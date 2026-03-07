@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
+import 'SecurityStaff/ZoneAlerts-2.dart';
 
 void main() {
-  runApp(const RushdApp());
+  runApp(const MyApp());
 }
 
-class RushdApp extends StatelessWidget {
-  const RushdApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      home: ZoneAlerts2Screen(),
     );
   }
 }
