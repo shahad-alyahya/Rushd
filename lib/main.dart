@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
-import 'SecurityStaff/ZoneAlerts-2.dart';
+import 'Admin/HomePage-3.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const RushdApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class RushdApp extends StatelessWidget {
+  const RushdApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ZoneAlerts2Screen(),
+      home: Center(
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: SizedBox(
+            width: 401,
+            height: 874,
+            child: const HomePage3Screen(),
+          ),
+        ),
+      ),
     );
   }
 }
