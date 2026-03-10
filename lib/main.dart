@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rushd/Visitor/homepage1.dart';
+import 'package:rushd/Admin/ZonesListPage.dart';
 
 void main() {
   runApp(const RushdApp());
@@ -13,7 +13,7 @@ class RushdApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Rushd',
-      home: HomePage1(),
+      home: ZonesListPage(),
     );
   }
 }
