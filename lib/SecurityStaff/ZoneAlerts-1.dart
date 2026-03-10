@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ZoneAlerts-2.dart';
 
 class ZoneAlerts1Screen extends StatelessWidget {
   const ZoneAlerts1Screen({super.key});
@@ -6,143 +7,216 @@ class ZoneAlerts1Screen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F6),
+      backgroundColor: const Color(0xFFFFFFFF),
+
+      bottomNavigationBar: Container(
+        height: 78,
+        padding: const EdgeInsets.only(left: 28, right: 28, top: 8, bottom: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            BottomItemActive(
+              icon: Icons.person_outline,
+              label: 'Profile',
+              selected: false,
+            ),
+            BottomItemActive(
+              icon: Icons.home_outlined,
+              label: 'Home',
+              selected: false,
+            ),
+            BottomItemActive(
+              icon: Icons.info_outline,
+              label: 'Zone Alert',
+              selected: true,
+            ),
+          ],
+        ),
+      ),
+
       body: SafeArea(
         child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430),
+          child: SizedBox(
+            width: 401,
+            height: 874,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+
+                  SizedBox(
+                    height: 24,
+                    child: Row(
+                      children: [
+                        const Text(
+                          '9:41',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF010E16),
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(
+                          Icons.signal_cellular_alt,
+                          size: 15,
+                          color: Color(0xFF010E16),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.wifi,
+                          size: 15,
+                          color: Color(0xFF010E16),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 24,
+                          height: 11,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: const Color(0xFF010E16),
+                              width: 1.3,
+                            ),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              width: 15,
+                              margin: const EdgeInsets.all(1.1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF010E16),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
                   const Text(
                     'Zone Alerts',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: Color(0xFF000000),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  Container(
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F1F1),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(22),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x12000000),
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Active Alerts',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const Expanded(
-                          child: Center(
-                            child: Text(
-                              'Responded Alerts',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFFB6B6B6),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+
                   const SizedBox(height: 22),
+
+                  Center(
+                    child: Container(
+                      width: 280,
+                      height: 46,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x12000000),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Active Alerts',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF4A5660),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ZoneAlerts2Screen(),
+                                  ),
+                                );
+                              },
+                              child: const Center(
+                                child: Text(
+                                  'Responded Alerts',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF9B9B9B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
                   Expanded(
                     child: ListView(
+                      padding: EdgeInsets.zero,
                       children: const [
-                        AlertCard(
+                        AlertCardActive(
                           imagePath: 'assets/images/saudiZone.png',
                           title: 'Saudi Arabia Zone',
                           date: '27 Des 2025',
                           timeAgo: '4 minutes ago',
                           levelText: 'High Level',
-                          levelBg: Color(0xFFF8D5D8),
-                          levelTextColor: Color(0xFFE17884),
+                          levelBg: Color(0x33C22222),
+                          levelTextColor: Color(0xFFE11A1A),
                         ),
                         SizedBox(height: 20),
-                        AlertCard(
+                        AlertCardActive(
                           imagePath: 'assets/images/AmusementPark.png',
                           title: 'Amusement Park',
                           date: '27 Des 2025',
                           timeAgo: '8 minutes ago',
                           levelText: 'Medium Level',
-                          levelBg: Color(0xFFFFE4CC),
-                          levelTextColor: Color(0xFFE8A15F),
+                          levelBg: Color(0x33C26722),
+                          levelTextColor: Color(0xFFF87927),
                         ),
                         SizedBox(height: 20),
-                        AlertCard(
+                        AlertCardActive(
                           imagePath: 'assets/images/greek.png',
                           title: 'Greek Subzone',
                           date: '27 Des 2025',
                           timeAgo: '14 minutes ago',
                           levelText: 'Medium Level',
-                          levelBg: Color(0xFFFFE4CC),
-                          levelTextColor: Color(0xFFE8A15F),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    height: 72,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(26),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x14000000),
-                          blurRadius: 10,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        BottomItem(
-                          icon: Icons.person_outline,
-                          label: 'Profile',
-                          selected: false,
-                        ),
-                        BottomItem(
-                          icon: Icons.home_outlined,
-                          label: 'Home',
-                          selected: false,
-                        ),
-                        BottomItem(
-                          icon: Icons.info_outline,
-                          label: 'Zone Alert',
-                          selected: true,
+                          levelBg: Color(0x33C26722),
+                          levelTextColor: Color(0xFFF87927),
                         ),
                       ],
                     ),
@@ -157,7 +231,7 @@ class ZoneAlerts1Screen extends StatelessWidget {
   }
 }
 
-class AlertCard extends StatelessWidget {
+class AlertCardActive extends StatelessWidget {
   final String imagePath;
   final String title;
   final String date;
@@ -166,7 +240,7 @@ class AlertCard extends StatelessWidget {
   final Color levelBg;
   final Color levelTextColor;
 
-  const AlertCard({
+  const AlertCardActive({
     super.key,
     required this.imagePath,
     required this.title,
@@ -180,105 +254,111 @@ class AlertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
+      height: 150,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x16000000),
-            blurRadius: 7,
+            color: Color(0x14000000),
+            blurRadius: 8,
             offset: Offset(0, 3),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Image.asset(
               imagePath,
-              width: 110,
-              height: 85,
+              width: 122,
+              height: 86,
               fit: BoxFit.cover,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
+            child: SizedBox(
+              height: 100,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF000000),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today_outlined,
-                      size: 14,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      date,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Colors.grey,
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: Color(0xFF4A5660),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      timeAgo,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Colors.grey,
+                      const SizedBox(width: 6),
+                      Text(
+                        date,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF9B9B9B),
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Color(0xFF4A5660),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        timeAgo,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF9B9B9B),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 12,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: levelBg,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         levelText,
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: levelTextColor,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -287,12 +367,12 @@ class AlertCard extends StatelessWidget {
   }
 }
 
-class BottomItem extends StatelessWidget {
+class BottomItemActive extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool selected;
 
-  const BottomItem({
+  const BottomItemActive({
     super.key,
     required this.icon,
     required this.label,
@@ -301,22 +381,23 @@ class BottomItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color activeColor = const Color(0xFFB9A7E8);
+    const Color activeColor = Color(0xFF867AB9);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(
           icon,
-          size: 23,
-          color: selected ? activeColor : Colors.black87,
+          size: 22,
+          color: selected ? activeColor : const Color(0xFF010E16),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
             fontSize: 11,
-            color: selected ? activeColor : Colors.black87,
+            fontWeight: FontWeight.w500,
+            color: selected ? activeColor : const Color(0xFF010E16),
           ),
         ),
       ],
