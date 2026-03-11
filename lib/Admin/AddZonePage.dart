@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class AddZonePage extends StatefulWidget {
   final String selectedLocation;
+  final List<String> existingZoneNames;
 
   const AddZonePage({
     super.key,
     required this.selectedLocation,
+    required this.existingZoneNames,
   });
 
   @override
@@ -17,12 +19,12 @@ class _AddZonePageState extends State<AddZonePage> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
+  late final TextEditingController _locationController;
 
   @override
   void initState() {
     super.initState();
-    _locationController.text = widget.selectedLocation;
+    _locationController = TextEditingController(text: widget.selectedLocation);
   }
 
   @override
@@ -32,15 +34,64 @@ class _AddZonePageState extends State<AddZonePage> {
     super.dispose();
   }
 
-  void _saveZone() {
-    if (!_formKey.currentState!.validate()) return;
-
-    final Map<String, String> newZone = {
-      'name': _nameController.text.trim(),
-      'location': _locationController.text.trim(),
-    };
-
-    Navigator.pop(context, newZone);
+  Future<void> _showExistsDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Zone Already Exists',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'This zone name already exists. Please enter a different name.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.black87,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kDark,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   InputDecoration _inputDecoration() {
@@ -65,6 +116,32 @@ class _AddZonePageState extends State<AddZonePage> {
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Colors.red),
       ),
+    );
+  }
+
+  Future<void> _saveZone() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final zoneName = _nameController.text.trim();
+    final location = _locationController.text.trim();
+
+    final exists = widget.existingZoneNames.any(
+      (name) => name.toLowerCase() == zoneName.toLowerCase(),
+    );
+
+    if (exists) {
+      await _showExistsDialog();
+      return;
+    }
+
+    if (!mounted) return;
+
+    Navigator.pop(
+      context,
+      {
+        'name': zoneName,
+        'location': location,
+      },
     );
   }
 
@@ -145,17 +222,12 @@ class _AddZonePageState extends State<AddZonePage> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _locationController,
+                        readOnly: true,
                         decoration: _inputDecoration(),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter location';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 52),
                       Center(

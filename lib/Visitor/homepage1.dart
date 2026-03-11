@@ -212,11 +212,11 @@ class _HomePage1State extends State<HomePage1> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Padding(
-                            padding: EdgeInsets.only(top: 11),
+                            padding: EdgeInsets.only(top: 3),
                             child: Icon(
                               Icons.location_on_outlined,
                               color: kPurple,
-                              size: 20,
+                              size: 35,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -360,7 +360,7 @@ class _TopDropdown extends StatelessWidget {
       tooltip: '',
       color: Colors.white,
       elevation: 10,
-      offset: const Offset(0, 48),
+      offset: const Offset(0, 60),// change here
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
       ),
@@ -388,7 +388,7 @@ class _TopDropdown extends StatelessWidget {
                     item,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       color: const Color(0xFF1F2430),
                       fontWeight:
                           isSelected ? FontWeight.w800 : FontWeight.w600,
@@ -403,10 +403,9 @@ class _TopDropdown extends StatelessWidget {
       child: Container(
         height: 40,
         alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 2),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          
           boxShadow: const [
             BoxShadow(
               color: Color(0x0D000000),
@@ -429,11 +428,11 @@ class _TopDropdown extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 10),
             const Icon(
               Icons.keyboard_arrow_down_rounded,
               color: Color(0xFF1F2430),
-              size: 22,
+              size: 30,
             ),
           ],
         ),
