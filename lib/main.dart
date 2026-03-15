@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'homepage_2.dart';
+// نستخدم المسار الصحيح للمجلد والملف
+import 'Security/homepage_2.dart';
 
 void main() {
   runApp(const RushdApp());
@@ -10,9 +11,13 @@ class RushdApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'Rushd App',
+      // إخفاء شريط الـ Debug المزعج
       debugShowCheckedModeBanner: false,
-      home: homepage_2.dart(),
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      // ننادي كلاس HomePage2 اللي موجود في ملف homepage_2.dart
+      home: const HomePage2(),
     );
   }
 }
