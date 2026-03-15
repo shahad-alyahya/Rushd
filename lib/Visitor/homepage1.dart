@@ -360,7 +360,7 @@ class _TopDropdown extends StatelessWidget {
       tooltip: '',
       color: Colors.white,
       elevation: 10,
-      offset: const Offset(0, 60),// change here
+      offset: const Offset(30, 30),// change here
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
       ),
