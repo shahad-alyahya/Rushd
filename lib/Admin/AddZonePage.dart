@@ -39,7 +39,9 @@ class _AddZonePageState extends State<AddZonePage> {
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
             child: Column(
@@ -50,18 +52,12 @@ class _AddZonePageState extends State<AddZonePage> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 12),
                 const Text(
                   'This zone name already exists. Please enter a different name.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.black87,
-                    height: 1.5,
-                  ),
                 ),
                 const SizedBox(height: 22),
                 SizedBox(
@@ -71,19 +67,11 @@ class _AddZonePageState extends State<AddZonePage> {
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kDark,
-                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'OK',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: const Text('OK'),
                   ),
                 ),
               ],
@@ -99,7 +87,8 @@ class _AddZonePageState extends State<AddZonePage> {
       isDense: true,
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
@@ -109,10 +98,6 @@ class _AddZonePageState extends State<AddZonePage> {
         borderSide: const BorderSide(color: Colors.black87),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.red),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Colors.red),
       ),
@@ -149,39 +134,46 @@ class _AddZonePageState extends State<AddZonePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
+                // ===== HEADER =====
+                const SizedBox(height: 10),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     InkWell(
                       onTap: () => Navigator.pop(context),
                       borderRadius: BorderRadius.circular(20),
                       child: const Padding(
-                        padding: EdgeInsets.all(4),
+                        padding: EdgeInsets.all(6),
                         child: Icon(
                           Icons.arrow_back_ios_new_rounded,
-                          size: 22,
+                          size: 20,
                           color: Colors.black,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 6),
                     const Text(
                       'Add Zone',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 70),
+
+                const SizedBox(height: 60),
+
+                // ===== FORM =====
                 Form(
                   key: _formKey,
                   child: Column(
@@ -189,20 +181,12 @@ class _AddZonePageState extends State<AddZonePage> {
                     children: [
                       const Text(
                         'Name',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
+                        style: TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _nameController,
                         decoration: _inputDecoration(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Please enter zone name';
@@ -210,43 +194,41 @@ class _AddZonePageState extends State<AddZonePage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+
+                      const SizedBox(height: 22),
+
                       const Text(
                         'Location',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
+                        style: TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _locationController,
                         readOnly: true,
                         decoration: _inputDecoration(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
                       ),
-                      const SizedBox(height: 52),
-                      Center(
+
+                      const SizedBox(height: 40),
+
+                      // ===== SAVE BUTTON =====
+                      Align(
+                        alignment: Alignment.centerRight,
                         child: SizedBox(
-                          width: 220,
-                          height: 54,
+                          width: 140,
+                          height: 44,
                           child: ElevatedButton(
                             onPressed: _saveZone,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kDark,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: const Text(
                               'Save',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),

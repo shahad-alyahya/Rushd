@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+// Comment for this page 
+//1- Change the discreption of Bottom Sheet to be Dinamic for choosen places -> take it from database or real time data (i'm not sure)
+//2- كتبت الكود بحيث لما يضغط على كلمه بوليفارد من الليست يطلع له الشييت  فقط حتى اشوفه واعدله لكن شيليه وانه يطلع فقط لما يضغط عالخريطة
+//3- في هولدر تحت للخريطه لكن ممكن يحتاج كود اضافي غير هالمكان للدبوس الخريطة او غيره تأكدي من هالشي 
+//4- Do not add bottom bar for this page 
+// 5- add in button (explore the zone) -> to route page according to the choosen plase & updated
+//6- for the current visitors -> need data from database 
+// 7- need the map to be zoom out 
+// 8- للخريطه ترى بس البوليفارد بتكون لها الوان حسب زحمتها لكن للاماكن الثانيه اللي بالليست تكون محدده بس بدون لون ولباقي الاماكن بالخريطه تكون رمادي 
 
 class HomePage1 extends StatefulWidget {
   const HomePage1({super.key});
@@ -21,13 +30,10 @@ class _HomePage1State extends State<HomePage1> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
 
-  String _selected = 'Boulevard World'; // selected place 
-  DateTime _lastUpdate = DateTime.now(); // store last update
+  String _selected = 'Boulevard World';
+  DateTime _lastUpdate = DateTime.now();
+  bool _showSheet = false;
 
-  bool _showSheet = false; // pottom sheet hide
-  Offset? _pinPosition; // store pin position
-
-// function for pottom sheet
   Future<void> _animateSheet(double size) async {
     if (!_sheetController.isAttached) return;
     await _sheetController.animateTo(
@@ -36,13 +42,13 @@ class _HomePage1State extends State<HomePage1> {
       curve: Curves.easeOutCubic,
     );
   }
-// refresh button
+
   void _refresh() {
     setState(() {
       _lastUpdate = DateTime.now();
     });
   }
-// format time 
+
   String _formattedTime(DateTime dateTime) {
     final hh = dateTime.hour.toString().padLeft(2, '0');
     final mm = dateTime.minute.toString().padLeft(2, '0');
@@ -134,55 +140,34 @@ class _HomePage1State extends State<HomePage1> {
     );
   }
 
-  void _selectBoulevardWorldAt(Offset pinPosition) {
+  Future<void> _handleDestinationSelected(String value) async {
     setState(() {
-      _selected = 'Boulevard World';
-      _showSheet = true;
-      _pinPosition = pinPosition;
+      _selected = value;
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _animateSheet(0.34); 
-    });
-  }
-// if we need to add more places 
-  void _handleDestinationSelected(String value, BoxConstraints constraints) {
     if (value == 'Boulevard World') {
-      final worldRect = _MapRects.boulevardWorld(constraints);
-      final pin = Offset(worldRect.center.dx, worldRect.center.dy - 8);
-      _selectBoulevardWorldAt(pin);
+      setState(() {
+        _showSheet = true;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _animateSheet(0.36);
+      });
     } else {
+      setState(() {
+        _showSheet = false;
+      });
       _showComingSoonDialog(value);
     }
   }
-// cleck on map
-  void _onMapTap(TapDownDetails details, BoxConstraints constraints) {
-    final point = details.localPosition;
 
-    final worldRect = _MapRects.boulevardWorld(constraints);
-    final cityRect = _MapRects.boulevardCity(constraints);
-    final zooRect = _MapRects.riyadhZoo(constraints);
-    final bujariRect = _MapRects.alBujari(constraints);
+  Future<void> _closeSheet() async {
+    await _animateSheet(0.0);
+    if (!mounted) return;
 
-    if (worldRect.contains(point)) {
-      final pin = Offset(worldRect.center.dx, worldRect.center.dy - 8);
-      _selectBoulevardWorldAt(pin);
-      return;
-    }
-
-    if (cityRect.contains(point)) {
-      _showComingSoonDialog('Boulevard City');
-      return;
-    }
-
-    if (zooRect.contains(point)) {
-      _showComingSoonDialog('Riyadh Zoo');
-      return;
-    }
-
-    if (bujariRect.contains(point)) {
-      _showComingSoonDialog('Al-Bujari');
-    }
+    setState(() {
+      _showSheet = false;
+    });
   }
 
   @override
@@ -190,155 +175,111 @@ class _HomePage1State extends State<HomePage1> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F6),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTapDown: (details) => _onMapTap(details, constraints),
-                    child: _MapCanvas(constraints: constraints),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                color: const Color(0xFFF2F3F4),
+
+                // ==================================================
+                // PLACE MAP HERE
+                // ==================================================
+                child: const Center(
+                  child: Text(
+                    ' Map will be added here',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF7C7E86),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      color: const Color(0xFFF6EFF8),
-                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 3),
-                            child: Icon(
-                              Icons.location_on_outlined,
-                              color: kPurple,
-                              size: 35,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _TopDropdown(
-                              value: _selected,
-                              items: _destinations,
-                              onSelected: (value) =>
-                                  _handleDestinationSelected(value, constraints),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                height: 40,
-                                child: ElevatedButton.icon(
-                                  onPressed: _refresh,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: kDark,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  icon: const Icon(
-                                    Icons.refresh_rounded,
-                                    size: 16,
-                                  ),
-                                  label: const Text(
-                                    'Refresh',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Last update: ${_formattedTime(_lastUpdate)}',
-                                style: const TextStyle(
-                                  fontSize: 11.5,
-                                  color: Color(0xFF7C7E86),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: Container(
+                color: const Color(0xFFF6EFF8),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 3),
+                      child: Icon(
+                        Icons.location_on_outlined,
+                        color: kPurple,
+                        size: 35,
                       ),
                     ),
-                  ),
-                  if (_pinPosition != null)
-                    Positioned(
-                      left: _pinPosition!.dx - 13,
-                      top: _pinPosition!.dy - 30,
-                      child: const _PinMarker(),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _TopDropdown(
+                        value: _selected,
+                        items: _destinations,
+                        onSelected: _handleDestinationSelected,
+                      ),
                     ),
-                  _DetailsBottomSheet(
-                    controller: _sheetController,
-                    visible: _showSheet,
-                    onArrowTap: () => _animateSheet(0.18),
-                    onClose: () async {
-                      await _animateSheet(0.0);
-                      if (!mounted) return;
-                      setState(() {
-                        _showSheet = false;
-                        _pinPosition = null;
-                      });
-                    },
-                    onExplore: () {},
-                  ),
-                ],
-              );
-            },
-          ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: ElevatedButton.icon(
+                            onPressed: _refresh,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kDark,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
+                            ),
+                            label: const Text(
+                              'Refresh',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Last update: ${_formattedTime(_lastUpdate)}',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Color(0xFF7C7E86),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            _DetailsBottomSheet(
+              controller: _sheetController,
+              visible: _showSheet,
+              onClose: _closeSheet,
+              onExplore: () {},
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _MapRects {
-  static Rect boulevardWorld(BoxConstraints c) {
-    return Rect.fromLTWH(
-      c.maxWidth * 0.61,
-      c.maxHeight * 0.48,
-      c.maxWidth * 0.23,
-      c.maxHeight * 0.18,
-    );
-  }
-
-  static Rect boulevardCity(BoxConstraints c) {
-    return Rect.fromLTWH(
-      c.maxWidth * 0.39,
-      c.maxHeight * 0.61,
-      c.maxWidth * 0.19,
-      c.maxHeight * 0.12,
-    );
-  }
-
-  static Rect riyadhZoo(BoxConstraints c) {
-    return Rect.fromLTWH(
-      c.maxWidth * 0.08,
-      c.maxHeight * 0.50,
-      c.maxWidth * 0.24,
-      c.maxHeight * 0.17,
-    );
-  }
-
-  static Rect alBujari(BoxConstraints c) {
-    return Rect.fromLTWH(
-      c.maxWidth * 0.08,
-      c.maxHeight * 0.18,
-      c.maxWidth * 0.23,
-      c.maxHeight * 0.17,
     );
   }
 }
@@ -360,7 +301,7 @@ class _TopDropdown extends StatelessWidget {
       tooltip: '',
       color: Colors.white,
       elevation: 10,
-      offset: const Offset(30, 30),// change here
+      offset: const Offset(-8, 40),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
       ),
@@ -400,20 +341,8 @@ class _TopDropdown extends StatelessWidget {
           );
         }).toList();
       },
-      child: Container(
+      child: SizedBox(
         height: 40,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        decoration: BoxDecoration(
-          
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0D000000),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
         child: Row(
           children: [
             Expanded(
@@ -428,11 +357,11 @@ class _TopDropdown extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 6),
             const Icon(
               Icons.keyboard_arrow_down_rounded,
               color: Color(0xFF1F2430),
-              size: 30,
+              size: 28,
             ),
           ],
         ),
@@ -441,174 +370,19 @@ class _TopDropdown extends StatelessWidget {
   }
 }
 
-class _MapCanvas extends StatelessWidget {
-  const _MapCanvas({required this.constraints});
-
-  final BoxConstraints constraints;
-
-  @override
-  Widget build(BuildContext context) {
-    final worldRect = _MapRects.boulevardWorld(constraints);
-    final cityRect = _MapRects.boulevardCity(constraints);
-    final zooRect = _MapRects.riyadhZoo(constraints);
-    final bujariRect = _MapRects.alBujari(constraints);
-
-    return Container(
-      color: const Color(0xFFF2F3F4),
-      child: Stack(
-        children: [
-          CustomPaint(
-            size: Size(constraints.maxWidth, constraints.maxHeight),
-            painter: _RoadPainter(),
-          ),
-          Positioned.fromRect(
-            rect: bujariRect,
-            child: const _MapArea(
-              color: Color(0xFFF2E5B8),
-              borderColor: Color(0xFFE2D39E),
-              child: _MapLabel(
-                text: 'Al-Bujari',
-                textColor: Color(0xFF636A59),
-              ),
-            ),
-          ),
-          Positioned(
-            left: constraints.maxWidth * 0.55,
-            top: constraints.maxHeight * 0.23,
-            child: _MapArea(
-              width: constraints.maxWidth * 0.22,
-              height: constraints.maxHeight * 0.12,
-              color: const Color(0xFFDCE9D8),
-              borderColor: const Color(0xFFC8D8C2),
-              child: const _MapLabel(
-                text: 'A Sahamiyah',
-                textColor: Color(0xFF5D6E5C),
-              ),
-            ),
-          ),
-          Positioned.fromRect(
-            rect: zooRect,
-            child: const _MapArea(
-              color: Color(0xFFDCE9D8),
-              borderColor: Color(0xFFC8D8C2),
-              child: _MapLabel(
-                text: 'Riyadh\nZoo',
-                textColor: Color(0xFF5D6E5C),
-              ),
-            ),
-          ),
-          Positioned.fromRect(
-            rect: cityRect,
-            child: const _MapArea(
-              color: Color(0xFFDCE9D8),
-              borderColor: Color(0xFFC8D8C2),
-              child: _MapLabel(
-                text: 'Boulevard\nCity',
-                textColor: Color(0xFF5D6E5C),
-              ),
-            ),
-          ),
-          Positioned.fromRect(
-            rect: worldRect,
-            child: const _MapArea(
-              color: Color(0xFFF4D3D8),
-              borderColor: Color(0xFFE8BEC5),
-              child: _MapLabel(
-                text: 'Boulevard\nWorld',
-                textColor: Color(0xFF5D606B),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MapArea extends StatelessWidget {
-  const _MapArea({
-    this.width,
-    this.height,
-    required this.color,
-    required this.borderColor,
-    required this.child,
-  });
-
-  final double? width;
-  final double? height;
-  final Color color;
-  final Color borderColor;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _BlobShapePainter(
-        fillColor: color,
-        borderColor: borderColor,
-      ),
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Center(child: child),
-      ),
-    );
-  }
-}
-
-class _MapLabel extends StatelessWidget {
-  const _MapLabel({
-    required this.text,
-    required this.textColor,
-  });
-
-  final String text;
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: 13,
-        height: 1.1,
-        color: textColor,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-}
-
-class _PinMarker extends StatelessWidget {
-  const _PinMarker();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Icon(
-      Icons.location_on,
-      color: Color(0xFFE54545),
-      size: 30,
-    );
-  }
-}
-
 class _DetailsBottomSheet extends StatelessWidget {
   const _DetailsBottomSheet({
     required this.controller,
     required this.visible,
-    required this.onArrowTap,
     required this.onClose,
     required this.onExplore,
   });
 
   final DraggableScrollableController controller;
   final bool visible;
-  final VoidCallback onArrowTap;
   final VoidCallback onClose;
   final VoidCallback onExplore;
 
-  static const Color kPurple = Color(0xFF867AB9);
   static const Color kDark = Color(0xFF353841);
 
   @override
@@ -620,13 +394,14 @@ class _DetailsBottomSheet extends StatelessWidget {
         opacity: visible ? 1 : 0,
         child: DraggableScrollableSheet(
           controller: controller,
-          initialChildSize: 0.34,
-          minChildSize: 0.18,
-          maxChildSize: 0.56,
+          initialChildSize: 0.36,
+          minChildSize: 0.36,
+          maxChildSize: 0.60,
           snap: true,
-          snapSizes: const [0.18, 0.34, 0.56],
+          snapSizes: const [0.36, 0.60],
           builder: (context, scrollController) {
             return Container(
+              width: double.infinity,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
@@ -642,87 +417,67 @@ class _DetailsBottomSheet extends StatelessWidget {
                 controller: scrollController,
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE3E5EA),
-                                borderRadius: BorderRadius.circular(50),
-                              ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: GestureDetector(
+                          onTap: onClose,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F7),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            const SizedBox(height: 6),
-                            GestureDetector(
-                              onTap: onArrowTap,
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                child: Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: Color(0xFF52545B),
-                                  size: 20,
-                                ),
-                              ),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              color: Color(0xFF52545B),
+                              size: 20,
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: const Text(
-                          'Boulevard World',
-                          style: TextStyle(
-                            fontSize: 17,
-                            color: Color(0xFF1F2430),
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 2),
-                        child: Text(
-                          'Boulevard World is a premier Riyadh Season destination, featuring global cultures, and diverse international dining experiences.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            height: 1.45,
-                            color: Color(0xFF454A57),
-                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 2),
-                        child: Column(
-                          children: [
-                            _InfoTile(
-                              icon: Icons.location_on_outlined,
-                              text: 'Location: Riyadh, Hiteen',
-                            ),
-                            SizedBox(height: 10),
-                            _InfoTile(
-                              icon: Icons.access_time_rounded,
-                              text: 'Open: 4:00 PM – 12:00 AM',
-                            ),
-                            SizedBox(height: 10),
-                            _InfoTile(
-                              icon: Icons.groups_rounded,
-                              text: 'Current Visitors: 145',
-                            ),
-                          ],
+                      const Text(
+                        'Boulevard World',
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Color(0xFF1F2430),
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Boulevard World is a premier Riyadh Season destination, featuring global cultures, and diverse international dining experiences.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.45,
+                          color: Color(0xFF454A57),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Column(
+                        children: [
+                          _InfoTile(
+                            icon: Icons.location_on_outlined,
+                            text: 'Location: Riyadh, Hiteen',
+                          ),
+                          SizedBox(height: 10),
+                          _InfoTile(
+                            icon: Icons.access_time_rounded,
+                            text: 'Open: 4:00 PM – 12:00 AM',
+                          ),
+                          SizedBox(height: 10),
+                          _InfoTile(
+                            icon: Icons.groups_rounded,
+                            text: 'Current Visitors: 145',
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 18),
                       SizedBox(
@@ -788,141 +543,5 @@ class _InfoTile extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _RoadPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final outer = Paint()
-      ..color = const Color(0xFFE5E6EA)
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 13;
-
-    final inner = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 10;
-
-    final roads = <Path>[
-      Path()
-        ..moveTo(size.width * 0.10, size.height * 0.39)
-        ..cubicTo(
-          size.width * 0.22,
-          size.height * 0.22,
-          size.width * 0.38,
-          size.height * 0.24,
-          size.width * 0.52,
-          size.height * 0.31,
-        )
-        ..cubicTo(
-          size.width * 0.68,
-          size.height * 0.39,
-          size.width * 0.76,
-          size.height * 0.52,
-          size.width * 0.78,
-          size.height * 0.67,
-        ),
-      Path()
-        ..moveTo(size.width * 0.40, size.height * 0.21)
-        ..cubicTo(
-          size.width * 0.44,
-          size.height * 0.34,
-          size.width * 0.42,
-          size.height * 0.48,
-          size.width * 0.36,
-          size.height * 0.58,
-        )
-        ..cubicTo(
-          size.width * 0.31,
-          size.height * 0.66,
-          size.width * 0.28,
-          size.height * 0.74,
-          size.width * 0.22,
-          size.height * 0.83,
-        ),
-      Path()
-        ..moveTo(size.width * 0.44, size.height * 0.71)
-        ..cubicTo(
-          size.width * 0.54,
-          size.height * 0.66,
-          size.width * 0.66,
-          size.height * 0.64,
-          size.width * 0.79,
-          size.height * 0.69,
-        ),
-    ];
-
-    for (final path in roads) {
-      canvas.drawPath(path, outer);
-      canvas.drawPath(path, inner);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _BlobShapePainter extends CustomPainter {
-  _BlobShapePainter({
-    required this.fillColor,
-    required this.borderColor,
-  });
-
-  final Color fillColor;
-  final Color borderColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final fill = Paint()..color = fillColor;
-    final border = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.1;
-
-    final path = Path()
-      ..moveTo(size.width * 0.12, size.height * 0.16)
-      ..quadraticBezierTo(
-        size.width * 0.18,
-        size.height * 0.02,
-        size.width * 0.44,
-        size.height * 0.06,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.84,
-        size.height * 0.02,
-        size.width * 0.90,
-        size.height * 0.30,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.98,
-        size.height * 0.68,
-        size.width * 0.78,
-        size.height * 0.90,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.42,
-        size.height * 1.02,
-        size.width * 0.18,
-        size.height * 0.86,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.02,
-        size.height * 0.64,
-        size.width * 0.12,
-        size.height * 0.16,
-      )
-      ..close();
-
-    canvas.drawPath(path, fill);
-    canvas.drawPath(path, border);
-  }
-
-  @override
-  bool shouldRepaint(covariant _BlobShapePainter oldDelegate) {
-    return oldDelegate.fillColor != fillColor ||
-        oldDelegate.borderColor != borderColor;
   }
 }

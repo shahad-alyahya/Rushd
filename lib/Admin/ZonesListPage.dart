@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import'package:rushd/Admin/AddZonePage.dart';
-import'package:rushd/Admin/message_3.dart';
-
-
+import 'package:rushd/Admin/AddZonePage.dart';
+import 'package:rushd/Admin/message_3.dart';
+// comments for this page 
+//1- سويت فنكشن الحذف والاضافه لكن يحتاج ياخذ البيانات من الداتا بيس 
+//2- change the bottom bar -> i did it just a holder for the new one (who responsable for Admin home page) 
+//3- check for the colors if its good or not 
+//4- need function for export and print 
 class ZonesListPage extends StatefulWidget {
   const ZonesListPage({super.key});
 
@@ -175,24 +178,24 @@ class _ZonesListPageState extends State<ZonesListPage> {
                       child: SizedBox(
                         height: 52,
                         child: ElevatedButton(
-                         onPressed: () async {
-  setState(() {
-    _zones.removeWhere(
-      (item) =>
-          item['name'] == zone['name'] &&
-          item['location'] == zone['location'],
-    );
-  });
+                          onPressed: () async {
+                            setState(() {
+                              _zones.removeWhere(
+                                (item) =>
+                                    item['name'] == zone['name'] &&
+                                    item['location'] == zone['location'],
+                              );
+                            });
 
-  Navigator.pop(context);
+                            Navigator.pop(context);
 
-  await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const Message3Page(),
-    ),
-  );
-},
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const Message3Page(),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kDark,
                             elevation: 0,
@@ -221,78 +224,10 @@ class _ZonesListPageState extends State<ZonesListPage> {
     );
   }
 
-  Future<void> _showNoDataDialog(String location) async {
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'No Data',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'There is no data available for $location.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: Colors.black87,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kDark,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      'OK',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _onLocationChanged(String? value) async {
-    if (value == null) return;
-
+  void _onLocationChanged(String value) {
     setState(() {
       _selectedLocation = value;
     });
-
-    final hasData = _zones.any((zone) => zone['location'] == value);
-
-    if (!hasData) {
-      await _showNoDataDialog(value);
-    }
   }
 
   Widget _buildTopBar() {
@@ -307,26 +242,10 @@ class _ZonesListPageState extends State<ZonesListPage> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedLocation,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                borderRadius: BorderRadius.circular(16),
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-                items: _locations
-                    .map(
-                      (location) => DropdownMenuItem<String>(
-                        value: location,
-                        child: Text(location),
-                      ),
-                    )
-                    .toList(),
-                onChanged: _onLocationChanged,
-              ),
+            child: _LocationPopupMenu(
+              value: _selectedLocation,
+              items: _locations,
+              onSelected: _onLocationChanged,
             ),
           ),
         ),
@@ -460,14 +379,20 @@ class _ZonesListPageState extends State<ZonesListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddZonePage,
-        backgroundColor: kPurple,
-        elevation: 0,
-        child: const Icon(
-          Icons.add,
-          size: 34,
-          color: Colors.black,
+      floatingActionButton: SizedBox(
+        width: 64,
+        height: 64,
+        child: FloatingActionButton(
+          onPressed: _openAddZonePage,
+          backgroundColor: kPurple,
+          elevation: 0,
+          shape: const CircleBorder(),
+          child: const Icon(
+            Icons.add,
+            size: 36,
+            weight: 900,
+            color: Colors.black,
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -512,6 +437,92 @@ class _ZonesListPageState extends State<ZonesListPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LocationPopupMenu extends StatelessWidget {
+  const _LocationPopupMenu({
+    required this.value,
+    required this.items,
+    required this.onSelected,
+  });
+
+  final String value;
+  final List<String> items;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: '',
+      color: Colors.white,
+      elevation: 10,
+      offset: const Offset(-8, 40),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+      onSelected: onSelected,
+      itemBuilder: (context) {
+        return items.map((item) {
+          final isSelected = item == value;
+          return PopupMenuItem<String>(
+            value: item,
+            height: 48,
+            child: Row(
+              children: [
+                Icon(
+                  isSelected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 18,
+                  color: isSelected
+                      ? const Color(0xFF867AB9)
+                      : const Color(0xFFB7B9C0),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    item,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: const Color(0xFF1F2430),
+                      fontWeight:
+                          isSelected ? FontWeight.w800 : FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList();
+      },
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                value,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.black,
+              size: 28,
+            ),
+          ],
         ),
       ),
     );
