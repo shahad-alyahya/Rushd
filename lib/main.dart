@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
-// Import واجهتنا اللي تعبنا عليها
-import 'package:rushd/Security/homepage_2.dart';
+// التعديل هنا: اسم المجلد بعدين اسم الملف/import 'security/home_page2.dart';
+import 'visitor/profile_1.dart';
+import 'visitor/faqs_1.dart';
+import 'visitor/edit_profile_1.dart';
+import 'security/edit_profile_2.dart';
+//import 'security/f.dart';
+import 'security/home_page2.dart';
+
+import 'security/profile_2.dart';
 
 void main() {
   runApp(const RushdApp());
@@ -11,11 +18,17 @@ class RushdApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Rushd',
-      // هنا نادينا HomePage2 حقتنا
-      home: HomePage2(),
+      theme: ThemeData(useMaterial3: true),
+
+      home: const FAQPage(),
+      //home: const SecurityProfilePage(),
+      //home: const EditProfilePageSecurity(),
+      //home: const HomePage2(),
+
+      //home: const ProfileVisitorPage(),
+      //home: const SecurityDashboardPage(),
     );
   }
 }
