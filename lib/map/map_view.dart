@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'map_data.dart';
+import 'route_service.dart';
+import 'location_service.dart';
+import 'dart:ui' as ui;
+
 
 class MapView extends StatefulWidget {
+  
   const MapView({super.key});
 
   @override
@@ -10,27 +16,63 @@ class MapView extends StatefulWidget {
 
 class _MapViewState extends State<MapView> {
   GoogleMapController? _mapController;
-
+late final Set<Polyline> _polylines;
   // مركز تقريبي داخل منطقة البوليفارد
-  static const LatLng _boulevardWorldCenter = LatLng(24.7765, 46.6014);
+  static const LatLng _boulevardWorldCenter = MapData.boulevardWorldCenter;
 
   // نحصر الحركة داخل مساحة صغيرة فقط
-  static final CameraTargetBounds _boulevardBounds = CameraTargetBounds(
-    LatLngBounds(
-      southwest: const LatLng(24.7717872, 46.5970640),
-      northeast: const LatLng(24.7812052, 46.6057510),
-    ),
-  );
+  static final CameraTargetBounds _boulevardBounds = MapData.boulevardBounds;
 
-  final Set<Marker> _markers =  {
-    const Marker(
-      markerId: MarkerId('boulevard_world'),
-      position: LatLng(24.7760199, 46.6013703),
-      infoWindow: InfoWindow(title: 'Boulevard World'),
+  final Set<Marker> _markers = {};
+
+ late final Set<Circle> _circles;
+ 
+    @override
+void initState() {
+
+  super.initState();
+  _circles = LocationService.getUserLocationCircles();
+  _loadZoneLabels();
+
+  _polylines = {
+    RouteService.buildRouteToZonePolyline(
+      toZoneId: 'japan',
     ),
-   
   };
+  _setDestinationMarker('japan');
+}
+Future<void> _loadZoneLabels() async {
+  final newMarkers = <Marker>{};
 
+  for (final entry in MapData.zoneLabelCenters.entries) {
+    final zoneId = entry.key;
+    final center = entry.value;
+    final text = MapData.zoneLabelTexts[zoneId];
+
+    if (text == null) continue;
+
+    final marker = await _createTextMarker(
+      id: '${zoneId}_label',
+      text: text,
+      position: center,
+    );
+
+    newMarkers.add(marker);
+  }
+
+  setState(() {
+    _markers.addAll(newMarkers);
+  });
+}
+
+void _setDestinationMarker(String zoneId) {
+  final destinationMarker = RouteService.buildDestinationMarker(zoneId);
+
+  setState(() {
+    _markers.removeWhere((m) => m.markerId.value.startsWith('destination_'));
+    _markers.add(destinationMarker);
+  });
+}
   void _onMapCreated(GoogleMapController controller) {
   _mapController = controller;
 
@@ -56,22 +98,8 @@ class _MapViewState extends State<MapView> {
  
  
  final Set<Polygon> _polygons = {
-  // LAKE
-  Polygon(
-    polygonId: PolygonId('lake'),
-    points: [
-      LatLng(24.77710, 46.60070),
-      LatLng(24.77720, 46.60220),
-      LatLng(24.77680, 46.60320),
-      LatLng(24.77600, 46.60370),
-      LatLng(24.77480, 46.60320),
-      LatLng(24.77450, 46.60180),
-      LatLng(24.77480, 46.60060),
-      LatLng(24.77580, 46.60030),
-    ],
-    strokeWidth: 0,
-    fillColor: Color(0xFF6EC6FF).withOpacity(0.30),
-  ),
+  
+  
 
   // 1 - أعلى يسار
   Polygon(
@@ -91,7 +119,7 @@ class _MapViewState extends State<MapView> {
       LatLng(24.7741435, 46.6002123),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(255, 227, 80, 80),
+   fillColor: Color.fromARGB(120, 80, 200, 120),
   ),
 
   // 2 - أعلى وسط يسار
@@ -120,24 +148,23 @@ class _MapViewState extends State<MapView> {
       LatLng(24.7741864, 46.6008060),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(255, 154, 227, 134),
+    fillColor: Color.fromARGB(120, 255, 200, 80),
   ),
 
   // 3 - أعلى وسط
   Polygon(
     polygonId: PolygonId('sham'),
     points: [
-      LatLng(24.7742643, 46.6017612),
-      LatLng(24.7744065, 46.6018400),
-      LatLng(24.7745270, 46.6021522),
-      LatLng(24.7744847, 46.6023366),
-      LatLng(24.7741401, 46.6025052),
-      LatLng(24.7739060, 46.6018987),
-      LatLng(24.7742208, 46.6017488),
+      LatLng(24.7745368, 46.6023108),
+      LatLng(24.7742488, 46.6017327),
+      LatLng(24.7736025, 46.6020523),
+      LatLng(24.7738269, 46.6026491),
+      LatLng(24.7738193, 46.6027057),
+      
 
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(255, 248, 223, 156),
+     fillColor: Color.fromARGB(120, 255, 80, 80),
   ),
 
   // 4 - أعلى يمين
@@ -159,7 +186,7 @@ class _MapViewState extends State<MapView> {
       LatLng(24.7745009, 46.6028348),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(255, 190, 240, 170),
+    fillColor: Color.fromARGB(120, 255, 80, 80),
   ),
 
   // 5 - يمين أعلى
@@ -182,12 +209,12 @@ class _MapViewState extends State<MapView> {
 
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(255, 165, 209, 117),
+    fillColor: Color.fromARGB(120, 255, 200, 80),
   ),
 
   // 6 - يمين وسط
   Polygon(
-    polygonId: PolygonId('games'),
+    polygonId: PolygonId('kuwait'),
     points: [
       LatLng(24.7748354, 46.6032415),
       LatLng(24.7745639, 46.6039848),
@@ -200,7 +227,7 @@ class _MapViewState extends State<MapView> {
       LatLng(24.7748838, 46.6032542),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(255, 237, 211, 120),
+    fillColor: Color.fromARGB(120, 255, 200, 80),
   ),
 
   // 7 - يمين أسفل
@@ -215,105 +242,230 @@ class _MapViewState extends State<MapView> {
       LatLng(24.7770936, 46.6035184),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(255, 211, 54, 54),
+    fillColor: Color.fromARGB(120, 255, 200, 80),
   ),
 
   // 8 - أسفل يمين
   Polygon(
-    polygonId: PolygonId('z8'),
+    polygonId: PolygonId('Egypt'),
     points: [
-      LatLng(24.77485, 46.60270),
-      LatLng(24.77505, 46.60445),
-      LatLng(24.77415, 46.60530),
-      LatLng(24.77310, 46.60495),
-      LatLng(24.77300, 46.60335),
-      LatLng(24.77375, 46.60245),
+      LatLng(24.7771051, 46.6037481),
+      LatLng(24.7775998, 46.6038212),
+      LatLng(24.7778713, 46.6038289),
+      LatLng(24.7783700, 46.6036140),
+      LatLng(24.7785213, 46.6034940),
+      LatLng(24.7786835, 46.6032385),
+      LatLng(24.7785764, 46.6029029),
+      LatLng(24.7782838, 46.6025703),
+      LatLng(24.7779599, 46.6024693),
+      LatLng(24.7776756, 46.6024392),
+      LatLng(24.7771809, 46.6027771),
+      LatLng(24.7771748, 46.6031992),
+      LatLng(24.7770914, 46.6037105),
+        
     ],
     strokeWidth: 0,
-    fillColor: Color(0xFFD6F0D2).withOpacity(0.25),
+   fillColor: Color.fromARGB(120, 80, 200, 120),
   ),
 
   // 9 - أسفل
   Polygon(
-    polygonId: PolygonId('z9'),
+    polygonId: PolygonId('turky'),
     points: [
-      LatLng(24.77420, 46.60090),
-      LatLng(24.77435, 46.60270),
-      LatLng(24.77360, 46.60340),
-      LatLng(24.77255, 46.60300),
-      LatLng(24.77245, 46.60130),
-      LatLng(24.77320, 46.60055),
+      LatLng(24.7786202, 46.6028469),
+      LatLng(24.7789623, 46.6024164),
+      LatLng(24.7791785, 46.6021300),
+      LatLng(24.7793270, 46.6014035),
+      LatLng(24.7793333, 46.6013220),
+      LatLng(24.7792241, 46.6008909),
+      LatLng(24.7791060, 46.6004470),
+      LatLng(24.7789919, 46.6000949),
+      LatLng(24.7784324, 46.6001791),
+      LatLng(24.7783082, 46.6004550),
+      LatLng(24.7782519, 46.6011276),
+      LatLng(24.7780534, 46.6014337),
+      LatLng(24.7778369, 46.6021904),
+      LatLng(24.7782628, 46.6025438),
+      LatLng(24.7785910, 46.6028650),
     ],
     strokeWidth: 0,
-    fillColor: Color(0xFFBFD8F2).withOpacity(0.25),
+    fillColor: Color.fromARGB(120, 255, 80, 80),
   ),
 
   // 10 - أسفل يسار
   Polygon(
-    polygonId: PolygonId('z10'),
+    polygonId: PolygonId('Spain'),
     points: [
-      LatLng(24.77455, 46.59900),
-      LatLng(24.77470, 46.60080),
-      LatLng(24.77400, 46.60135),
-      LatLng(24.77295, 46.60100),
-      LatLng(24.77280, 46.59930),
-      LatLng(24.77345, 46.59855),
+      LatLng(24.7776394, 46.6005372),
+      LatLng(24.7784293, 46.6001449),
+      LatLng(24.7784932, 46.6000191),
+      LatLng(24.7786318, 46.5997771),
+      LatLng(24.7782327, 46.5991313),
+      LatLng(24.7774226, 46.5997539),
+      LatLng(24.7775003, 46.6000570),
+      LatLng(24.7776269, 46.6005123),
+    ], 
+    strokeWidth: 0,
+    fillColor: Color.fromARGB(120, 80, 200, 120),
+  ),
+
+   Polygon(
+    polygonId: PolygonId('US'),
+    points: [
+      LatLng(24.7777429, 46.5994244),
+      LatLng(24.7784147, 46.5989087),
+      LatLng(24.7779450, 46.5982063),
+      LatLng(24.7774354, 46.5986465),
+      LatLng(24.77733004, 46.5989339),
+      LatLng(24.7777094, 46.5994089),
+
+    
     ],
     strokeWidth: 0,
-    fillColor: Color(0xFFAED6A3).withOpacity(0.25),
+    fillColor: Color.fromARGB(120, 255, 200, 80),
   ),
 
   // 11 - يسار وسط
   Polygon(
-    polygonId: PolygonId('z11'),
+    polygonId: PolygonId('japan'),
     points: [
-      LatLng(24.77630, 46.59785),
-      LatLng(24.77645, 46.59965),
-      LatLng(24.77570, 46.60020),
-      LatLng(24.77470, 46.59990),
-      LatLng(24.77445, 46.59830),
-      LatLng(24.77510, 46.59755),
+      LatLng(24.7761459, 46.5986368),
+      LatLng(24.7764826, 46.5984879),
+      LatLng(24.7767286, 46.5987340),
+      LatLng(24.7770680, 46.5987984),
+      LatLng(24.7772312, 46.5988192),
+      LatLng(24.7774029, 46.5985376),
+      LatLng(24.7775033, 46.5983542),
+      LatLng(24.7773581, 46.5981564),
+      LatLng(24.7771633, 46.5980323),
+      LatLng(24.7770022, 46.5979797),
+      LatLng(24.7767082, 46.5980162),
+      LatLng(24.7765134, 46.5980457),
+      LatLng(24.7763572, 46.5976129),
+      LatLng(24.7757535, 46.5978694),
+      LatLng(24.7760875, 46.5986589),
+        
     ],
     strokeWidth: 0,
-    fillColor: Color(0xFFCDE7BE).withOpacity(0.25),
+    fillColor: Color.fromARGB(120, 80, 200, 120),
   ),
 
   // 12 - يسار أعلى
   Polygon(
-    polygonId: PolygonId('z12'),
+    polygonId: PolygonId('india'),
     points: [
-      LatLng(24.77820, 46.59740),
-      LatLng(24.77835, 46.59910),
-      LatLng(24.77765, 46.59970),
-      LatLng(24.77680, 46.59935),
-      LatLng(24.77660, 46.59785),
-      LatLng(24.77715, 46.59715),
+      LatLng(24.7743937, 46.5996762),
+      LatLng(24.7745767, 46.5995853),
+      LatLng(24.7748488, 46.5996477),
+      LatLng(24.7752041, 46.5999052),
+      LatLng(24.7755286, 46.5999109),
+      LatLng(24.7756138, 46.5999581),
+      LatLng(24.7757694, 46.5998881),
+      LatLng(24.7757913, 46.5998388),
+      LatLng(24.7758126, 46.5996081),
+      LatLng(24.7758415, 46.5994512),
+      LatLng(24.7759590, 46.5993664),
+      LatLng(24.7760777, 46.5992185),
+      LatLng(24.7761225, 46.5990864),
+      LatLng(24.7761231, 46.5989888),
+      LatLng(24.7761405, 46.5987642),
+      LatLng(24.7760689, 46.5984960),
+      LatLng(24.7759167, 46.5981500),
+      LatLng(24.7757036, 46.5976796),
+      LatLng(24.7748646, 46.5980642),
+      LatLng(24.7743700, 46.5984055),
+      LatLng(24.7740856, 46.5987857),
+      LatLng(24.7738689, 46.5992011),
+      LatLng(24.7739410, 46.5993483),
+      LatLng(24.7741462, 46.5994157),
+      LatLng(24.7743587, 46.5996949),
+        
     ],
     strokeWidth: 0,
-    fillColor: Color(0xFFF7D9A8).withOpacity(0.25),
-  ),
+    fillColor: Color.fromARGB(120, 255, 80, 80),
 
-};
+)};
+ 
+
+ LatLng _getPolygonCenter(List<LatLng> points) {
+  double lat = 0;
+  double lng = 0;
+
+  for (final point in points) {
+    lat += point.latitude;
+    lng += point.longitude;
+  }
+
+  return LatLng(lat / points.length, lng / points.length);
+}
+
+Future<Marker> _createTextMarker({
+  required String id,
+  required String text,
+  required LatLng position,
+}) async {
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder);
+
+  final textPainter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: const TextStyle(
+        color: Color.fromARGB(255, 51, 51, 51),
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+    textDirection: TextDirection.ltr,
+    textAlign: TextAlign.center,
+  );
+
+  textPainter.layout();
+  textPainter.paint(canvas, const Offset(0, 0));
+
+  final image = await recorder.endRecording().toImage(
+    textPainter.width.ceil(),
+    textPainter.height.ceil(),
+  );
+
+  final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+  if (byteData == null) {
+    throw Exception('Failed to convert text marker to bytes');
+  }
+
+  final bytes = byteData.buffer.asUint8List();
+
+  return Marker(
+    markerId: MarkerId(id),
+    position: position,
+    icon: BitmapDescriptor.fromBytes(bytes),
+    anchor: const Offset(0.5, 0.5),
+  );
+}
   @override
   Widget build(BuildContext context) {
     return GoogleMap(
+      circles: _circles,
       onMapCreated: _onMapCreated,
       initialCameraPosition:  
       CameraPosition(
         target: _boulevardWorldCenter,
-        zoom: 15.7,
+        zoom: 16,
       ),
       mapType: MapType.satellite,
+      onTap: (LatLng point) {
+  print('📍 ${point.latitude}, ${point.longitude}');
+},
       cameraTargetBounds: _boulevardBounds,
       minMaxZoomPreference: const MinMaxZoomPreference(15.8, 19.0),
       markers: _markers,
       polygons: _polygons,
-      myLocationEnabled: false,
-      myLocationButtonEnabled: false,
+      myLocationEnabled: true,
+      myLocationButtonEnabled: true,
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
       compassEnabled: false,
-      polylines: const <Polyline>{},
+      polylines: _polylines,
     );
   }
 }
