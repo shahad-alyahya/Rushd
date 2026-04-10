@@ -181,8 +181,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       controller: _emailController,
 
       validator: (value) {
-        if (value == null || !value.contains('@') || !value.contains('.'))
+        if (value == null || !value.contains('@') || !value.contains('.')) {
           return 'Enter a valid email';
+        }
 
         return null;
       },

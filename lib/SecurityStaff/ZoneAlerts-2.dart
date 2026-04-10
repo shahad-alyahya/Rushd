@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'ZoneAlerts-1.dart';
 
 class ZoneAlerts2Screen extends StatelessWidget {
   const ZoneAlerts2Screen({super.key});

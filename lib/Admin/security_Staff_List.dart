@@ -36,8 +36,6 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                   const SizedBox(height: 2),
 
                   // status bar
-                 
-
                   const SizedBox(height: 20),
 
                   const Center(
@@ -94,12 +92,12 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                         color: const Color(0xFF010E16),
                         size: 22,
                       ),
-                  const SizedBox(width: 18),
-                    Icon(
-                     Icons.print,
-                     color: const Color(0xFF010E16),
-                     size: 22,
-                   ),
+                      const SizedBox(width: 18),
+                      Icon(
+                        Icons.print,
+                        color: const Color(0xFF010E16),
+                        size: 22,
+                      ),
                     ],
                   ),
 
@@ -135,17 +133,17 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                           ),
                           child: Row(
                             children: [
-                              Container(
+                              SizedBox(
                                 width: 46,
                                 height: 47,
-                                
-                      child: Center(        
-                     child: Image.asset(
-                       "assets/images/user.png",
-                        width: 45,
-                        height: 45,
-                         ),
-                      ),
+
+                                child: Center(
+                                  child: Image.asset(
+                                    "assets/images/user.png",
+                                    width: 45,
+                                    height: 45,
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -176,111 +174,125 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                                   ],
                                 ),
                               ),
-                              
-              IconButton(
-              icon: const Icon(
-              Icons.delete_outline,
-               color: Color(0xFFA61A22),
-                size: 26,
-               ),
-           onPressed: () {
-    showDialog(
-  context: context,
-  builder: (context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: SizedBox(
-        width: 100,
-    
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
 
-            const SizedBox(height: 25),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Color(0xFFA61A22),
+                                  size: 26,
+                                ),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: SizedBox(
+                                          width: 100,
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                "Are you sure you want to delete this User?",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF010E16),
-                ),
-              ),
-            ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const SizedBox(height: 25),
 
-            const SizedBox(height: 25),
+                                              const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 20,
+                                                ),
+                                                child: Text(
+                                                  "Are you sure you want to delete this User?",
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Color(0xFF010E16),
+                                                  ),
+                                                ),
+                                              ),
 
-            Row(
-              children: [
+                                              const SizedBox(height: 25),
 
-                /// NO
-                Expanded(
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      height: 52,
-                      alignment: Alignment.center,
-                      child: const Text(
-                        "NO",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF010E16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                                              Row(
+                                                children: [
+                                                  /// NO
+                                                  Expanded(
+                                                    child: InkWell(
+                                                      onTap: () {
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: Container(
+                                                        height: 52,
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: const Text(
+                                                          "NO",
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: Color(
+                                                              0xFF010E16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
 
-                /// YES
-                Expanded(
-                  child: InkWell(
-                    onTap: () {
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const Message4(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      height: 52,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF353841),
-                        borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        "YES",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  },
-);
-  },
-),
+                                                  /// YES
+                                                  Expanded(
+                                                    child: InkWell(
+                                                      onTap: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const Message4(),
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: Container(
+                                                        height: 52,
+                                                        alignment:
+                                                            Alignment.center,
+                                                        decoration: const BoxDecoration(
+                                                          color: Color(
+                                                            0xFF353841,
+                                                          ),
+                                                          borderRadius:
+                                                              BorderRadius.only(
+                                                                bottomRight:
+                                                                    Radius.circular(
+                                                                      20,
+                                                                    ),
+                                                              ),
+                                                        ),
+                                                        child: const Text(
+                                                          "YES",
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         );
@@ -302,21 +314,17 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                   shape: const CircleBorder(),
                   backgroundColor: const Color(0xFFA79ECC),
                   elevation: 4,
-                 
-                    onPressed: () {
-                      Navigator.push(
-                       context,
-                     MaterialPageRoute(
-                    builder: (context) => const AddSecurity(),
-                     ),
-                   );
-                    },
-                 
-                  child: const Icon(
-                    Icons.add,
-                    color: Colors.black,
-                    size: 34,
-                  ),
+
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddSecurity(),
+                      ),
+                    );
+                  },
+
+                  child: const Icon(Icons.add, color: Colors.black, size: 34),
                 ),
               ),
             ),
@@ -330,17 +338,17 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                 child: Container(
                   width: 229,
                   height: 54,
-                 decoration: BoxDecoration(
-  color: const Color(0xFFFFFFFF),
-  borderRadius: BorderRadius.circular(25),
-  boxShadow: [
-    BoxShadow(
-      color: Colors.black.withOpacity(0.08),
-      blurRadius: 20,
-      offset: const Offset(0, 4),
-    ),
-  ],
-),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFFFF),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [

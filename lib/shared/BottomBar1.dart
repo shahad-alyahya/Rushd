@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:rushd/Visitor/homepage1.dart';
-// import other pages 
+// import other pages
 
+// Add other pages that the bottom bar needs to access
 // فيه ايرور لان ما حطيت الميثودز حقت الصفحات الباقية ولا امبورت
 
 class CustomBottomBar extends StatelessWidget {
   final int currentIndex;
 
-  const CustomBottomBar({
-    super.key,
-    required this.currentIndex,
-  });
+  const CustomBottomBar({super.key, required this.currentIndex});
 
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kGrey = Colors.black54;
@@ -22,22 +20,19 @@ class CustomBottomBar extends StatelessWidget {
 
     switch (index) {
       case 0:
-      //  page = const ProfilePage();
+        //  page = const ProfilePage();
         break;
       case 1:
         page = const HomePage1();
         break;
       case 2:
-       // page = const RoutesPage();
+        // page = const RoutesPage();
         break;
       default:
         page = const HomePage1();
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-    );
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
   }
 
   @override
@@ -48,9 +43,7 @@ class CustomBottomBar extends StatelessWidget {
         height: 78,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(
-            top: BorderSide(color: Color(0xFFE5E5E5), width: 1),
-          ),
+          border: Border(top: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -95,11 +88,7 @@ class CustomBottomBar extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 30,
-              color: isSelected ? kPurple : kGrey,
-            ),
+            Icon(icon, size: 30, color: isSelected ? kPurple : kGrey),
             const SizedBox(height: 4),
             Text(
               label,
