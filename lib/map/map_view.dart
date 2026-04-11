@@ -16,7 +16,11 @@ class MapView extends StatefulWidget {
 
 class _MapViewState extends State<MapView> {
   GoogleMapController? _mapController;
-late final Set<Polyline> _polylines;
+
+Set<Polyline> _polylines = {};
+Set<Circle> _circles = {};
+LatLng? _selectedUserLocation;
+
   // مركز تقريبي داخل منطقة البوليفارد
   static const LatLng _boulevardWorldCenter = MapData.boulevardWorldCenter;
 
@@ -25,21 +29,42 @@ late final Set<Polyline> _polylines;
 
   final Set<Marker> _markers = {};
 
- late final Set<Circle> _circles;
+ 
  
     @override
 void initState() {
 
   super.initState();
-  _circles = LocationService.getUserLocationCircles();
+   _circles = {};
+ // _circles = Location Service.getUserLocationCircles();
   _loadZoneLabels();
 
-  _polylines = {
-    RouteService.buildRouteToZonePolyline(
-      toZoneId: 'japan',
-    ),
-  };
-  _setDestinationMarker('japan');
+_polylines = {};
+  //_polylines = {
+  // RouteService.buildRouteToZonePolyline(
+  //  userLocation: point,
+   //  toZoneId: 'japan',
+  //),
+ // };
+ // _setDestinationMarker('japan');
+}
+
+LatLng _snapToNearestZoneCenter(LatLng point) {
+  double minDistance = double.infinity;
+  LatLng nearestPoint = point;
+
+  for (final center in MapData.zoneLabelCenters.values) {
+    final dx = point.latitude - center.latitude;
+    final dy = point.longitude - center.longitude;
+    final distance = dx * dx + dy * dy;
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestPoint = center;
+    }
+  }
+
+  return nearestPoint;
 }
 Future<void> _loadZoneLabels() async {
   final newMarkers = <Marker>{};
@@ -65,8 +90,9 @@ Future<void> _loadZoneLabels() async {
   });
 }
 
-void _setDestinationMarker(String zoneId) {
-  final destinationMarker = RouteService.buildDestinationMarker(zoneId);
+void _setDestinationMarker(String zoneId, LatLng userLocation) {
+  final destinationMarker =
+      RouteService.buildDestinationMarker(zoneId, userLocation);
 
   setState(() {
     _markers.removeWhere((m) => m.markerId.value.startsWith('destination_'));
@@ -453,16 +479,33 @@ Future<Marker> _createTextMarker({
         zoom: 16,
       ),
       mapType: MapType.satellite,
-      onTap: (LatLng point) {
-  print('📍 ${point.latitude}, ${point.longitude}');
+    onTap: (LatLng point) {
+  setState(() {
+    _selectedUserLocation = point;
+    _circles = LocationService.getUserLocationCircles(point);
+
+    _polylines = {
+      RouteService.buildRouteToZonePolyline(
+        userLocation: point,
+        toZoneId: 'japan',
+      ),
+    };
+
+    _setDestinationMarker('japan', point);
+  });
 },
       cameraTargetBounds: _boulevardBounds,
-      minMaxZoomPreference: const MinMaxZoomPreference(15.8, 19.0),
+      minMaxZoomPreference: const MinMaxZoomPreference(15.8, 19),
       markers: _markers,
       polygons: _polygons,
+       zoomGesturesEnabled: true,      
+       scrollGesturesEnabled: true,    
+       rotateGesturesEnabled: true,   
+       tiltGesturesEnabled: true,     
+
       myLocationEnabled: true,
       myLocationButtonEnabled: true,
-      zoomControlsEnabled: false,
+      zoomControlsEnabled: true,
       mapToolbarEnabled: false,
       compassEnabled: false,
       polylines: _polylines,

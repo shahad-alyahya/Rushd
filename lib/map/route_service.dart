@@ -96,15 +96,16 @@ class RouteService {
 
   /// يجيب المسار من موقع المستخدم إلى أقرب بوابة في الزون الهدف
   static List<LatLng> getRouteToZone({
-    required String toZoneId,
-  }) {
+  required LatLng userLocation,
+  required String toZoneId,
+}) {
     final toZone = MapData.zones[toZoneId];
 
     if (toZone == null) {
       return [];
     }
 
-    final userLocation = MapData.mockUserLocation;
+    
 
     final startNodeId = findNearestNode(userLocation);
     final endNodeId = getClosestZoneNodeId(
@@ -143,9 +144,13 @@ if (zoneCenter != null) {
 
   /// يبني Polyline جاهزة للرسم من موقع المستخدم إلى أقرب بوابة في الزون الهدف
   static Polyline buildRouteToZonePolyline({
-    required String toZoneId,
-  }) {
-    final points = getRouteToZone(toZoneId: toZoneId);
+  required LatLng userLocation,
+  required String toZoneId,
+}) {
+  final points = getRouteToZone(
+    userLocation: userLocation,
+    toZoneId: toZoneId,
+  );
 
     return Polyline(
       polylineId: PolylineId('route_to_$toZoneId'),
@@ -156,18 +161,18 @@ if (zoneCenter != null) {
   }
 
   /// ماركر للوجهة على أقرب بوابة
-  static Marker buildDestinationMarker(String zoneId) {
+  static Marker buildDestinationMarker(String zoneId, LatLng userLocation) {
     final zone = MapData.zones[zoneId];
 
     if (zone == null) {
-      return const Marker(
+      return  Marker(
         markerId: MarkerId('invalid_destination'),
-        position: MapData.mockUserLocation,
+        position: userLocation,
         infoWindow: InfoWindow(title: 'Invalid destination'),
       );
     }
 
-    final userLocation = MapData.mockUserLocation;
+    
 
 final closestNodeId = getClosestZoneNodeId(
   zoneId: zoneId,

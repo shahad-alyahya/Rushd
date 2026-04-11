@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'map/map_view.dart';
+//import 'map/map_view.dart';
+import 'map/riyadh_season_map.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MapView(),
+     // home: MapView(),
+      home: RiyadhSeasonMapView(),
     );
   }
 }

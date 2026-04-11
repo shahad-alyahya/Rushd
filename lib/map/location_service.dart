@@ -8,19 +8,19 @@ class LocationService {
     return mockLocation;
   }
 
-  static Set<Circle> getUserLocationCircles() {
+  static Set<Circle> getUserLocationCircles(LatLng location) {
     return {
       Circle(
         circleId: const CircleId('glow'),
-        center: mockLocation,
-        radius: 35,
+        center: location,
+        radius: 30,
         fillColor: const Color.fromARGB(190, 0, 132, 255),
         strokeColor: Colors.transparent,
         strokeWidth: 0,
       ),
       Circle(
         circleId: const CircleId('dot'),
-        center: mockLocation,
+        center: location,
         radius: 12,
         fillColor: const Color.fromARGB(255, 2, 57, 116),
         strokeColor: Colors.white,
