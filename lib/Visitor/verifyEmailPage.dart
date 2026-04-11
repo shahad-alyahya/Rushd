@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rushd/shared/app_button.dart';
+import 'package:rushd/shared/app_spacing.dart';
 import 'massage1.dart';
 
 class VerifyEmailPage extends StatefulWidget {
@@ -29,13 +31,28 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 380),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+            child: SizedBox(
+              width: 380,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
+
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      size: 26,
+                      color: Color(0xff1F2230),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+
+                  const SizedBox(height: 20),
 
                   const Text(
                     "Enter your verification code",
@@ -46,7 +63,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  AppSpacing.h40,
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -90,10 +107,10 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
                   const SizedBox(height: 50),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: AppButton(
+                      text: 'Verification',
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -102,21 +119,6 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                           ),
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff313444),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      child: const Text(
-                        "verification",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
                     ),
                   ),
                 ],

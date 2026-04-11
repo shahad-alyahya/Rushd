@@ -1,13 +1,5 @@
 import 'package:flutter/material.dart';
-// Comment for this page 
-//1- Change the discreption of Bottom Sheet to be Dinamic for choosen places -> take it from database or real time data (i'm not sure)
-//2- كتبت الكود بحيث لما يضغط على كلمه بوليفارد من الليست يطلع له الشييت  فقط حتى اشوفه واعدله لكن شيليه وانه يطلع فقط لما يضغط عالخريطة
-//3- في هولدر تحت للخريطه لكن ممكن يحتاج كود اضافي غير هالمكان للدبوس الخريطة او غيره تأكدي من هالشي 
-//4- Do not add bottom bar for this page 
-// 5- add in button (explore the zone) -> to route page according to the choosen plase & updated
-//6- for the current visitors -> need data from database 
-// 7- need the map to be zoom out 
-// 8- للخريطه ترى بس البوليفارد بتكون لها الوان حسب زحمتها لكن للاماكن الثانيه اللي بالليست تكون محدده بس بدون لون ولباقي الاماكن بالخريطه تكون رمادي 
+import 'routes.dart';
 
 class HomePage1 extends StatefulWidget {
   const HomePage1({super.key});
@@ -19,6 +11,29 @@ class HomePage1 extends StatefulWidget {
 class _HomePage1State extends State<HomePage1> {
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kDark = Color(0xFF353841);
+
+  final Map<String, Map<String, dynamic>> placeData = {
+    'Boulevard World': {
+      'description':
+          'Boulevard World is a premier Riyadh Season destination, featuring global cultures, and diverse international dining experiences.',
+      'visitors': 145,
+    },
+    'Boulevard City': {
+      'description':
+          'Boulevard City offers a modern entertainment experience with attractions, events, and dining options.',
+      'visitors': 90,
+    },
+    'Riyadh Zoo': {
+      'description':
+          'Riyadh Zoo is a family-friendly attraction with a variety of animals and outdoor experiences.',
+      'visitors': 60,
+    },
+    'Al-Bujari': {
+      'description':
+          'Al-Bujari is known for its heritage vibe, restaurants, and relaxing atmosphere.',
+      'visitors': 40,
+    },
+  };
 
   final List<String> _destinations = const [
     'Boulevard World',
@@ -32,7 +47,7 @@ class _HomePage1State extends State<HomePage1> {
 
   String _selected = 'Boulevard World';
   DateTime _lastUpdate = DateTime.now();
-  bool _showSheet = false;
+  bool _showSheet = true;
 
   Future<void> _animateSheet(double size) async {
     if (!_sheetController.isAttached) return;
@@ -55,110 +70,15 @@ class _HomePage1State extends State<HomePage1> {
     return '$hh:$mm';
   }
 
-  void _showComingSoonDialog(String destination) {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x22000000),
-                  blurRadius: 24,
-                  offset: Offset(0, 12),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: kPurple.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: kPurple,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  destination,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1F2430),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'This destination will be available soon.\nWe are working on adding full details and zone navigation.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    height: 1.45,
-                    color: Color.fromARGB(255, 103, 107, 116),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kDark,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text(
-                      'Got it',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _handleDestinationSelected(String value) async {
     setState(() {
       _selected = value;
+      _showSheet = true;
     });
 
-    if (value == 'Boulevard World') {
-      setState(() {
-        _showSheet = true;
-      });
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _animateSheet(0.36);
-      });
-    } else {
-      setState(() {
-        _showSheet = false;
-      });
-      _showComingSoonDialog(value);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animateSheet(0.36);
+    });
   }
 
   Future<void> _closeSheet() async {
@@ -175,109 +95,122 @@ class _HomePage1State extends State<HomePage1> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F6),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Container(
-                color: const Color(0xFFF2F3F4),
-
-                // ==================================================
-                // PLACE MAP HERE
-                // ==================================================
-                child: const Center(
-                  child: Text(
-                    ' Map will be added here',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF7C7E86),
-                      fontWeight: FontWeight.w600,
+        child: Center(
+          child: SizedBox(
+            width: 380,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    color: const Color(0xFFF2F3F4),
+                    child: const Center(
+                      child: Text(
+                        'Map will be added here',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF7C7E86),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
 
-            Positioned(
-              top: 12,
-              left: 12,
-              right: 12,
-              child: Container(
-                color: const Color(0xFFF6EFF8),
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(top: 3),
-                      child: Icon(
-                        Icons.location_on_outlined,
-                        color: kPurple,
-                        size: 35,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _TopDropdown(
-                        value: _selected,
-                        items: _destinations,
-                        onSelected: _handleDestinationSelected,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                Positioned(
+                  top: 28,
+                  left: 12,
+                  right: 12,
+                  child: Container(
+                    color: const Color(0xFFF6EFF8),
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: 40,
-                          child: ElevatedButton.icon(
-                            onPressed: _refresh,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kDark,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.refresh_rounded,
-                              size: 16,
-                            ),
-                            label: const Text(
-                              'Refresh',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 3),
+                          child: Icon(
+                            Icons.location_on_outlined,
+                            color: kPurple,
+                            size: 35,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Last update: ${_formattedTime(_lastUpdate)}',
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            color: Color(0xFF7C7E86),
-                            fontWeight: FontWeight.w500,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _TopDropdown(
+                            value: _selected,
+                            items: _destinations,
+                            onSelected: _handleDestinationSelected,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                height: 40,
+                                child: ElevatedButton.icon(
+                                  onPressed: _refresh,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kDark,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.refresh_rounded,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'Refresh',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Last update: ${_formattedTime(_lastUpdate)}',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF7C7E86),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-            _DetailsBottomSheet(
-              controller: _sheetController,
-              visible: _showSheet,
-              onClose: _closeSheet,
-              onExplore: () {},
+                _DetailsBottomSheet(
+                  controller: _sheetController,
+                  visible: _showSheet,
+                  onClose: _closeSheet,
+                  onExplore: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RoutesPage(),
+                      ),
+                    );
+                  },
+                  selected: _selected,
+                  placeData: placeData,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -376,12 +309,16 @@ class _DetailsBottomSheet extends StatelessWidget {
     required this.visible,
     required this.onClose,
     required this.onExplore,
+    required this.selected,
+    required this.placeData,
   });
 
   final DraggableScrollableController controller;
   final bool visible;
   final VoidCallback onClose;
   final VoidCallback onExplore;
+  final String selected;
+  final Map<String, Map<String, dynamic>> placeData;
 
   static const Color kDark = Color(0xFF353841);
 
@@ -441,9 +378,9 @@ class _DetailsBottomSheet extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const Text(
-                        'Boulevard World',
-                        style: TextStyle(
+                      Text(
+                        selected,
+                        style: const TextStyle(
                           fontSize: 17,
                           color: Color(0xFF1F2430),
                           fontWeight: FontWeight.w800,
@@ -451,9 +388,9 @@ class _DetailsBottomSheet extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Boulevard World is a premier Riyadh Season destination, featuring global cultures, and diverse international dining experiences.',
-                        style: TextStyle(
+                      Text(
+                        placeData[selected]?['description'] ?? '',
+                        style: const TextStyle(
                           fontSize: 13,
                           height: 1.45,
                           color: Color(0xFF454A57),
@@ -461,21 +398,22 @@ class _DetailsBottomSheet extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const Column(
+                      Column(
                         children: [
-                          _InfoTile(
+                          const _InfoTile(
                             icon: Icons.location_on_outlined,
                             text: 'Location: Riyadh, Hiteen',
                           ),
-                          SizedBox(height: 10),
-                          _InfoTile(
+                          const SizedBox(height: 10),
+                          const _InfoTile(
                             icon: Icons.access_time_rounded,
                             text: 'Open: 4:00 PM – 12:00 AM',
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           _InfoTile(
                             icon: Icons.groups_rounded,
-                            text: 'Current Visitors: 145',
+                            text:
+                                'Current Visitors: ${placeData[selected]?['visitors'] ?? 0}',
                           ),
                         ],
                       ),

@@ -8,7 +8,6 @@ class FAQPage extends StatefulWidget {
 }
 
 class _FAQPageState extends State<FAQPage> {
-  // قائمة الأسئلة والأجوبة المحدثة لنظام "رشد" المؤتمت
   final List<Map<String, dynamic>> faqs = [
     {
       "id": "01",
@@ -51,30 +50,65 @@ class _FAQPageState extends State<FAQPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-          onPressed: () => Navigator.pop(context),
+      body: SafeArea(
+        child: Center(
+          child: SizedBox(
+            width: 380,
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'FAQs',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 26,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Expanded(
+                  child: ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: faqs.length,
+                    itemBuilder: (context, index) {
+                      return _buildFAQItem(index);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        title: const Text(
-          'FAQs',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: ListView.builder(
-        physics: const BouncingScrollPhysics(),
-        itemCount: faqs.length,
-        itemBuilder: (context, index) {
-          return _buildFAQItem(index);
-        },
       ),
     );
   }
 
   Widget _buildFAQItem(int index) {
-    bool isExpanded = faqs[index]['isExpanded'];
+    final bool isExpanded = faqs[index]['isExpanded'];
 
     return InkWell(
       onTap: () {
@@ -99,6 +133,7 @@ class _FAQPageState extends State<FAQPage> {
                     : Colors.grey.shade200,
               ),
             ),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -116,10 +151,13 @@ class _FAQPageState extends State<FAQPage> {
                   isExpanded
                       ? Icons.remove_circle_outline
                       : Icons.add_circle_outline,
-                  color: isExpanded ? const Color(0xFF673AB7) : Colors.black45,
+                  color: isExpanded
+                      ? const Color(0xFF673AB7)
+                      : Colors.black45,
                 ),
               ],
             ),
+
             if (isExpanded) ...[
               const SizedBox(height: 15),
               Text(

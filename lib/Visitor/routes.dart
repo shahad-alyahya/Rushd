@@ -1,165 +1,197 @@
 import 'package:flutter/material.dart';
-
-class RoutesPage extends StatelessWidget {
+import 'alternative_route.dart';
+import 'package:rushd/shared/VisitorBottomBar1.dart';
+class RoutesPage extends StatefulWidget {
   const RoutesPage({super.key});
+
+  @override
+  State<RoutesPage> createState() => _RoutesPageState();
+}
+
+class _RoutesPageState extends State<RoutesPage> {
+  static const Color kPurple = Color(0xFF867AB9);
+  static const Color kDark = Color(0xFF353841);
+
+  String _selectedLocation = "Boulevard World";
+  DateTime _lastUpdate = DateTime.now();
+
+  void _refresh() {
+    setState(() {
+      _lastUpdate = DateTime.now();
+    });
+  }
+
+  String _formattedTime(DateTime dateTime) {
+    final hh = dateTime.hour.toString().padLeft(2, '0');
+    final mm = dateTime.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        currentIndex: 2,
-        selectedItemColor: const Color(0xFF867AB9),
-        unselectedItemColor: const Color.fromARGB(255, 0, 0, 0),
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline, size: 30),
-            label: "Profile",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined, size: 30),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.location_on_outlined, size: 30),
-            label: "Route",
-          ),
-        ],
-      ),
-
+      backgroundColor: const Color(0xFFF4F4F6),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: ListView(
-            children: [
-              const SizedBox(height: 44),
+        child: Center(
+          child: SizedBox(
+            width: 380,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              children: [
+                const SizedBox(height: 28),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  Transform.translate(
-             offset: const Offset(-6,0),
-             child: Row(
-                    children: const [
-                      Icon(Icons.location_on, size: 26, color: Color(0xFF867AB9)),
-                      SizedBox(width: 4),
-                      Text(
-                        "Boulevard World",
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 26,
+                          color: kPurple,
                         ),
-                      ),
-                    ],
-                  ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.refresh, size: 18),
-                        label: const Text("Refresh"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF353841),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(0, 28),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 0,
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        SizedBox(width: 4),
+                        Text(
+                          "Boulevard World",
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _refresh,
+                            icon: const Icon(Icons.refresh, size: 18),
+                            label: const Text("Refresh"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kDark,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(0, 28),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 0,
+                              ),
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "Last update: ${_formattedTime(_lastUpdate)}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                  ],
+                ),
 
-                      const SizedBox(height: 0),
+                const SizedBox(height: 20),
 
-                      const Text(
-                        "Last update: 9:12",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black,
+                const Text(
+                  "Routes",
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  _selectedLocation,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Container(
+                  height: 291,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 242, 242, 242),
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                const Text(
+                  "Best Nearby Destinations (Low Crowd)",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                destinationCard(
+                  title: "Morocco Zone",
+                  time: "5 min away!",
+                  image: "assets/images/morocco.png",
+                  onGo: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AlternativeRoute(
+                          zoneName: "Morocco Zone",
+                          locationName: "Boulevard World",
+                          distance: "320 m",
+                          estimatedTime: "4 min",
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-
-             
-            Transform.translate(
-             offset: const Offset(0,-22),
-             child: const Text(
-                "Routes",
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                    );
+                  },
                 ),
-              ),
-),
 
-              Transform.translate(
-             offset: const Offset(0,-20),
-              child: const Text(
-                "Your location",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                const SizedBox(height: 18),
+
+                destinationCard(
+                  title: "China Zone",
+                  time: "11 min away!",
+                  image: "assets/images/china.png",
+                  onGo: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AlternativeRoute(
+                          zoneName: "China Zone",
+                          locationName: "Boulevard World",
+                          distance: "700 m",
+                          estimatedTime: "11 min",
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ),
-              ),
-              
 
-              Container(
-                height: 291,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 242, 242, 242),
-                  borderRadius: BorderRadius.circular(40),),
-              ),
-
-              const SizedBox(height: 6),
-
-              const Text(
-                "Best Nearby Destinations (Low Crowd)",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              destinationCard(
-                title: "Morocco Zone",
-                time: "5 min away!",
-                image: "assets/images/morocco.png",
-              ),
-
-              const SizedBox(height: 18),
-
-              destinationCard(
-                title: "China Zone",
-                time: "11 min away!",
-                image: "assets/images/china.png",
-              ),
-
-              const SizedBox(height: 18),
-            ],
+                const SizedBox(height: 18),
+              ],
+            ),
           ),
         ),
       ),
+      bottomNavigationBar: const VisitorBottomBar1(currentIndex: 2),
     );
   }
 
@@ -167,10 +199,10 @@ class RoutesPage extends StatelessWidget {
     required String title,
     required String time,
     required String image,
+    required VoidCallback onGo,
   }) {
     return Container(
       height: 141,
-      margin: const EdgeInsets.symmetric(horizontal: 18),
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -197,9 +229,7 @@ class RoutesPage extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(width: 16),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,9 +242,7 @@ class RoutesPage extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
                 Row(
                   children: [
                     const Icon(Icons.access_time, size: 14),
@@ -228,9 +256,7 @@ class RoutesPage extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 6),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -249,25 +275,27 @@ class RoutesPage extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
-                Container(
-                  width: 116,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF353841),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    "GO !",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                GestureDetector(
+                  onTap: onGo,
+                  child: Container(
+                    width: 116,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF353841),
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                  ),),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      "GO !",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

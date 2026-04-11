@@ -22,7 +22,7 @@ import 'SecurityStaff/ZoneAlerts-1.dart';
 import 'SecurityStaff/ZoneAlerts-2.dart';
 
 // --- Shared Components ---
-import 'shared/BottomBar1.dart';
+import 'shared/VisitorBottomBar1.dart';
 
 // --- Visitor Section ---
 import 'Visitor/alternative_route.dart';

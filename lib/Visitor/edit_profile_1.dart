@@ -8,117 +8,127 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  // 1. مفتاح للفورم عشان نتحقق من البيانات (Validation)
-
   final _formKey = GlobalKey<FormState>();
 
-  // 2. كونتولرز لاستقبال الكتابة
-
-  final TextEditingController _firstNameController = TextEditingController();
-
-  final TextEditingController _lastNameController = TextEditingController();
-
-  final TextEditingController _emailController = TextEditingController();
-
-  final TextEditingController _passwordController = TextEditingController();
-
-  // ميثود الإرسال
+  final TextEditingController _firstNameController =
+      TextEditingController(text: 'Sara');
+  final TextEditingController _lastNameController =
+      TextEditingController(text: 'Mohammed');
+  final TextEditingController _emailController =
+      TextEditingController(text: 'saramohammed@gmail.com');
+  final TextEditingController _passwordController =
+      TextEditingController(text: '************');
 
   void _submitData() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile Updated Successfully! ✅'),
-
           backgroundColor: Color(0xFF673AB7),
+          duration: Duration(seconds: 1),
         ),
       );
+
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
     }
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: SizedBox(
+            width: 380,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
 
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          size: 20,
+                          color: Colors.black,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
 
-          onPressed: () => Navigator.pop(context),
-        ),
+                    const SizedBox(height: 8),
 
-        backgroundColor: Colors.white,
+                    const Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
-        elevation: 0,
+                    const SizedBox(height: 24),
 
-        centerTitle: true,
-      ),
+                    _buildProfileIcon(),
 
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+                    const SizedBox(height: 32),
 
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+                    _buildField(
+                      "First Name",
+                      _firstNameController,
+                      Icons.person_outline,
+                    ),
 
-        child: Form(
-          key: _formKey,
+                    const SizedBox(height: 16),
 
-          child: Column(
-            children: [
-              const Center(
-                child: Text(
-                  'Edit Profile',
+                    _buildField(
+                      "Last Name",
+                      _lastNameController,
+                      Icons.person_outline,
+                    ),
 
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 16),
+
+                    _buildEmailField(),
+
+                    const SizedBox(height: 16),
+
+                    _buildField(
+                      "Password",
+                      _passwordController,
+                      Icons.lock_outline,
+                      isPass: true,
+                    ),
+
+                    const SizedBox(height: 38),
+
+                    _buildSubmitButton(),
+
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 30),
-
-              _buildProfileIcon(),
-
-              const SizedBox(height: 40),
-
-              _buildField(
-                "First Name",
-
-                _firstNameController,
-
-                Icons.person_outline,
-              ),
-
-              const SizedBox(height: 20),
-
-              _buildField(
-                "Last Name",
-
-                _lastNameController,
-
-                Icons.person_outline,
-              ),
-
-              const SizedBox(height: 20),
-
-              _buildEmailField(),
-
-              const SizedBox(height: 20),
-
-              _buildField(
-                "Password",
-
-                _passwordController,
-
-                Icons.lock_outline,
-
-                isPass: true,
-              ),
-
-              const SizedBox(height: 50),
-
-              _buildSubmitButton(),
-
-              const SizedBox(height: 30),
-            ],
+            ),
           ),
         ),
       ),
@@ -126,107 +136,124 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Widget _buildProfileIcon() {
-    return Center(
-      child: Container(
-        height: 110,
-
-        width: 110,
-
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-
-          border: Border.all(color: Colors.grey.shade200, width: 3),
-
-          color: const Color(0xFFF3F0FA),
-        ),
-
-        child: const Icon(Icons.person, size: 75, color: Color(0xFF2D3142)),
+    return Container(
+      height: 95,
+      width: 95,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.grey.shade300, width: 2),
+        color: const Color(0xFFF3F0FA),
+      ),
+      child: const Icon(
+        Icons.person,
+        size: 62,
+        color: Color(0xFF2D3142),
       ),
     );
   }
 
   Widget _buildField(
     String label,
-
     TextEditingController controller,
-
     IconData icon, {
-
     bool isPass = false,
   }) {
-    return TextFormField(
-      controller: controller,
-
-      obscureText: isPass,
-
-      validator: (value) =>
-          (value == null || value.isEmpty) ? 'Enter $label' : null,
-
-      decoration: InputDecoration(
-        labelText: label,
-
-        prefixIcon: Icon(icon, color: const Color(0xFF673AB7)),
-
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-
-        filled: true,
-
-        fillColor: Colors.grey.shade50,
+    return SizedBox(
+      width: double.infinity,
+      child: TextFormField(
+        controller: controller,
+        obscureText: isPass,
+        validator: (value) =>
+            (value == null || value.isEmpty) ? 'Enter $label' : null,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(fontSize: 15),
+          prefixIcon: Icon(
+            icon,
+            size: 22,
+            color: const Color(0xFF673AB7),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(
+              color: Color(0xFF673AB7),
+              width: 1.4,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        ),
       ),
     );
   }
 
   Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-
-      validator: (value) {
-        if (value == null || !value.contains('@') || !value.contains('.')) {
-          return 'Enter a valid email';
-        }
-
-        return null;
-      },
-
-      decoration: InputDecoration(
-        labelText: "Email Address",
-
-        prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF673AB7)),
-
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-
-        filled: true,
-
-        fillColor: Colors.grey.shade50,
+    return SizedBox(
+      width: double.infinity,
+      child: TextFormField(
+        controller: _emailController,
+        validator: (value) {
+          if (value == null || !value.contains('@') || !value.contains('.')) {
+            return 'Enter a valid email';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: "Email Address",
+          labelStyle: const TextStyle(fontSize: 15),
+          prefixIcon: const Icon(
+            Icons.email_outlined,
+            size: 22,
+            color: Color(0xFF673AB7),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(
+              color: Color(0xFF673AB7),
+              width: 1.4,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        ),
       ),
     );
   }
 
   Widget _buildSubmitButton() {
     return SizedBox(
-      width: double.infinity,
-
-      height: 55,
-
+      width: 260,
+      height: 52,
       child: ElevatedButton(
         onPressed: _submitData,
-
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF2D3142),
-
+          elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
         ),
-
         child: const Text(
           'Save Changes',
-
           style: TextStyle(
             color: Colors.white,
-
-            fontSize: 18,
-
+            fontSize: 17,
             fontWeight: FontWeight.bold,
           ),
         ),
