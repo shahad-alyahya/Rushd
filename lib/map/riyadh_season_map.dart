@@ -121,7 +121,7 @@ class _RiyadhSeasonMapViewState extends State<RiyadhSeasonMapView> {
       },
       'riyadh_zoo': {
         'text': 'Riyadh\nZoo',
-        'position': const LatLng(24.7897209, 46.6077261), 
+        'position': const LatLng(24.7914674,46.6070050), 
       },
     };
 

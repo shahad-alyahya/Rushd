@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'map_data.dart';
 import 'route_service.dart';
+import 'zone_logic.dart';
 import 'location_service.dart';
 import 'dart:ui' as ui;
 
@@ -145,7 +146,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
       LatLng(24.7741435, 46.6002123),
     ],
     strokeWidth: 0,
-   fillColor: Color.fromARGB(120, 80, 200, 120),
+   fillColor: ZoneLogic.getZoneColorById('saudia'),
   ),
 
   // 2 - أعلى وسط يسار
@@ -174,7 +175,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
       LatLng(24.7741864, 46.6008060),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 200, 80),
+    fillColor: ZoneLogic.getZoneColorById('china'),
   ),
 
   // 3 - أعلى وسط
@@ -190,7 +191,8 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
 
     ],
     strokeWidth: 0,
-     fillColor: Color.fromARGB(120, 255, 80, 80),
+         fillColor: ZoneLogic.getZoneColorById('sham'),
+
   ),
 
   // 4 - أعلى يمين
@@ -209,10 +211,11 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
       LatLng(24.7748047, 46.6018410),
       LatLng(24.7748074, 46.6018900),
       LatLng(24.7747228, 46.6019530),
+      
       LatLng(24.7745009, 46.6028348),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 80, 80),
+     fillColor: ZoneLogic.getZoneColorById('moroco'),
   ),
 
   // 5 - يمين أعلى
@@ -235,7 +238,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
 
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 200, 80),
+     fillColor: ZoneLogic.getZoneColorById('italy'),
   ),
 
   // 6 - يمين وسط
@@ -253,7 +256,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
       LatLng(24.7748838, 46.6032542),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 200, 80),
+    fillColor: ZoneLogic.getZoneColorById('kuwait'),
   ),
 
   // 7 - يمين أسفل
@@ -268,7 +271,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
       LatLng(24.7770936, 46.6035184),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 200, 80),
+ fillColor: ZoneLogic.getZoneColorById('greece'), 
   ),
 
   // 8 - أسفل يمين
@@ -291,8 +294,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
         
     ],
     strokeWidth: 0,
-   fillColor: Color.fromARGB(120, 80, 200, 120),
-  ),
+ fillColor: ZoneLogic.getZoneColorById('Egypt'),  ),
 
   // 9 - أسفل
   Polygon(
@@ -315,8 +317,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
       LatLng(24.7785910, 46.6028650),
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 80, 80),
-  ),
+ fillColor: ZoneLogic.getZoneColorById('turky'),  ),
 
   // 10 - أسفل يسار
   Polygon(
@@ -332,8 +333,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
       LatLng(24.7776269, 46.6005123),
     ], 
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 80, 200, 120),
-  ),
+ fillColor: ZoneLogic.getZoneColorById('Spain'),  ),
 
    Polygon(
     polygonId: PolygonId('US'),
@@ -348,8 +348,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
     
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 200, 80),
-  ),
+ fillColor: ZoneLogic.getZoneColorById('US'),  ),
 
   // 11 - يسار وسط
   Polygon(
@@ -373,8 +372,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
         
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 80, 200, 120),
-  ),
+ fillColor: ZoneLogic.getZoneColorById('japan'),  ),
 
   // 12 - يسار أعلى
   Polygon(
@@ -408,8 +406,7 @@ void _setDestinationMarker(String zoneId, LatLng userLocation) {
         
     ],
     strokeWidth: 0,
-    fillColor: Color.fromARGB(120, 255, 80, 80),
-
+ fillColor: ZoneLogic.getZoneColorById('india'),
 )};
  
 
