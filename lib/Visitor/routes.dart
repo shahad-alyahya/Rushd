@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'alternative_route.dart';
 import 'package:rushd/shared/VisitorBottomBar1.dart';
+
 class RoutesPage extends StatefulWidget {
   const RoutesPage({super.key});
 
@@ -35,163 +36,170 @@ class _RoutesPageState extends State<RoutesPage> {
         child: Center(
           child: SizedBox(
             width: 380,
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Column(
               children: [
-                const SizedBox(height: 28),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    children: [
+                      const SizedBox(height: 28),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 26,
-                          color: kPurple,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          "Boulevard World",
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ElevatedButton.icon(
-                            onPressed: _refresh,
-                            icon: const Icon(Icons.refresh, size: 18),
-                            label: const Text("Refresh"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kDark,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(0, 28),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 0,
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                size: 26,
+                                color: kPurple,
                               ),
-                              tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                              SizedBox(width: 4),
+                              Text(
+                                "Boulevard World",
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "Last update: ${_formattedTime(_lastUpdate)}",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: _refresh,
+                                  icon: const Icon(Icons.refresh, size: 18),
+                                  label: const Text("Refresh"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kDark,
+                                    foregroundColor: Colors.white,
+                                    minimumSize: const Size(0, 28),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 0,
+                                    ),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  "Last update: ${_formattedTime(_lastUpdate)}",
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
 
-                const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                const Text(
-                  "Routes",
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  _selectedLocation,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                Container(
-                  height: 291,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 242, 242, 242),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                const Text(
-                  "Best Nearby Destinations (Low Crowd)",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                destinationCard(
-                  title: "Morocco Zone",
-                  time: "5 min away!",
-                  image: "assets/images/morocco.png",
-                  onGo: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AlternativeRoute(
-                          zoneName: "Morocco Zone",
-                          locationName: "Boulevard World",
-                          distance: "320 m",
-                          estimatedTime: "4 min",
+                      const Text(
+                        "Routes",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
-                    );
-                  },
-                ),
 
-                const SizedBox(height: 18),
+                      const SizedBox(height: 8),
 
-                destinationCard(
-                  title: "China Zone",
-                  time: "11 min away!",
-                  image: "assets/images/china.png",
-                  onGo: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AlternativeRoute(
-                          zoneName: "China Zone",
-                          locationName: "Boulevard World",
-                          distance: "700 m",
-                          estimatedTime: "11 min",
+                      Text(
+                        _selectedLocation,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
-                    );
-                  },
+
+                      const SizedBox(height: 16),
+
+                      Container(
+                        height: 291,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 242, 242, 242),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        "Best Nearby Destinations (Low Crowd)",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.black,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      destinationCard(
+                        title: "Morocco Zone",
+                        time: "5 min away!",
+                        image: "assets/images/morocco.png",
+                        onGo: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AlternativeRoute(
+                                zoneName: "Morocco Zone",
+                                locationName: "Boulevard World",
+                                distance: "320 m",
+                                estimatedTime: "4 min",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      destinationCard(
+                        title: "China Zone",
+                        time: "11 min away!",
+                        image: "assets/images/china.png",
+                        onGo: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AlternativeRoute(
+                                zoneName: "China Zone",
+                                locationName: "Boulevard World",
+                                distance: "700 m",
+                                estimatedTime: "11 min",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 18),
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 18),
+                const VisitorBottomBar1(currentIndex: 2),
               ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: const VisitorBottomBar1(currentIndex: 2),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rushd/shared/VisitorBottomBar1.dart';
 import 'edit_profile_1.dart';
 import 'faqs_1.dart';
+import 'loginPage.dart';
 
 class ProfileVisitorPage extends StatefulWidget {
   const ProfileVisitorPage({super.key});
@@ -22,7 +23,7 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        automaticallyImplyLeading:false,
+        automaticallyImplyLeading: false,
         title: const Text(
           'My Profile',
           style: TextStyle(
@@ -38,117 +39,133 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
         child: Center(
           child: SizedBox(
             width: 380,
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
 
-                  const CircleAvatar(
-                    radius: 55,
-                    backgroundColor: Color(0xFFF3F0FA),
-                    child: Icon(
-                      Icons.person,
-                      size: 80,
-                      color: Color(0xFF424242),
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Text(
-                    visitorName,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  Text(
-                    visitorEmail,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EditProfilePage(),
+                        const CircleAvatar(
+                          radius: 55,
+                          backgroundColor: Color(0xFFF3F0FA),
+                          child: Icon(
+                            Icons.person,
+                            size: 80,
+                            color: Color(0xFF424242),
+                          ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF424242),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Edit Profile',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
 
-                  const SizedBox(height: 30),
+                        const SizedBox(height: 15),
 
-                  _buildOptionTile(
-                    Icons.language,
-                    'Languages',
-                    trailing: _buildLanguageDropdown(),
-                  ),
-
-                  _buildOptionTile(
-                    Icons.help_outline,
-                    'FAQ',
-                    subtitle: 'Find answers to your questions',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FAQPage(),
+                        Text(
+                          visitorName,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      );
-                    },
-                  ),
 
-                  _buildOptionTile(
-                    Icons.email_outlined,
-                    'Contact Us',
-                    subtitle: 'Reach us at support@rushd.com',
-                  ),
+                        Text(
+                          visitorEmail,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
 
-                  _buildOptionTile(
-                    Icons.logout,
-                    'Log out',
-                    subtitle: 'Sign out of your account safely',
-                    isDestructive: true,
-                  ),
+                        const SizedBox(height: 10),
 
-                  const SizedBox(height: 40),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EditProfilePage(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF424242),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Edit Profile',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
 
-                  const Text(
-                    'App Version 1.0.0',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
+                        const SizedBox(height: 30),
+
+                        _buildOptionTile(
+                          Icons.language,
+                          'Languages',
+                          trailing: _buildLanguageDropdown(),
+                        ),
+
+                        _buildOptionTile(
+                          Icons.help_outline,
+                          'FAQ',
+                          subtitle: 'Find answers to your questions',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const FAQPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        _buildOptionTile(
+                          Icons.email_outlined,
+                          'Contact Us',
+                          subtitle: 'Reach us at support@rushd.com',
+                        ),
+
+                       _buildOptionTile(
+  Icons.logout,
+  'Log out',
+  subtitle: 'Sign out of your account safely',
+  isDestructive: true,
+  onTap: () {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
+      (route) => false,
+    );
+  },
+),
+
+                        const SizedBox(height: 40),
+
+                        const Text(
+                          'App Version 1.0.0',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                      ],
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 20),
-                ],
-              ),
+                const VisitorBottomBar1(currentIndex: 0),
+              ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: const VisitorBottomBar1(currentIndex: 0),
     );
   }
 

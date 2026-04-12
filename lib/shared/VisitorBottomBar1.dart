@@ -51,33 +51,28 @@ class VisitorBottomBar1 extends StatelessWidget {
             ),
           ),
         ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildItem(
-                  context: context,
-                  index: 0,
-                  icon: Icons.person_outline,
-                  label: 'Profile',
-                ),
-                _buildItem(
-                  context: context,
-                  index: 1,
-                  icon: Icons.home_outlined,
-                  label: 'Home',
-                ),
-                _buildItem(
-                  context: context,
-                  index: 2,
-                  icon: Icons.map_outlined,
-                  label: 'Route',
-                ),
-              ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildItem(
+              context: context,
+              index: 0,
+              icon: Icons.person_outline,
+              label: 'Profile',
             ),
-          ),
+            _buildItem(
+              context: context,
+              index: 1,
+              icon: Icons.home_outlined,
+              label: 'Home',
+            ),
+            _buildItem(
+              context: context,
+              index: 2,
+              icon: Icons.map_outlined,
+              label: 'Route',
+            ),
+          ],
         ),
       ),
     );
@@ -102,8 +97,8 @@ class VisitorBottomBar1 extends StatelessWidget {
             index == 2
                 ? Image.asset(
                     "assets/images/map.png",
-                    width: 28,
-                    height: 28,
+                    width: 22,
+                    height: 22,
                     color: isSelected ? kPurple : kGrey,
                   )
                 : Icon(
