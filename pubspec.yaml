@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^2.0.10
 
   google_maps_flutter: ^2.5.0
   mapbox_maps_flutter: ^2.0.0
@@ -61,10 +62,12 @@ flutter:
 
   
   uses-material-design: true
-
+  
   assets:
-    - assets/images/rushd_logo.png
-    
+  - assets/images/
+
+  
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
