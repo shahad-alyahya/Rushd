@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rushd/map/map_view.dart';
 
 class SecurityDashboardPage extends StatefulWidget {
   const SecurityDashboardPage({super.key});
@@ -74,19 +75,24 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
   }
 
   Widget _buildMapPlaceholder() {
-    return Container(
-      height: 250,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+  return Container(
+    height: 250,
+    width: double.infinity,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: const [
+        BoxShadow(color: Colors.black12, blurRadius: 10),
+      ],
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: const MapView(
+        mode: MapMode.viewOnly,
       ),
-      child: const Center(
-        child: Text('Map PlaceHolder', style: TextStyle(color: Colors.grey)),
-      ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildZoneCard({
     required String zoneName,
