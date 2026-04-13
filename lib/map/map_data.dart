@@ -161,14 +161,15 @@ static final Map<String, String> zoneLabelTexts = {
     'p1': const PathNode(id: 'p1', point: LatLng(24.773991569304215, 46.59973215311766)),
     'p2': const PathNode(id: 'p2', point: LatLng(24.774125513998182, 46.601064540445805)),
     'p3': const PathNode(id: 'p3', point: LatLng(24.7745188234917, 46.60188194364309)),
-    'p4': const PathNode(id: 'p4', point: LatLng(24.775710007877567, 46.60344332456589)),
-    'p5': const PathNode(id: 'p5', point: LatLng(24.77628504782071, 46.6035496070981)),
-    'p6': const PathNode(id: 'p6', point: LatLng(24.777172107919196, 46.60312883555889)),
-    'p7': const PathNode(id: 'p7', point: LatLng(24.778262811767025, 46.60250756889582)),
-    'p8': const PathNode(id: 'p8', point: LatLng(24.77867559029348, 46.59999702125788)),
-    'p9': const PathNode(id: 'p9', point: LatLng(24.778003759055586, 46.599265448749065)),
-    'p10': const PathNode(id: 'p10', point: LatLng(24.77735414623578, 46.598703525960445)),
-    'p11': const PathNode(id: 'p11', point: LatLng(24.776027208641487, 46.59839507192373)),
+    'p4': const PathNode(id: 'p4', point: LatLng(24.7751246, 46.6024687)),
+    'p5': const PathNode(id: 'p5', point: LatLng(24.775710007877567, 46.60344332456589)),
+    'p6': const PathNode(id: 'p6', point: LatLng(24.77628504782071, 46.6035496070981)),
+    'p7': const PathNode(id: 'p7', point: LatLng(24.777172107919196, 46.60312883555889)),
+    'p8': const PathNode(id: 'p8', point: LatLng(24.778262811767025, 46.60250756889582)),
+    'p9': const PathNode(id: 'p9', point: LatLng(24.77867559029348, 46.59999702125788)),
+    'p10': const PathNode(id: 'p10', point: LatLng(24.778003759055586, 46.599265448749065)),
+    'p11': const PathNode(id: 'p11', point: LatLng(24.77735414623578, 46.598703525960445)),
+    'p12': const PathNode(id: 'p12', point: LatLng(24.776027208641487, 46.59839507192373)),
     
   };
 
@@ -184,7 +185,8 @@ static final Map<String, String> zoneLabelTexts = {
   'p8': ['p7', 'p9'],
   'p9': ['p8', 'p10'],
   'p10': ['p9', 'p11'],
-  'p11': ['p10', 'p1'],
+  'p11': ['p10', 'p12'],
+  'p12': ['p11', 'p1'],
 };
 
   // 🚪 أقرب نقطة ممر لمدخل كل زون
