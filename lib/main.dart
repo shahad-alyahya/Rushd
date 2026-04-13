@@ -71,7 +71,9 @@ class MyApp extends StatelessWidget {
       // home: const EditProfilePageSecurity(),
       //home: const SecurityProfilePage(),
       // home: const ProfileVisitorPage(),
-      // 2. هنا حطيت كومنت على الـ routes اللي كانت تخرب التشغيل لو خليناها مع الـ home
+
+      // 2. --------------------------------------------
+
       // initialRoute: '/',
       // routes: {
       //   '/': (context) => const SplashScreen(),
