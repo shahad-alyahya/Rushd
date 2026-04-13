@@ -63,21 +63,14 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorSchemeSeed: const Color(0xFF867AB9),
       ),
+      // Initial screen is the SplashScreen
+      home: const SplashScreen(),
 
-      // 1.
+      /* Commented out unused routes for now
       home: const ZoneAlerts2Screen(),
-      //home: const ZoneAlerts1Screen(),
-      // home: const SecurityDashboardPage(),
-      // home: const EditProfilePageSecurity(),
-      //home: const SecurityProfilePage(),
-      // home: const ProfileVisitorPage(),
-
-      // 2. --------------------------------------------
-
-      // initialRoute: '/',
-      // routes: {
-      //   '/': (context) => const SplashScreen(),
-      // },
+      home: const ZoneAlerts1Screen(),
+      home: const SecurityDashboardPage(),
+      */
     );
   }
 }

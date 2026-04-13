@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rushd/Visitor/loginPage.dart';
+import 'package:rushd/Security/home_page2.dart'; // Navigation destination
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,13 +32,14 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
+    // Navigate to Home Dashboard after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
 
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              const LoginPage(),
+              const SecurityDashboardPage(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },

@@ -12,7 +12,7 @@ class ZoneAlerts2Screen extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 380, // iPhone Style alignment
+            width: 380,
             child: Column(
               children: [
                 Expanded(
@@ -31,13 +31,8 @@ class ZoneAlerts2Screen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 22),
-
-                        // Navigation toggle focused on "Responded" alerts
                         _buildAlertToggle(context),
-
                         const SizedBox(height: 24),
-
-                        // List of security alerts that have been successfully resolved
                         const AlertCardResponded(
                           imagePath: 'assets/images/egypt.png',
                           title: 'Egyptian Subzone',
@@ -51,7 +46,6 @@ class ZoneAlerts2Screen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Reusable Bottom Bar with Alert section highlighted
                 const SecurityBottomBar(currentIndex: 2),
               ],
             ),
@@ -61,7 +55,6 @@ class ZoneAlerts2Screen extends StatelessWidget {
     );
   }
 
-  // Toggle widget to navigate back to Active Alerts
   Widget _buildAlertToggle(BuildContext context) {
     return Center(
       child: Container(
@@ -77,7 +70,6 @@ class ZoneAlerts2Screen extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  // Navigate back to Active Alerts screen
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
@@ -117,7 +109,6 @@ class ZoneAlerts2Screen extends StatelessWidget {
   }
 }
 
-// Reusable card widget for responded/closed alerts
 class AlertCardResponded extends StatelessWidget {
   final String imagePath;
   final String title;
@@ -195,7 +186,6 @@ class AlertCardResponded extends StatelessWidget {
                     Text(timeAgo, style: const TextStyle(fontSize: 12)),
                   ],
                 ),
-                // Response level badge (e.g., Safe/Low Level)
                 Align(
                   alignment: Alignment.bottomRight,
                   child: Container(

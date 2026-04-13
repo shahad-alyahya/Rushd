@@ -12,13 +12,11 @@ class ZoneAlerts1Screen extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            // Constraint to maintain a consistent iPhone-style layout (380px)
-            width: 380,
+            width: 380, // iPhone layout constraint
             child: Column(
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    // iOS-style bounce scroll for a premium feel
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 22),
                     child: Column(
@@ -33,13 +31,8 @@ class ZoneAlerts1Screen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 22),
-
-                        // Navigation toggle between Active and Responded alerts
                         _buildAlertToggle(context),
-
                         const SizedBox(height: 24),
-
-                        // List of current active security alerts
                         const AlertCardActive(
                           imagePath: 'assets/images/saudiZone.png',
                           title: 'Saudi Arabia Zone',
@@ -63,7 +56,7 @@ class ZoneAlerts1Screen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Fixed Security Bottom Bar (Always visible at the bottom)
+                // Alert index is 2
                 const SecurityBottomBar(currentIndex: 2),
               ],
             ),
@@ -73,7 +66,6 @@ class ZoneAlerts1Screen extends StatelessWidget {
     );
   }
 
-  // Toggle switch to handle navigation between alert screens
   Widget _buildAlertToggle(BuildContext context) {
     return Center(
       child: Container(
@@ -106,7 +98,6 @@ class ZoneAlerts1Screen extends StatelessWidget {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  // Replaces current view with the Responded Alerts screen
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
@@ -129,7 +120,6 @@ class ZoneAlerts1Screen extends StatelessWidget {
   }
 }
 
-// Reusable card widget for active security alerts
 class AlertCardActive extends StatelessWidget {
   final String imagePath;
   final String title;
@@ -168,7 +158,6 @@ class AlertCardActive extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Styled image for the zone with rounded corners
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Image.asset(
@@ -193,7 +182,6 @@ class AlertCardActive extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Date metadata row
                 Row(
                   children: [
                     const Icon(Icons.calendar_today_outlined, size: 14),
@@ -202,7 +190,6 @@ class AlertCardActive extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                // Time metadata row
                 Row(
                   children: [
                     const Icon(Icons.access_time, size: 14),
@@ -210,7 +197,6 @@ class AlertCardActive extends StatelessWidget {
                     Text(timeAgo, style: const TextStyle(fontSize: 12)),
                   ],
                 ),
-                // Threat level badge
                 Align(
                   alignment: Alignment.bottomRight,
                   child: Container(
