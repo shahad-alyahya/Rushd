@@ -80,7 +80,7 @@ class ZoneLogic {
     const ZoneStatus(
       id: 'sham',
       name: 'Sham Zone',
-      crowdLevel: CrowdLevel.high,
+      crowdLevel: CrowdLevel.low,
       visitorCount: 320,
       lastUpdated: '9:12 PM',
     ),
@@ -101,7 +101,7 @@ class ZoneLogic {
     const ZoneStatus(
       id: 'kuwait',
       name: 'Kuwait Zone',
-      crowdLevel: CrowdLevel.medium,
+      crowdLevel: CrowdLevel.high,
       visitorCount: 200,
       lastUpdated: '9:12 PM',
     ),

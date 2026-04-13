@@ -201,7 +201,7 @@ class _RiyadhSeasonMapViewState extends State<RiyadhSeasonMapView> {
       onMapCreated: _onMapCreated,
       initialCameraPosition: const CameraPosition(
         target: _initialCenter,
-        zoom: 14.4,
+        zoom: 14.1,
       ),
       mapType: MapType.normal,
       polygons: _polygons,
