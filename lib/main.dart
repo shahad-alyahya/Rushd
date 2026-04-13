@@ -63,10 +63,19 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorSchemeSeed: const Color(0xFF867AB9),
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-      },
+
+      // 1.
+      home: const ZoneAlerts2Screen(),
+      //home: const ZoneAlerts1Screen(),
+      // home: const SecurityDashboardPage(),
+      // home: const EditProfilePageSecurity(),
+      //home: const SecurityProfilePage(),
+      // home: const ProfileVisitorPage(),
+      // 2. هنا حطيت كومنت على الـ routes اللي كانت تخرب التشغيل لو خليناها مع الـ home
+      // initialRoute: '/',
+      // routes: {
+      //   '/': (context) => const SplashScreen(),
+      // },
     );
   }
 }

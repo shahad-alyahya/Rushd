@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'ZoneAlerts-2.dart';
+import 'package:rushd/Security/security_bottom_bar.dart';
 
 class ZoneAlerts1Screen extends StatelessWidget {
   const ZoneAlerts1Screen({super.key});
@@ -7,213 +8,53 @@ class ZoneAlerts1Screen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
-
-      bottomNavigationBar: Container(
-        height: 78,
-        padding: const EdgeInsets.only(left: 28, right: 28, top: 8, bottom: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            BottomItemActive(
-              icon: Icons.person_outline,
-              label: 'Profile',
-              selected: false,
-            ),
-            BottomItemActive(
-              icon: Icons.home_outlined,
-              label: 'Home',
-              selected: false,
-            ),
-            BottomItemActive(
-              icon: Icons.info_outline,
-              label: 'Zone Alert',
-              selected: true,
-            ),
-          ],
-        ),
-      ),
-
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 401,
-            height: 874,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 6),
-
-                  SizedBox(
-                    height: 24,
-                    child: Row(
+            // Constraint to maintain a consistent iPhone-style layout (380px)
+            width: 380,
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    // iOS-style bounce scroll for a premium feel
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 25),
                         const Text(
-                          '9:41',
+                          'Zone Alerts',
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF010E16),
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const Spacer(),
-                        const Icon(
-                          Icons.signal_cellular_alt,
-                          size: 15,
-                          color: Color(0xFF010E16),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(
-                          Icons.wifi,
-                          size: 15,
-                          color: Color(0xFF010E16),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 24,
-                          height: 11,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: const Color(0xFF010E16),
-                              width: 1.3,
-                            ),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              width: 15,
-                              margin: const EdgeInsets.all(1.1),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF010E16),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                        const SizedBox(height: 22),
 
-                  const SizedBox(height: 18),
+                        // Navigation toggle between Active and Responded alerts
+                        _buildAlertToggle(context),
 
-                  const Text(
-                    'Zone Alerts',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF000000),
-                    ),
-                  ),
+                        const SizedBox(height: 24),
 
-                  const SizedBox(height: 22),
-
-                  Center(
-                    child: Container(
-                      width: 280,
-                      height: 46,
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x12000000),
-                                    blurRadius: 6,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'Active Alerts',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF4A5660),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ZoneAlerts2Screen(),
-                                  ),
-                                );
-                              },
-                              child: const Center(
-                                child: Text(
-                                  'Responded Alerts',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF9B9B9B),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Expanded(
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      children: const [
-                        AlertCardActive(
+                        // List of current active security alerts
+                        const AlertCardActive(
                           imagePath: 'assets/images/saudiZone.png',
                           title: 'Saudi Arabia Zone',
-                          date: '27 Des 2025',
+                          date: '27 Dec 2025',
                           timeAgo: '4 minutes ago',
                           levelText: 'High Level',
                           levelBg: Color(0x33C22222),
                           levelTextColor: Color(0xFFE11A1A),
                         ),
-                        SizedBox(height: 20),
-                        AlertCardActive(
+                        const SizedBox(height: 20),
+                        const AlertCardActive(
                           imagePath: 'assets/images/AmusementPark.png',
                           title: 'Amusement Park',
-                          date: '27 Des 2025',
+                          date: '27 Dec 2025',
                           timeAgo: '8 minutes ago',
-                          levelText: 'Medium Level',
-                          levelBg: Color(0x33C26722),
-                          levelTextColor: Color(0xFFF87927),
-                        ),
-                        SizedBox(height: 20),
-                        AlertCardActive(
-                          imagePath: 'assets/images/greek.png',
-                          title: 'Greek Subzone',
-                          date: '27 Des 2025',
-                          timeAgo: '14 minutes ago',
                           levelText: 'Medium Level',
                           levelBg: Color(0x33C26722),
                           levelTextColor: Color(0xFFF87927),
@@ -221,16 +62,74 @@ class ZoneAlerts1Screen extends StatelessWidget {
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                // Fixed Security Bottom Bar (Always visible at the bottom)
+                const SecurityBottomBar(currentIndex: 2),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+
+  // Toggle switch to handle navigation between alert screens
+  Widget _buildAlertToggle(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 280,
+        height: 46,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x12000000), blurRadius: 6),
+                  ],
+                ),
+                child: const Center(
+                  child: Text(
+                    'Active Alerts',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  // Replaces current view with the Responded Alerts screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ZoneAlerts2Screen(),
+                    ),
+                  );
+                },
+                child: const Center(
+                  child: Text(
+                    'Responded Alerts',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF9B9B9B)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
+// Reusable card widget for active security alerts
 class AlertCardActive extends StatelessWidget {
   final String imagePath;
   final String title;
@@ -255,10 +154,9 @@ class AlertCardActive extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 150,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -269,138 +167,76 @@ class AlertCardActive extends StatelessWidget {
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Styled image for the zone with rounded corners
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Image.asset(
               imagePath,
-              width: 122,
+              width: 110,
               height: 86,
               fit: BoxFit.cover,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: SizedBox(
-              height: 100,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF000000),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Date metadata row
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today_outlined, size: 14),
+                    const SizedBox(width: 5),
+                    Text(date, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                // Time metadata row
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 14),
+                    const SizedBox(width: 5),
+                    Text(timeAgo, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+                // Threat level badge
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 14,
-                        color: Color(0xFF4A5660),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        date,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9B9B9B),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: Color(0xFF4A5660),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        timeAgo,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9B9B9B),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: levelBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        levelText,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: levelTextColor,
-                        ),
+                    decoration: BoxDecoration(
+                      color: levelBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      levelText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: levelTextColor,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class BottomItemActive extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-
-  const BottomItemActive({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.selected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const Color activeColor = Color(0xFF867AB9);
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          size: 22,
-          color: selected ? activeColor : const Color(0xFF010E16),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: selected ? activeColor : const Color(0xFF010E16),
-          ),
-        ),
-      ],
     );
   }
 }

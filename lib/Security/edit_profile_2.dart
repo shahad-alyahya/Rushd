@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// Importing the custom bottom bar we created earlier
+import 'security_bottom_bar.dart';
 
 class EditProfilePageSecurity extends StatefulWidget {
   const EditProfilePageSecurity({super.key});
@@ -15,6 +17,7 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // Handle data submission and validation
   void _submitData() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -31,55 +34,83 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        // Back button with iOS style icon
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const Text(
-                'Edit Profile',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 30),
-              _buildSecurityProfileIcon(),
-              const SizedBox(height: 40),
-              _buildField(
-                "First Name",
-                _firstNameController,
-                Icons.person_outline,
-              ),
-              const SizedBox(height: 20),
-              _buildField(
-                "Last Name",
-                _lastNameController,
-                Icons.person_outline,
-              ),
-              const SizedBox(height: 20),
-              _buildEmailField(),
-              const SizedBox(height: 20),
-              _buildField(
-                "Password",
-                _passwordController,
-                Icons.lock_outline,
-                isPass: true,
-              ),
-              const SizedBox(height: 50),
-              _buildSubmitButton(),
-            ],
+      body: SafeArea(
+        child: Center(
+          child: SizedBox(
+            width: 380, // Constrain width for iPhone-like appearance
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    // iOS bounce scroll effect
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Edit Profile',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          _buildSecurityProfileIcon(),
+                          const SizedBox(height: 40),
+
+                          // Input Fields
+                          _buildField(
+                            "First Name",
+                            _firstNameController,
+                            Icons.person_outline,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildField(
+                            "Last Name",
+                            _lastNameController,
+                            Icons.person_outline,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildEmailField(),
+                          const SizedBox(height: 20),
+                          _buildField(
+                            "Password",
+                            _passwordController,
+                            Icons.lock_outline,
+                            isPass: true,
+                          ),
+                          const SizedBox(height: 50),
+                          _buildSubmitButton(),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Reusable Bottom Navigation Bar
+                const SecurityBottomBar(currentIndex: 0),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  // Build the profile security icon at the top
   Widget _buildSecurityProfileIcon() {
     return Center(
       child: Container(
@@ -95,6 +126,7 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
     );
   }
 
+  // Generic text field builder
   Widget _buildField(
     String label,
     TextEditingController controller,
@@ -110,10 +142,15 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF673AB7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Color(0xFF673AB7), width: 2),
+        ),
       ),
     );
   }
 
+  // Specialized email field builder
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
@@ -124,10 +161,15 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
         labelText: "Email Address",
         prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF673AB7)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Color(0xFF673AB7), width: 2),
+        ),
       ),
     );
   }
 
+  // Submit button builder
   Widget _buildSubmitButton() {
     return SizedBox(
       width: double.infinity,
