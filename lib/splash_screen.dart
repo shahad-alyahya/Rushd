@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rushd/Security/home_page2.dart'; // Navigation destination
+// import 'package:rushd/Security/home_page2.dart'; // [DEPRECATED] Original destination commented out
+import 'package:rushd/Admin/HomePage-3.dart'; // [UPDATED] Redirecting to Admin Dashboard
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,13 +19,17 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
+    // --- Animation Controller Initialization ---
+    // Manages the 2-second timing for the visual entrance effects
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     );
 
+    // Opacity animation from transparent to opaque
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
 
+    // Scaling animation for a subtle "zoom-in" feel on the logo
     _scaleAnimation = Tween<double>(
       begin: 0.9,
       end: 1,
@@ -32,15 +37,19 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate to Home Dashboard after 3 seconds
+    // --- Navigation Logic Implementation ---
+    // Executing the transition after a 3-second delay for branding exposure
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
 
+      // Routing to the Administrative Module
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              const SecurityDashboardPage(),
+              // const SecurityDashboardPage(), // [Original Destination Commented Out]
+              const AdminHomePage(), // [New Destination: Admin Dashboard]
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // Smooth Cross-Fade transition for premium UI feel
             return FadeTransition(opacity: animation, child: child);
           },
           transitionDuration: const Duration(milliseconds: 800),
@@ -51,6 +60,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    // Memory Management: Disposing the controller to prevent leaks
     _controller.dispose();
     super.dispose();
   }
@@ -64,6 +74,7 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fadeAnimation,
           child: ScaleTransition(
             scale: _scaleAnimation,
+            // Rushd Branding Logo
             child: Image.asset("assets/images/rushd_logo.png", width: 230),
           ),
         ),

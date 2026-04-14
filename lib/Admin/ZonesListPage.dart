@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:rushd/Admin/AddZonePage.dart';
-import 'package:rushd/Admin/message_3.dart';
-// comments for this page 
-//1- سويت فنكشن الحذف والاضافه لكن يحتاج ياخذ البيانات من الداتا بيس 
-//2- change the bottom bar -> i did it just a holder for the new one (who responsable for Admin home page) 
-//3- check for the colors if its good or not 
-//4- need function for export and print 
+import 'AddZonePage.dart';
+import 'message_3.dart';
+import 'admin_bottom_bar.dart';
+
+/// [ZonesListPage] serves as the dynamic registry for all operational zones.
+/// It maintains a synchronized state with the creation module to reflect real-time updates.
 class ZonesListPage extends StatefulWidget {
   const ZonesListPage({super.key});
 
@@ -14,11 +13,10 @@ class ZonesListPage extends StatefulWidget {
 }
 
 class _ZonesListPageState extends State<ZonesListPage> {
-  static const Color kPurple = Color(0xFFB8A9FF);
-  static const Color kDark = Color(0xFF1F2430);
-  static const Color kCard = Color(0xFFF1F1F1);
-  static const Color kDelete = Color(0xFF9B4A4A);
+  static const Color kRushdPurple = Color(0xFF867AB9);
+  static const Color kDestructive = Color(0xFF9B4A4A);
 
+  String _selectedLocation = 'Boulevard World';
   final List<String> _locations = const [
     'Boulevard World',
     'Boulevard City',
@@ -26,68 +24,139 @@ class _ZonesListPageState extends State<ZonesListPage> {
     'Riyadh Zoo',
   ];
 
-  String _selectedLocation = 'Boulevard World';
-
+  // --- Simulated Database: Initializing with your requested zones ---
   final List<Map<String, String>> _zones = [
-    {
-      'name': 'Türkiye Zone',
-      'location': 'Boulevard World',
-    },
+    {'name': 'Türkiye Zone', 'location': 'Boulevard World'},
+    {'name': 'Africa Zone', 'location': 'Boulevard World'},
+    {'name': 'Saudi Arabia Zone', 'location': 'Boulevard World'},
+    {'name': 'Korea Zone', 'location': 'Boulevard World'},
+    {'name': 'Greece Zone', 'location': 'Boulevard World'},
+    {'name': 'Kuwait Zone', 'location': 'Boulevard World'},
   ];
 
-  List<Map<String, String>> get _filteredZones {
-    return _zones
-        .where((zone) => zone['location'] == _selectedLocation)
-        .toList();
+  List<Map<String, String>> get _filteredZones =>
+      _zones.where((z) => z['location'] == _selectedLocation).toList();
+
+  /// Handles the ingestion of new zone records from the AddZonePage module.
+  /// Synchronizes the UI state with the updated registry payload.
+  void _navigateToAddZone() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddZonePage(
+          selectedLocation: _selectedLocation,
+          existingZoneNames: _zones.map((z) => z['name']!).toList(),
+        ),
+      ),
+    );
+
+    // [DATABASE LOGIC] If data is returned, commit to the list and rebuild UI
+    if (result != null && result is Map<String, String>) {
+      setState(() {
+        _zones.add(result);
+      });
+    }
   }
 
-  Future<void> _showActionDialog(String title, String message) async {
+  Future<void> _confirmDeletion(Map<String, String> zone) async {
     await showDialog<void>(
       context: context,
       builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Confirm Deletion',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text('Are you sure you want to delete "${zone['name']}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'NO',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kDestructive,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                setState(() => _zones.remove(zone));
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Message3Page()),
+                );
+              },
+              child: const Text(
+                'YES',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: SizedBox(
+            width: 380,
+            child: Stack(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: Colors.black87,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kDark,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                Column(
+                  children: [
+                    const SizedBox(height: 25),
+                    const Text(
+                      'Zones List',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text(
-                      'OK',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                    const SizedBox(height: 20),
+                    _buildFilterHeader(),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: _filteredZones.isEmpty
+                          ? _buildEmptyState()
+                          : _buildZoneListView(),
+                    ),
+                    const AdminBottomBar(currentIndex: 2),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+                Positioned(
+                  bottom: 100,
+                  right: 20,
+                  child: SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: FloatingActionButton(
+                      onPressed: _navigateToAddZone,
+                      backgroundColor: kRushdPurple,
+                      elevation: 6,
+                      shape: const CircleBorder(),
+                      child: const Icon(
+                        Icons.add,
+                        size: 30,
                         color: Colors.white,
                       ),
                     ),
@@ -96,468 +165,94 @@ class _ZonesListPageState extends State<ZonesListPage> {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _openAddZonePage() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddZonePage(
-          selectedLocation: _selectedLocation,
-          existingZoneNames: _zones
-              .map((zone) => zone['name'] ?? '')
-              .where((name) => name.isNotEmpty)
-              .toList(),
         ),
       ),
     );
-
-    if (result != null && result is Map<String, String>) {
-      setState(() {
-        _zones.add({
-          'name': result['name'] ?? '',
-          'location': result['location'] ?? _selectedLocation,
-        });
-      });
-    }
   }
 
-  Future<void> _showDeleteDialog(Map<String, String> zone) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Are you sure you want to delete this Zone?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                    height: 1.4,
-                  ),
+  Widget _buildFilterHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F7),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedLocation,
+                  items: _locations
+                      .map(
+                        (loc) => DropdownMenuItem(value: loc, child: Text(loc)),
+                      )
+                      .toList(),
+                  onChanged: (val) => setState(() => _selectedLocation = val!),
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 52,
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide.none,
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            'NO',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            setState(() {
-                              _zones.removeWhere(
-                                (item) =>
-                                    item['name'] == zone['name'] &&
-                                    item['location'] == zone['location'],
-                              );
-                            });
-
-                            Navigator.pop(context);
-
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Message3Page(),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kDark,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            'YES',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
+          const SizedBox(width: 8),
+          const Icon(Icons.ios_share, size: 22),
+          const SizedBox(width: 8),
+          const Icon(Icons.print, size: 22),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildZoneListView() {
+    return ListView.separated(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      itemCount: _filteredZones.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 15),
+      itemBuilder: (context, index) {
+        final zone = _filteredZones[index];
+        return _ZoneTile(
+          name: zone['name']!,
+          onDelete: () => _confirmDeletion(zone),
         );
       },
     );
   }
 
-  void _onLocationChanged(String value) {
-    setState(() {
-      _selectedLocation = value;
-    });
-  }
+  Widget _buildEmptyState() => const Center(
+    child: Text('No data available', style: TextStyle(color: Colors.grey)),
+  );
+}
 
-  Widget _buildTopBar() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: _LocationPopupMenu(
-              value: _selectedLocation,
-              items: _locations,
-              onSelected: _onLocationChanged,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        _ActionIconButton(
-          icon: Icons.ios_share_outlined,
-          onTap: () {
-            _showActionDialog(
-              'Export',
-              _filteredZones.isNotEmpty
-                  ? 'The export action will be connected later.'
-                  : 'There is no data to export for this location.',
-            );
-          },
-        ),
-        const SizedBox(width: 8),
-        _ActionIconButton(
-          icon: Icons.print_outlined,
-          onTap: () {
-            _showActionDialog(
-              'Print',
-              _filteredZones.isNotEmpty
-                  ? 'The print action will be connected later.'
-                  : 'There is no data to print for this location.',
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildZoneCard(Map<String, String> zone) {
+class _ZoneTile extends StatelessWidget {
+  final String name;
+  final VoidCallback onDelete;
+  const _ZoneTile({required this.name, required this.onDelete});
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(22),
+        color: const Color(0xFFF1F1F1),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.location_on_outlined,
-            size: 30,
-            color: Colors.black,
-          ),
-          const SizedBox(width: 16),
+          const Icon(Icons.location_on_outlined),
+          const SizedBox(width: 15),
           Expanded(
             child: Text(
-              zone['name'] ?? '',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
+              name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          InkWell(
-            onTap: () => _showDeleteDialog(zone),
-            borderRadius: BorderRadius.circular(30),
-            child: const Padding(
-              padding: EdgeInsets.all(6),
-              child: Icon(
-                Icons.delete_outline_rounded,
-                size: 28,
-                color: kDelete,
-              ),
-            ),
+          IconButton(
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline, color: Color(0xFF9B4A4A)),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
-      decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        children: const [
-          Icon(
-            Icons.location_off_outlined,
-            size: 34,
-            color: Colors.black54,
-          ),
-          SizedBox(height: 10),
-          Text(
-            'No data available for this location',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomBar() {
-    return Container(
-      height: 74,
-      margin: const EdgeInsets.symmetric(horizontal: 34, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: const [
-          Icon(Icons.person_outline_rounded, size: 28),
-          Icon(Icons.home_rounded, size: 28),
-          Icon(Icons.location_on_outlined, size: 28),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      floatingActionButton: SizedBox(
-        width: 64,
-        height: 64,
-        child: FloatingActionButton(
-          onPressed: _openAddZonePage,
-          backgroundColor: kPurple,
-          elevation: 0,
-          shape: const CircleBorder(),
-          child: const Icon(
-            Icons.add,
-            size: 36,
-            weight: 900,
-            color: Colors.black,
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: _buildBottomBar(),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-          child: Column(
-            children: [
-              const SizedBox(height: 14),
-              const Center(
-                child: Text(
-                  'Zones List',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              _buildTopBar(),
-              const SizedBox(height: 22),
-              Expanded(
-                child: _filteredZones.isEmpty
-                    ? SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            _buildEmptyCard(),
-                            const SizedBox(height: 18),
-                          ],
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: _filteredZones.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 18),
-                        itemBuilder: (context, index) {
-                          final zone = _filteredZones[index];
-                          return _buildZoneCard(zone);
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LocationPopupMenu extends StatelessWidget {
-  const _LocationPopupMenu({
-    required this.value,
-    required this.items,
-    required this.onSelected,
-  });
-
-  final String value;
-  final List<String> items;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      tooltip: '',
-      color: Colors.white,
-      elevation: 10,
-      offset: const Offset(-8, 40),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
-      onSelected: onSelected,
-      itemBuilder: (context) {
-        return items.map((item) {
-          final isSelected = item == value;
-          return PopupMenuItem<String>(
-            value: item,
-            height: 48,
-            child: Row(
-              children: [
-                Icon(
-                  isSelected
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  size: 18,
-                  color: isSelected
-                      ? const Color(0xFF867AB9)
-                      : const Color(0xFFB7B9C0),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    item,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: const Color(0xFF1F2430),
-                      fontWeight:
-                          isSelected ? FontWeight.w800 : FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList();
-      },
-      child: SizedBox(
-        height: 48,
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                value,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.left,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.black,
-              size: 28,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _ActionIconButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(
-            icon,
-            size: 24,
-            color: Colors.black,
-          ),
-        ),
       ),
     );
   }

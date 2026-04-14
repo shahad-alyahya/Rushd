@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// [AddZonePage] facilitates the creation of new operational zones.
+/// Features mandatory field validation and dynamic placeholder (hint) for location guidance.
 class AddZonePage extends StatefulWidget {
   final String selectedLocation;
   final List<String> existingZoneNames;
@@ -15,17 +17,12 @@ class AddZonePage extends StatefulWidget {
 }
 
 class _AddZonePageState extends State<AddZonePage> {
-  static const Color kDark = Color(0xFF1F2430);
-
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  late final TextEditingController _locationController;
+  static const Color kRushdPurple = Color(0xFF867AB9);
 
-  @override
-  void initState() {
-    super.initState();
-    _locationController = TextEditingController(text: widget.selectedLocation);
-  }
+  // Controller initialized as empty to allow the 'hintText' to be visible as an example
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
 
   @override
   void dispose() {
@@ -34,202 +31,86 @@ class _AddZonePageState extends State<AddZonePage> {
     super.dispose();
   }
 
-  Future<void> _showExistsDialog() async {
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Zone Already Exists',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'This zone name already exists. Please enter a different name.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kDark,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text('OK'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  InputDecoration _inputDecoration() {
-    return InputDecoration(
-      isDense: true,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.black87),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.red),
-      ),
-    );
-  }
-
-  Future<void> _saveZone() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final zoneName = _nameController.text.trim();
-    final location = _locationController.text.trim();
-
-    final exists = widget.existingZoneNames.any(
-      (name) => name.toLowerCase() == zoneName.toLowerCase(),
-    );
-
-    if (exists) {
-      await _showExistsDialog();
-      return;
+  /// Validates input integrity and pop back the zone data to the main registry.
+  void _handleSave() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.pop(context, {
+        'name': _nameController.text.trim(),
+        'location': _locationController.text.trim(),
+      });
     }
-
-    if (!mounted) return;
-
-    Navigator.pop(
-      context,
-      {
-        'name': zoneName,
-        'location': location,
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-
-                // ===== HEADER =====
-                const SizedBox(height: 10),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      borderRadius: BorderRadius.circular(20),
-                      child: const Padding(
-                        padding: EdgeInsets.all(6),
-                        child: Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 20,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Add Zone',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 60),
-
-                // ===== FORM =====
-                Form(
+        child: Center(
+          child: SizedBox(
+            width: 380,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 20),
+                      _buildHeader(context),
+                      const SizedBox(height: 50),
+
                       const Text(
-                        'Name',
-                        style: TextStyle(fontSize: 14),
+                        'Zone Name',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      TextFormField(
+                      const SizedBox(height: 10),
+                      _buildField(
                         controller: _nameController,
-                        decoration: _inputDecoration(),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter zone name';
-                          }
-                          return null;
-                        },
+                        hint: 'e.g. Türkiye Section',
                       ),
 
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 25),
 
+                      // --- Updated: Label changed to "Location" only ---
                       const Text(
                         'Location',
-                        style: TextStyle(fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      TextFormField(
+                      const SizedBox(height: 10),
+                      // --- Updated: Placeholder/Hint example provided ---
+                      _buildField(
                         controller: _locationController,
-                        readOnly: true,
-                        decoration: _inputDecoration(),
+                        hint: 'Boulevard World',
                       ),
 
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 60),
 
-                      // ===== SAVE BUTTON =====
                       Align(
                         alignment: Alignment.centerRight,
                         child: SizedBox(
-                          width: 140,
-                          height: 44,
+                          width: 150,
+                          height: 50,
                           child: ElevatedButton(
-                            onPressed: _saveZone,
+                            onPressed: _handleSave,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: kDark,
-                              elevation: 0,
+                              backgroundColor: kRushdPurple,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(15),
                               ),
                             ),
                             child: const Text(
-                              'Save',
+                              'Save Zone',
                               style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
@@ -239,11 +120,61 @@ class _AddZonePageState extends State<AddZonePage> {
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildField({
+    required TextEditingController controller,
+    required String hint,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: (val) =>
+          (val == null || val.trim().isEmpty) ? 'Required field' : null,
+      decoration: InputDecoration(
+        hintText: hint, // Transparent placeholder text
+        hintStyle: const TextStyle(
+          color: Colors.grey,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        isDense: true,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: kRushdPurple, width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        ),
+        const SizedBox(width: 5),
+        const Text(
+          'Add New Zone',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 }
