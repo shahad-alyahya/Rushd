@@ -20,6 +20,13 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String selectedRole = 'visitor';
+
+final List<String> roles = [
+  'visitor',
+  'security',
+  'admin',
+];
 
   @override
   void dispose() {
@@ -68,6 +75,35 @@ class _LoginPageState extends State<LoginPage> {
           _buildPasswordField(),
 
           AppSpacing.h16,
+          DropdownButtonFormField<String>(
+  value: selectedRole,
+  decoration: InputDecoration(
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 20,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: Color(0xffE8E8EE)),
+    ),
+  ),
+  items: roles.map((role) {
+    return DropdownMenuItem(
+      value: role,
+      child: Text(role),
+    );
+  }).toList(),
+  onChanged: (value) {
+    if (value == null) return;
+    setState(() {
+      selectedRole = value;
+    });
+  },
+),
+
+AppSpacing.h16,
 
           Row(
             children: [
@@ -114,14 +150,26 @@ class _LoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: AppButton(
               text: 'SIGN IN',
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HomePage1(),
-                  ),
-                );
-              },
+onPressed: () {
+  Widget page;
+
+  if (selectedRole == 'visitor') {
+    page = const HomePage1();
+  } else if (selectedRole == 'security') {
+    page = const Scaffold(
+      body: Center(child: Text("Security Home")),
+    );
+  } else {
+    page = const Scaffold(
+      body: Center(child: Text("Admin Home")),
+    );
+  }
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => page),
+  );
+},
             ),
           ),
 

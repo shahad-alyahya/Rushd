@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 // import 'package:rushd/Security/home_page2.dart'; // [DEPRECATED] Original destination commented out
-import 'package:rushd/Admin/HomePage-3.dart'; // [UPDATED] Redirecting to Admin Dashboard
-
+//import 'package:rushd/Admin/HomePage-3.dart'; // [UPDATED] Redirecting to Admin Dashboard
+import 'package:rushd/Visitor/loginPage.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen>
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
               // const SecurityDashboardPage(), // [Original Destination Commented Out]
-              const AdminHomePage(), // [New Destination: Admin Dashboard]
+              const LoginPage(), // [New Destination: Admin Dashboard]
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // Smooth Cross-Fade transition for premium UI feel
             return FadeTransition(opacity: animation, child: child);
