@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+
 /// [AddSecurity] provides an administrative interface for onboarding new security personnel.
 /// Features high-level form validation, data integrity checks, and credential masking.
 class AddSecurity extends StatefulWidget {

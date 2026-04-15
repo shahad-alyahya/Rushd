@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'AddZonePage.dart';
 import 'message_3.dart';
 import 'admin_bottom_bar.dart';
+import 'package:rushd/Admin/export.dart';
 
 /// [ZonesListPage] serves as the dynamic registry for all operational zones.
 /// It maintains a synchronized state with the creation module to reflect real-time updates.
@@ -179,10 +180,10 @@ class _ZonesListPageState extends State<ZonesListPage> {
             child: Container(
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F7),
-                borderRadius: BorderRadius.circular(15),
-              ),
+             decoration: BoxDecoration(
+  color: const Color(0xFFF6F5FB).withOpacity(0.2),
+  borderRadius: BorderRadius.circular(15),
+),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _selectedLocation,
@@ -199,7 +200,18 @@ class _ZonesListPageState extends State<ZonesListPage> {
           const SizedBox(width: 8),
           const Icon(Icons.ios_share, size: 22),
           const SizedBox(width: 8),
-          const Icon(Icons.print, size: 22),
+        GestureDetector(
+  onTap: () async {
+    await ExportService.exportAdminReport(
+      location: _selectedLocation,
+      date: 'Zones List',
+      visitors: 0,
+      security: 0,
+      zones: 0,
+    );
+  },
+  child: const Icon(Icons.print, size: 22),
+),
         ],
       ),
     );

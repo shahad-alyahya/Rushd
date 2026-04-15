@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rushd/Admin/export.dart';
 // --- Navigation & Core Modules ---
 import 'admin_bottom_bar.dart';
 import 'package:rushd/Visitor/loginPage.dart';
@@ -11,14 +12,10 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  // --- UI State Management ---
   String activeFilter = 'Daily';
   String selectedLocation = 'Boulevard World';
   DateTime selectedDate = DateTime(2025, 10, 15);
 
-  // --- Methods ---
-
-  // Displays a professional iOS-style date picker
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -39,7 +36,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 
-  // Opens a premium bottom sheet for location selection
   void _showLocationPicker() {
     final List<String> locations = [
       'Boulevard World',
@@ -64,17 +60,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const Divider(),
-              ...locations
-                  .map(
-                    (loc) => ListTile(
-                      title: Text(loc, textAlign: TextAlign.center),
-                      onTap: () {
-                        setState(() => selectedLocation = loc);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  )
-                  .toList(),
+              ...locations.map(
+                (loc) => ListTile(
+                  title: Text(loc, textAlign: TextAlign.center),
+                  onTap: () {
+                    setState(() => selectedLocation = loc);
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
             ],
           ),
         );
@@ -89,7 +83,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 380, // Consistent iPhone-width container
+            width: 380,
             child: Column(
               children: [
                 Expanded(
@@ -106,8 +100,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         const SizedBox(height: 30),
                         _buildPeriodToggle(),
                         const SizedBox(height: 35),
-
-                        // --- Interactive Components ---
                         const Text(
                           'Select Location',
                           style: TextStyle(
@@ -121,7 +113,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           Icons.keyboard_arrow_down,
                           _showLocationPicker,
                         ),
-
                         const SizedBox(height: 25),
                         const Text(
                           'Date',
@@ -136,7 +127,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           Icons.calendar_month,
                           _pickDate,
                         ),
-
                         const SizedBox(height: 40),
                         _buildQuickActions(),
                         const SizedBox(height: 20),
@@ -144,7 +134,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                   ),
                 ),
-                // Static bottom bar for UI consistency
                 const AdminBottomBar(currentIndex: 1),
                 const SizedBox(height: 10),
               ],
@@ -154,8 +143,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
-
-  // --- UI Components with Integrated Logic ---
 
   Widget _buildHeader(BuildContext context) {
     return Row(
@@ -186,32 +173,39 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Widget _buildMetricOverview() {
-    return Column(
-      children: [
-        _buildSimpleCard('Visitors', '7,783', height: 90, fullWidth: true),
-        const SizedBox(height: 15),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSimpleCard(
-                'Security',
-                '4,120',
-                height: 110,
-                icon: Icons.security,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDAD5F0),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          _buildSimpleCard('Visitors', '7,783', height: 90, fullWidth: true),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSimpleCard(
+                  'Security',
+                  '4,120',
+                  height: 110,
+                  icon: Icons.security,
+                ),
               ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: _buildSimpleCard(
-                'Zones',
-                '87',
-                height: 110,
-                icon: Icons.map_outlined,
+              const SizedBox(width: 15),
+              Expanded(
+                child: _buildSimpleCard(
+                  'Zones',
+                  '87',
+                  height: 110,
+                  icon: Icons.location_on_outlined,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -264,9 +258,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade200),
+          color: const Color(0xFFF6F5FB).withOpacity(0.6),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -330,26 +323,41 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  Widget _buildQuickActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        _buildCircleIcon(Icons.ios_share_outlined),
-        const SizedBox(width: 15),
-        _buildCircleIcon(Icons.print),
-      ],
-    );
-  }
-
-  Widget _buildCircleIcon(IconData icon) {
-    return Container(
+ Widget _buildQuickActions() {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.end,
+    children: [
+      _buildCircleIcon(Icons.ios_share_outlined, () {}),
+      const SizedBox(width: 15),
+      _buildCircleIcon(
+        Icons.print,
+        () async {
+          await ExportService.exportAdminReport(
+            location: selectedLocation,
+            date: "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+            visitors: 7783,
+            security: 4120,
+            zones: 87,
+          );
+        },
+      ),
+    ],
+  );
+}
+  Widget _buildCircleIcon(IconData icon, VoidCallback onTap) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
       padding: const EdgeInsets.all(10),
       decoration: const BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5)],
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 6),
+        ],
       ),
       child: Icon(icon, size: 22, color: Colors.black87),
-    );
-  }
+    ),
+  );
+}
 }

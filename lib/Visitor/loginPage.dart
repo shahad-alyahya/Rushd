@@ -6,6 +6,8 @@ import 'package:rushd/shared/app_button.dart';
 import 'package:rushd/shared/app_colors.dart';
 import 'package:rushd/shared/app_page_layout.dart';
 import 'package:rushd/shared/app_spacing.dart';
+import 'package:rushd/Security/home_page2.dart';
+import 'package:rushd/Admin/HomePage-3.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -156,13 +158,9 @@ onPressed: () {
   if (selectedRole == 'visitor') {
     page = const HomePage1();
   } else if (selectedRole == 'security') {
-    page = const Scaffold(
-      body: Center(child: Text("Security Home")),
-    );
+    page = const SecurityDashboardPage();
   } else {
-    page = const Scaffold(
-      body: Center(child: Text("Admin Home")),
-    );
+    page = const AdminHomePage();
   }
 
   Navigator.pushReplacement(

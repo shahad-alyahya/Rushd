@@ -71,16 +71,37 @@ class _HomePage1State extends State<HomePage1> {
   }
 
   Future<void> _handleDestinationSelected(String value) async {
+  setState(() {
+    _selected = value;
+  });
+
+  if (value == 'Boulevard World') {
     setState(() {
-      _selected = value;
       _showSheet = true;
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animateSheet(0.36);
     });
-  }
+  } else {
+    setState(() {
+      _showSheet = false;
+    });
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$value will be available soon'),
+        backgroundColor: Colors.grey.shade700,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
   Future<void> _closeSheet() async {
     await _animateSheet(0.0);
     if (!mounted) return;
@@ -95,6 +116,7 @@ class _HomePage1State extends State<HomePage1> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F6),
       body: SafeArea(
+       
         child: Center(
           child: SizedBox(
             width: 380,
@@ -105,9 +127,9 @@ class _HomePage1State extends State<HomePage1> {
                 ),
 
                 Positioned(
-                  top: 28,
-                  left: 12,
-                  right: 12,
+                  top: 0,
+                  left: 0,
+                  right: 0,
                   child: Container(
                     color: const Color(0xFFF6EFF8),
                     padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),

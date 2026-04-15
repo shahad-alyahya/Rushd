@@ -12,18 +12,19 @@ class SecurityBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70,
+      height: 78,
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
+        border: const Border(
+  top: BorderSide(
+    color: Color(0xFFE5E5E5),
+    width: 1,
+  ),
+),
       ),
       child: BottomNavigationBar(
+        backgroundColor: Colors.white,
+elevation: 0,
         currentIndex: currentIndex,
         onTap: (index) {
           // Optimization: If already on the active tab, prevent redundant navigation
@@ -57,7 +58,7 @@ class SecurityBottomBar extends StatelessWidget {
           );
         },
         selectedItemColor: const Color(0xFF867AB9),
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: Colors.black54,
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(

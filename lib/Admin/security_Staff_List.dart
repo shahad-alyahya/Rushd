@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'Mesgsage_4.dart';
 import 'add_security.dart';
 import 'admin_bottom_bar.dart';
+import 'package:rushd/Admin/export.dart';
+
 
 /// [SecurityStaffList] acts as the centralized view for all active personnel.
 /// It maintains high-fidelity synchronization with the AddSecurity module for record persistence.
@@ -184,13 +186,25 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
             onChanged: (val) => setState(() => selectedLocation = val!),
           ),
         ),
-        Row(
-          children: const [
-            Icon(Icons.ios_share, size: 22),
-            SizedBox(width: 15),
-            Icon(Icons.print, size: 22),
-          ],
-        ),
+       Row(
+  children: [
+    const Icon(Icons.ios_share, size: 22),
+    const SizedBox(width: 15),
+    GestureDetector(
+      onTap: () async {
+        await ExportService.exportAdminReport(
+          location: selectedLocation,
+          date: 'Security Staff List',
+          visitors: staff.length,
+          security: staff.length,
+          zones: _locations.length,
+        );
+      },
+      child: const Icon(Icons.print, size: 22),
+    ),
+  ],
+),
+        
       ],
     ),
   );

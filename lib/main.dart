@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+
 
 // --- Global App Imports ---
 import 'splash_screen.dart';
@@ -43,10 +43,6 @@ import 'Visitor/verifyEmailPage.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  MapboxOptions.setAccessToken(
-    'pk.eyJ1IjoiamFuYS1tYXAiLCJhIjoiY21ua2t2NmEwMHl2bTJvcXRtbTc3dmd4OCJ9.IFJKzxCXiljylAhDapynfQ',
-  );
 
   runApp(const MyApp());
 }
