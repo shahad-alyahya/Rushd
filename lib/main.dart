@@ -42,7 +42,7 @@ import 'Visitor/routes.dart';
 import 'Visitor/signupPage.dart';
 import 'Visitor/verify_email-2.dart';
 import 'Visitor/verifyEmailPage.dart';
-'
+
 
 
 void main() {

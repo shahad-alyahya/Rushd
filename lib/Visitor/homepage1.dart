@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'routes.dart';
 import 'package:rushd/map/riyadh_season_map.dart';
 import 'package:rushd/map/testAreaPage.dart';
+
 class HomePage1 extends StatefulWidget {
   const HomePage1({super.key});
 
@@ -19,9 +20,8 @@ class _HomePage1State extends State<HomePage1> {
           'Boulevard World is a premier Riyadh Season destination, featuring global cultures, and diverse international dining experiences.',
       'visitors': 145,
     },
-    'Al-Bujari': {
-      'description':
-           'Test Area .',
+    'Test Area': {
+      'description': 'Test Area for route and map testing.',
       'visitors': 40,
     },
     'Boulevard City': {
@@ -33,6 +33,11 @@ class _HomePage1State extends State<HomePage1> {
       'description':
           'Riyadh Zoo is a family-friendly attraction with a variety of animals and outdoor experiences.',
       'visitors': 60,
+    },
+    'Al-Bujari': {
+      'description':
+          'Al-Bujari is known for its heritage vibe, restaurants, and relaxing atmosphere.',
+      'visitors': 40,
     },
   };
 
@@ -73,36 +78,38 @@ class _HomePage1State extends State<HomePage1> {
   }
 
   Future<void> _handleDestinationSelected(String value) async {
-  setState(() {
-    _selected = value;
-  });
-
-  if (value == 'Boulevard World' || value == 'Test Area') {
     setState(() {
-      _showSheet = true;
+      _selected = value;
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _animateSheet(0.36);
-    });
-  } else {
-    setState(() {
-      _showSheet = false;
-    });
+    if (value == 'Boulevard World' || value == 'Test Area') {
+      setState(() {
+        _showSheet = true;
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$value will be available soon'),
-        backgroundColor: Colors.grey.shade700,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _animateSheet(0.36);
+      });
+    } else {
+      setState(() {
+        _showSheet = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$value will be available soon'),
+          backgroundColor: Colors.grey.shade700,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          duration: const Duration(seconds: 2),
         ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      );
+    }
   }
+
   Future<void> _closeSheet() async {
     await _animateSheet(0.0);
     if (!mounted) return;
@@ -117,18 +124,16 @@ class _HomePage1State extends State<HomePage1> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F6),
       body: SafeArea(
-       
         child: Center(
           child: SizedBox(
             width: 380,
             child: Stack(
               children: [
-              Positioned.fill(
-  child: _selected == 'Test Area'
-      ? const TestAreaPage()
-      : const RiyadhSeasonMapView(),
-),
-
+                Positioned.fill(
+                  child: _selected == 'Test Area'
+                      ? const TestAreaPage()
+                      : const RiyadhSeasonMapView(),
+                ),
                 Positioned(
                   top: 0,
                   left: 0,
@@ -205,7 +210,6 @@ class _HomePage1State extends State<HomePage1> {
                     ),
                   ),
                 ),
-
                 _DetailsBottomSheet(
                   controller: _sheetController,
                   visible: _showSheet,
