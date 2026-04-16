@@ -10,11 +10,9 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-<<<<<<< HEAD
+
             android:value="AIzaSyCyyGy3R18ewTXY_be7xv_2y_5uXvlKnHQ"/>
-=======
-            android:value="AIzaSyDVEr3zFwxeuCcrqaT_IHPIyTQqlE4JHEs"/>
->>>>>>> testArea
+
 
         <activity
             android:name=".MainActivity"

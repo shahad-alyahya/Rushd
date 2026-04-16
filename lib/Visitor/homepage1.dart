@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'routes.dart';
 import 'package:rushd/map/riyadh_season_map.dart';
+import 'package:rushd/map/testAreaPage.dart';
 class HomePage1 extends StatefulWidget {
   const HomePage1({super.key});
 
@@ -18,6 +19,11 @@ class _HomePage1State extends State<HomePage1> {
           'Boulevard World is a premier Riyadh Season destination, featuring global cultures, and diverse international dining experiences.',
       'visitors': 145,
     },
+    'Al-Bujari': {
+      'description':
+           'Test Area .',
+      'visitors': 40,
+    },
     'Boulevard City': {
       'description':
           'Boulevard City offers a modern entertainment experience with attractions, events, and dining options.',
@@ -28,15 +34,11 @@ class _HomePage1State extends State<HomePage1> {
           'Riyadh Zoo is a family-friendly attraction with a variety of animals and outdoor experiences.',
       'visitors': 60,
     },
-    'Al-Bujari': {
-      'description':
-          'Al-Bujari is known for its heritage vibe, restaurants, and relaxing atmosphere.',
-      'visitors': 40,
-    },
   };
 
   final List<String> _destinations = const [
     'Boulevard World',
+    'Test Area',
     'Boulevard City',
     'Riyadh Zoo',
     'Al-Bujari',
@@ -75,7 +77,7 @@ class _HomePage1State extends State<HomePage1> {
     _selected = value;
   });
 
-  if (value == 'Boulevard World') {
+  if (value == 'Boulevard World' || value == 'Test Area') {
     setState(() {
       _showSheet = true;
     });
@@ -101,7 +103,6 @@ class _HomePage1State extends State<HomePage1> {
       ),
     );
   }
-}
   Future<void> _closeSheet() async {
     await _animateSheet(0.0);
     if (!mounted) return;
@@ -122,9 +123,11 @@ class _HomePage1State extends State<HomePage1> {
             width: 380,
             child: Stack(
               children: [
-                Positioned.fill(
-                child: const RiyadhSeasonMapView(),
-                ),
+              Positioned.fill(
+  child: _selected == 'Test Area'
+      ? const TestAreaPage()
+      : const RiyadhSeasonMapView(),
+),
 
                 Positioned(
                   top: 0,
