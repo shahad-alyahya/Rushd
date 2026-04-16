@@ -36,8 +36,11 @@ dependencies:
  
 
   cupertino_icons: ^1.0.8
+
   pdf: ^3.10.8
   printing: ^5.12.0
+#tesr area key
+ # google_maps_flutter: ^2.10.1
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +72,9 @@ flutter:
   - assets/images/
 
   
+
+
+
 
 
   # To add assets to your application, add an assets section, like this:

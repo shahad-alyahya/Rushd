@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:rushd/map/testAreaPage.dart';
 
+<<<<<<< HEAD
 
 // --- Global App Imports ---
 import 'splash_screen.dart';
@@ -40,6 +42,8 @@ import 'Visitor/routes.dart';
 import 'Visitor/signupPage.dart';
 import 'Visitor/verify_email-2.dart';
 import 'Visitor/verifyEmailPage.dart';
+'
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,8 +56,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
+
       title: 'Rushd App',
       theme: ThemeData(
         useMaterial3: true,
@@ -67,6 +72,7 @@ class MyApp extends StatelessWidget {
       home: const ZoneAlerts1Screen(),
       home: const SecurityDashboardPage(),
       */
+
     );
   }
 }
