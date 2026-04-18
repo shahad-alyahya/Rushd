@@ -188,20 +188,27 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
         ),
        Row(
   children: [
-    const Icon(Icons.ios_share, size: 22),
-    const SizedBox(width: 15),
     GestureDetector(
-      onTap: () async {
-        await ExportService.exportAdminReport(
-          location: selectedLocation,
-          date: 'Security Staff List',
-          visitors: staff.length,
-          security: staff.length,
-          zones: _locations.length,
-        );
-      },
-      child: const Icon(Icons.print, size: 22),
-    ),
+  onTap: () async {
+    await ExportService.shareSecurityReport(
+      location: selectedLocation,
+      securityNames: staff.map((s) => s['name']!).toList(),
+    );
+  },
+  child: const Icon(Icons.ios_share, size: 22),
+),
+
+const SizedBox(width: 15),
+
+GestureDetector(
+  onTap: () async {
+    await ExportService.exportSecurityReport(
+      location: selectedLocation,
+      securityNames: staff.map((s) => s['name']!).toList(),
+    );
+  },
+  child: const Icon(Icons.print, size: 22),
+),
   ],
 ),
         

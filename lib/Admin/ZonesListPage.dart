@@ -198,16 +198,23 @@ class _ZonesListPageState extends State<ZonesListPage> {
             ),
           ),
           const SizedBox(width: 8),
-          const Icon(Icons.ios_share, size: 22),
-          const SizedBox(width: 8),
-        GestureDetector(
+          GestureDetector(
   onTap: () async {
-    await ExportService.exportAdminReport(
+    await ExportService.shareZonesReport(
       location: _selectedLocation,
-      date: 'Zones List',
-      visitors: 0,
-      security: 0,
-      zones: 0,
+      zoneNames: _filteredZones.map((z) => z['name']!).toList(),
+    );
+  },
+  child: const Icon(Icons.ios_share, size: 22),
+),
+
+const SizedBox(width: 8),
+
+GestureDetector(
+  onTap: () async {
+    await ExportService.exportZonesReport(
+      location: _selectedLocation,
+      zoneNames: _filteredZones.map((z) => z['name']!).toList(),
     );
   },
   child: const Icon(Icons.print, size: 22),

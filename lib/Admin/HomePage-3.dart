@@ -323,18 +323,31 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
- Widget _buildQuickActions() {
+Widget _buildQuickActions() {
   return Row(
     mainAxisAlignment: MainAxisAlignment.end,
     children: [
-      _buildCircleIcon(Icons.ios_share_outlined, () {}),
+      _buildCircleIcon(
+        Icons.ios_share_outlined,
+        () async {
+          await ExportService.shareAdminReport(
+            location: selectedLocation,
+            selectedDate: selectedDate,
+            filter: activeFilter,
+            visitors: 7783,
+            security: 4120,
+            zones: 87,
+          );
+        },
+      ),
       const SizedBox(width: 15),
       _buildCircleIcon(
         Icons.print,
         () async {
           await ExportService.exportAdminReport(
             location: selectedLocation,
-            date: "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+            selectedDate: selectedDate,
+            filter: activeFilter,
             visitors: 7783,
             security: 4120,
             zones: 87,
