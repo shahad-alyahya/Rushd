@@ -46,7 +46,7 @@ RoutePath? getRoute(ZonePoint from, ZonePoint to) {
   }
 
   // 4️⃣ Hall → B عبر A
-  if (from == ZonePoint.gate && to == ZonePoint.b) {
+  if (from == ZonePoint.hall && to == ZonePoint.b) {
     return _combine(
       from,
       to,
@@ -56,7 +56,7 @@ RoutePath? getRoute(ZonePoint from, ZonePoint to) {
   }
 
   // 5️⃣ B → Hall عبر A
-  if (from == ZonePoint.b && to == ZonePoint.gate) {
+  if (from == ZonePoint.b && to == ZonePoint.hall) {
     return _combine(
       from,
       to,

@@ -3,9 +3,15 @@ import 'alternative_route.dart';
 import 'package:rushd/shared/VisitorBottomBar1.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rushd/map/map_view.dart';
+import 'package:rushd/map/testAreaPage.dart';
 
 class RoutesPage extends StatefulWidget {
-  const RoutesPage({super.key});
+  final String selectedLocation;
+
+  const RoutesPage({
+    super.key,
+    required this.selectedLocation,
+  });
 
   @override
   State<RoutesPage> createState() => _RoutesPageState();
@@ -15,10 +21,11 @@ class _RoutesPageState extends State<RoutesPage> {
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kDark = Color(0xFF353841);
 
-  String _selectedLocation = "Boulevard World";
+  late String _selectedLocation;
   DateTime _lastUpdate = DateTime.now();
 
   LatLng? _selectedUserLocation;
+  String? _selectedTestAreaZoneId;
 
   void _refresh() {
     setState(() {
@@ -33,7 +40,17 @@ class _RoutesPageState extends State<RoutesPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _selectedLocation = widget.selectedLocation;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool isTestArea = _selectedLocation == 'Test Area';
+    final bool hasTestAreaSelection =
+        _selectedTestAreaZoneId != null && _selectedTestAreaZoneId!.isNotEmpty;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F6),
       body: SafeArea(
@@ -47,22 +64,21 @@ class _RoutesPageState extends State<RoutesPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                     children: [
                       const SizedBox(height: 28),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.location_on,
                                 size: 26,
                                 color: kPurple,
                               ),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
-                                "Boulevard World",
-                                style: TextStyle(
+                                _selectedLocation,
+                                style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -106,9 +122,7 @@ class _RoutesPageState extends State<RoutesPage> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 20),
-
                       const Text(
                         "Routes",
                         style: TextStyle(
@@ -117,9 +131,7 @@ class _RoutesPageState extends State<RoutesPage> {
                           color: Colors.black,
                         ),
                       ),
-
                       const SizedBox(height: 8),
-
                       Text(
                         _selectedLocation,
                         style: const TextStyle(
@@ -128,25 +140,36 @@ class _RoutesPageState extends State<RoutesPage> {
                           color: Colors.black,
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
                       ClipRRect(
-                     borderRadius: BorderRadius.circular(40),
-                     child: SizedBox(
-                     height: 291,
-                     width: double.infinity,
-                     child: MapView(
-                     mode: MapMode.selectLocation,
-                     onLocationSelected: (LatLng point) {
-                     _selectedUserLocation = point;
-                       },
-                          ),
+                        borderRadius: BorderRadius.circular(40),
+                        child: SizedBox(
+                          height: 291,
+                          width: double.infinity,
+                          child: isTestArea
+                              ? TestAreaPage(
+                                  onLocationSelected:
+                                      (LatLng point, String zoneId) {
+                                    setState(() {
+                                      if (zoneId.isEmpty) {
+                                        _selectedUserLocation = null;
+                                        _selectedTestAreaZoneId = null;
+                                      } else {
+                                        _selectedUserLocation = point;
+                                        _selectedTestAreaZoneId = zoneId;
+                                      }
+                                    });
+                                  },
+                                )
+                              : MapView(
+                                  mode: MapMode.selectLocation,
+                                  onLocationSelected: (LatLng point) {
+                                    _selectedUserLocation = point;
+                                  },
+                                ),
+                        ),
                       ),
-                       ),
-
                       const SizedBox(height: 12),
-
                       const Text(
                         "Best Nearby Destinations (Low Crowd)",
                         style: TextStyle(
@@ -155,75 +178,181 @@ class _RoutesPageState extends State<RoutesPage> {
                           color: Colors.black,
                         ),
                       ),
-
                       const SizedBox(height: 12),
 
-                      destinationCard(
-                      title: "Morocco Zone",
-                      time: "5 min away!",
-                      image: "assets/images/morocco.png",
-                      onGo: () {
-                     if (_selectedUserLocation == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                    content: Text('Please select your current location first'),
-                      ),
-                    );
-                      return;
-                  }
-                  Navigator.push(
-                  context,
-                 MaterialPageRoute(
-                 builder: (context) => AlternativeRoute(
-                zoneName: "Morocco Zone",
-                locationName: "Boulevard World",
-                distance: "320 m",
-                 estimatedTime: "4 min",
-                 zoneId: "moroco",
-                 userLocation: _selectedUserLocation!,
-                ),
-                  ),
-                   );
-                     },
-                    ),
+                      if (isTestArea) ...[
+                        if (!hasTestAreaSelection)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 6, bottom: 6),
+                            child: Text(
+                              "Tap your current zone on the map first.",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF7D7B7B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
 
-                      const SizedBox(height: 18),
+                        if (hasTestAreaSelection &&
+                            _selectedTestAreaZoneId != "zone_c")
+                          destinationCard(
+                            title: "Zone C",
+                            time: "4 min away!",
+                            image: "assets/images/morocco.png",
+                            onGo: () {
+                              if (_selectedUserLocation == null) return;
 
-                      destinationCard(
-                        title: "China Zone",
-                        time: "11 min away!",
-                        image: "assets/images/china.png",
-                        onGo: () {
-                      if (_selectedUserLocation == null) {
-                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                     content: Text('Please select your current location first'),
-                    ),
-                         );
-                       return;
-                      }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlternativeRoute(
+                                    zoneName: "Zone C",
+                                    locationName: "Test Area",
+                                    distance: "250 m",
+                                    estimatedTime: "4 min",
+                                    zoneId: "zone_c",
+                                    startZoneId: _selectedTestAreaZoneId!,
+                                    userLocation: _selectedUserLocation!,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
 
-                   Navigator.push(
-                 context,
-                 MaterialPageRoute(
-                  builder: (context) => AlternativeRoute(
-                   zoneName: "China Zone",
-                  locationName: "Boulevard World",
-                   distance: "700 m",
-                   estimatedTime: "11 min",
-                   zoneId: "china",
-                   userLocation: _selectedUserLocation!,
-               ),
-                    ),
-                         );
-                        },
-                      ),
+                        if (hasTestAreaSelection &&
+                            _selectedTestAreaZoneId != "zone_c" &&
+                            _selectedTestAreaZoneId != "zone_b")
+                          const SizedBox(height: 18),
+
+                        if (hasTestAreaSelection &&
+                            _selectedTestAreaZoneId != "zone_b")
+                          destinationCard(
+                            title: "Zone B",
+                            time: "7 min away!",
+                            image: "assets/images/china.png",
+                            onGo: () {
+                              if (_selectedUserLocation == null) return;
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlternativeRoute(
+                                    zoneName: "Zone B",
+                                    locationName: "Test Area",
+                                    distance: "430 m",
+                                    estimatedTime: "7 min",
+                                    zoneId: "zone_b",
+                                    startZoneId: _selectedTestAreaZoneId!,
+                                    userLocation: _selectedUserLocation!,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                        if (hasTestAreaSelection &&
+                            _selectedTestAreaZoneId != "zone_b" &&
+                            _selectedTestAreaZoneId != "zone_a")
+                          const SizedBox(height: 18),
+
+                        if (hasTestAreaSelection &&
+                            _selectedTestAreaZoneId != "zone_a")
+                          destinationCard(
+                            title: "Zone A",
+                            time: "5 min away!",
+                            image: "assets/images/morocco.png",
+                            onGo: () {
+                              if (_selectedUserLocation == null) return;
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlternativeRoute(
+                                    zoneName: "Zone A",
+                                    locationName: "Test Area",
+                                    distance: "300 m",
+                                    estimatedTime: "5 min",
+                                    zoneId: "zone_a",
+                                    startZoneId: _selectedTestAreaZoneId!,
+                                    userLocation: _selectedUserLocation!,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                      ] else ...[
+                        destinationCard(
+                          title: "Morocco Zone",
+                          time: "5 min away!",
+                          image: "assets/images/morocco.png",
+                          onGo: () {
+                            if (_selectedUserLocation == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please select your current location first',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AlternativeRoute(
+                                  zoneName: "Morocco Zone",
+                                  locationName: "Boulevard World",
+                                  distance: "320 m",
+                                  estimatedTime: "4 min",
+                                  zoneId: "moroco",
+                                  startZoneId: "dummy",
+                                  userLocation: _selectedUserLocation!,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 18),
+                        destinationCard(
+                          title: "China Zone",
+                          time: "11 min away!",
+                          image: "assets/images/china.png",
+                          onGo: () {
+                            if (_selectedUserLocation == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please select your current location first',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AlternativeRoute(
+                                  zoneName: "China Zone",
+                                  locationName: "Boulevard World",
+                                  distance: "700 m",
+                                  estimatedTime: "11 min",
+                                  zoneId: "china",
+                                  startZoneId: "dummy",
+                                  userLocation: _selectedUserLocation!,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
 
                       const SizedBox(height: 18),
                     ],
                   ),
                 ),
-
                 const VisitorBottomBar1(currentIndex: 2),
               ],
             ),

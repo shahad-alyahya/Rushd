@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'routes.dart';
 import 'package:rushd/map/riyadh_season_map.dart';
 import 'package:rushd/map/testAreaPage.dart';
+import 'package:rushd/map/test_area_preview_map.dart';
 
 class HomePage1 extends StatefulWidget {
   const HomePage1({super.key});
@@ -131,7 +132,7 @@ class _HomePage1State extends State<HomePage1> {
               children: [
                 Positioned.fill(
                   child: _selected == 'Test Area'
-                      ? const TestAreaPage()
+                      ? const TestAreaPreviewMap()
                       : const RiyadhSeasonMapView(),
                 ),
                 Positioned(
@@ -218,7 +219,9 @@ class _HomePage1State extends State<HomePage1> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RoutesPage(),
+                     builder: (context) => RoutesPage(
+                      selectedLocation: _selected,
+                         ),
                       ),
                     );
                   },

@@ -1,7 +1,6 @@
 
 
 enum ZonePoint {
-  gate,
   a,
   b,
   c,

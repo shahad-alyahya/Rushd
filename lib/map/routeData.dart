@@ -380,14 +380,14 @@ static const RouteModel aToC = RouteModel(
  
 
   static RouteModel? getDirectRoute(ZonePoint from, ZonePoint to) {
-    if (from == ZonePoint.gate && to == ZonePoint.a) return gateToA;
-    if (from == ZonePoint.a && to == ZonePoint.gate) return aToGate;
+    if (from == ZonePoint.hall && to == ZonePoint.a) return gateToA;
+    if (from == ZonePoint.a && to == ZonePoint.hall) return aToGate;
 
-    if (from == ZonePoint.gate && to == ZonePoint.c) return gateToC;
-    if (from == ZonePoint.c && to == ZonePoint.gate) return cToGate;
+    if (from == ZonePoint.hall && to == ZonePoint.c) return gateToC;
+    if (from == ZonePoint.c && to == ZonePoint.hall) return cToGate;
 
-    if (from == ZonePoint.gate && to == ZonePoint.b) return gateToB_viaA;
-    if (from == ZonePoint.b && to == ZonePoint.gate) return bToGate_viaA;
+    if (from == ZonePoint.hall && to == ZonePoint.b) return gateToB_viaA;
+    if (from == ZonePoint.b && to == ZonePoint.hall) return bToGate_viaA;
 
     if (from == ZonePoint.a && to == ZonePoint.b) return aToB;
     if (from == ZonePoint.b && to == ZonePoint.a) return bToA;

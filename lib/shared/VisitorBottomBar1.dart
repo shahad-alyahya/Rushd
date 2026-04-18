@@ -24,7 +24,7 @@ class VisitorBottomBar1 extends StatelessWidget {
         page = const HomePage1();
         break;
       case 2:
-        page = const RoutesPage();
+        page = const RoutesPage(selectedLocation:"Boulevard World");
         break;
       default:
         page = const HomePage1();
