@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "491211849737",
+    "project_id": "rushd-655a1",
+    "storage_bucket": "rushd-655a1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:491211849737:android:23c655c826b58f6c1b38d8",
+        "android_client_info": {
+          "package_name": "com.example.rushd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2SWf06_xoNXHhj9fl-d8SJJW-2nwWIIQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

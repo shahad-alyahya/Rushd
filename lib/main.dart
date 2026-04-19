@@ -1,9 +1,10 @@
-// lib/main.dart
+
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'reading_listener.dart';
+import 'package:rushd/map/testAreaPage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,7 @@ class RushdApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
       ),
-      home: const ReadingListenerPage(),
+      home: const TestAreaPage(),
     );
   }
 }
