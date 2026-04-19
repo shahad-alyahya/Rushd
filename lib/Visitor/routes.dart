@@ -133,13 +133,13 @@ class _RoutesPageState extends State<RoutesPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _selectedLocation,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
+  "Select location on the map",
+  style: const TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: Colors.black,
+  ),
+),
                       const SizedBox(height: 16),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(40),
