@@ -3,6 +3,10 @@ import 'edit_profile_2.dart';
 import 'security_bottom_bar.dart';
 import 'package:rushd/Visitor/loginPage.dart';
 
+// Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class SecurityProfilePage extends StatefulWidget {
   const SecurityProfilePage({super.key});
 
@@ -11,11 +15,10 @@ class SecurityProfilePage extends StatefulWidget {
 }
 
 class _SecurityProfilePageState extends State<SecurityProfilePage> {
-  final String staffName = "Layan Abdullah";
-  final String staffEmail = "layan.a@rushd.sa";
-
   String selectedLanguage = 'English';
   final List<String> languages = ['English', 'العربية'];
+
+  final user = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,7 @@ class _SecurityProfilePageState extends State<SecurityProfilePage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
-          'My Profile', // نفس الفيزتور
+          'My Profile',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -34,134 +37,155 @@ class _SecurityProfilePageState extends State<SecurityProfilePage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: Center(
-          child: SizedBox(
-            width: 380,
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 25),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
+      body: user == null
+          ? const Center(child: Text("No user logged in"))
+          : StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user!.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                        // 👇 نفس الفيزتور
-                        const CircleAvatar(
-                          radius: 55,
-                          backgroundColor: Color(0xFFF3F0FA),
-                          child: Icon(
-                            Icons.person,
-                            size: 80,
-                            color: Color(0xFF424242),
-                          ),
-                        ),
+                final data = snapshot.data!.data() as Map<String, dynamic>?;
 
-                        const SizedBox(height: 15),
+                if (data == null) {
+                  return const Center(child: Text("User data not found"));
+                }
 
-                        Text(
-                          staffName,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                final fullName = data['fullName'] ?? "No Name";
+                final email = data['email'] ?? "No Email";
 
-                        Text(
-                          staffEmail,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF7C7E86),
-                          ),
-                        ),
+                return SafeArea(
+                  child: Center(
+                    child: SizedBox(
+                      width: 380,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 25),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 20),
 
-                        const SizedBox(height: 10),
+                                  const CircleAvatar(
+                                    radius: 55,
+                                    backgroundColor: Color(0xFFF3F0FA),
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 80,
+                                      color: Color(0xFF424242),
+                                    ),
+                                  ),
 
-                        // 👇 زر نفس الفيزتور
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const EditProfilePageSecurity(),
+                                  const SizedBox(height: 15),
+
+                                  Text(
+                                    fullName,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  Text(
+                                    email,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Color(0xFF7C7E86),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const EditProfilePageSecurity(),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          const Color(0xFF424242),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Edit Profile',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 30),
+
+                                  _buildOptionTile(
+                                    Icons.language,
+                                    'Languages',
+                                    trailing: _buildLanguageDropdown(),
+                                  ),
+
+                                  _buildOptionTile(
+                                    Icons.email_outlined,
+                                    'Contact Us',
+                                    subtitle: 'Reach us at support@rushd.sa',
+                                  ),
+
+                                  _buildOptionTile(
+                                    Icons.logout,
+                                    'Log out',
+                                    subtitle: 'Sign out of your account',
+                                    isDestructive: true,
+                                    onTap: () async {
+                                      await FirebaseAuth.instance.signOut();
+
+                                      if (!mounted) return;
+
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginPage(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    },
+                                  ),
+
+                                  const SizedBox(height: 40),
+
+                                  const Text(
+                                    'App Version 1.0.0',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+                                ],
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF424242),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Edit Profile',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
 
-                        const SizedBox(height: 30),
-
-                        _buildOptionTile(
-                          Icons.language,
-                          'Languages',
-                          trailing: _buildLanguageDropdown(),
-                        ),
-
-                        _buildOptionTile(
-                          Icons.email_outlined,
-                          'Contact Us',
-                          subtitle: 'Reach us at support@rushd.sa',
-                        ),
-
-                        _buildOptionTile(
-                          Icons.logout,
-                          'Log out',
-                          subtitle: 'Sign out of your account',
-                          isDestructive: true,
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Logged out successfully! 👋'),
-                                backgroundColor: Color(0xFF867AB9),
-                              ),
-                            );
-
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                              (route) => false,
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        const Text(
-                          'App Version 1.0.0',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-                      ],
+                          SecurityBottomBar(currentIndex: 0),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-
-                // بدون const ❗
-                SecurityBottomBar(currentIndex: 0),
-              ],
+                );
+              },
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -182,7 +206,7 @@ class _SecurityProfilePageState extends State<SecurityProfilePage> {
           icon,
           color: isDestructive
               ? Colors.redAccent
-              : const Color(0xFF673AB7), // نفس الفيزتور
+              : const Color(0xFF673AB7),
         ),
       ),
       title: Text(
@@ -211,7 +235,10 @@ class _SecurityProfilePageState extends State<SecurityProfilePage> {
       items: languages
           .map((l) => DropdownMenuItem(value: l, child: Text(l)))
           .toList(),
-      onChanged: (val) => setState(() => selectedLanguage = val!),
+      onChanged: (val) {
+        if (val == null) return;
+        setState(() => selectedLanguage = val);
+      },
     );
   }
 }

@@ -8,6 +8,8 @@ import 'package:rushd/shared/app_page_layout.dart';
 import 'package:rushd/shared/app_spacing.dart';
 import 'package:rushd/Security/home_page2.dart';
 import 'package:rushd/Admin/HomePage-3.dart';
+import 'package:rushd/Services/auth_service.dart';
+import 'package:rushd/Visitor/verifyEmailPage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,13 +24,6 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String selectedRole = 'visitor';
-
-final List<String> roles = [
-  'visitor',
-  'security',
-  'admin',
-];
 
   @override
   void dispose() {
@@ -77,35 +72,6 @@ final List<String> roles = [
           _buildPasswordField(),
 
           AppSpacing.h16,
-          DropdownButtonFormField<String>(
-  value: selectedRole,
-  decoration: InputDecoration(
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 20,
-    ),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xffE8E8EE)),
-    ),
-  ),
-  items: roles.map((role) {
-    return DropdownMenuItem(
-      value: role,
-      child: Text(role),
-    );
-  }).toList(),
-  onChanged: (value) {
-    if (value == null) return;
-    setState(() {
-      selectedRole = value;
-    });
-  },
-),
-
-AppSpacing.h16,
 
           Row(
             children: [
@@ -152,22 +118,54 @@ AppSpacing.h16,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: AppButton(
               text: 'SIGN IN',
-onPressed: () {
-  Widget page;
+              onPressed: () async {
+                final email = _emailController.text;
+                final password = _passwordController.text;
 
-  if (selectedRole == 'visitor') {
-    page = const HomePage1();
-  } else if (selectedRole == 'security') {
-    page = const SecurityDashboardPage();
-  } else {
-    page = const AdminHomePage();
-  }
+                final error = await AuthService.instance.login(
+                  email: email,
+                  password: password,
+                );
 
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => page),
-  );
-},
+                if (error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error)),
+                  );
+                  return;
+                }
+
+                final result =
+                    await AuthService.instance.getCurrentUserRole();
+
+                if (result == null) return;
+
+                if (result.requiresVerification) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const VerifyEmailPage()),
+                  );
+                  return;
+                }
+
+                if (result.role == 'user') {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomePage1()),
+                  );
+                } else if (result.role == 'security') {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const SecurityDashboardPage()),
+                  );
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminHomePage()),
+                  );
+                }
+              },
             ),
           ),
 

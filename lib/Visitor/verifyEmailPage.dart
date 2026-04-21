@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:rushd/shared/app_button.dart';
-import 'package:rushd/shared/app_spacing.dart';
-import 'massage1.dart';
+import 'package:rushd/Services/auth_service.dart';
+import 'homepage1.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   const VerifyEmailPage({super.key});
@@ -11,119 +11,82 @@ class VerifyEmailPage extends StatefulWidget {
 }
 
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
-  final List<TextEditingController> controllers = List.generate(
-    4,
-    (index) => TextEditingController(),
-  );
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // يبدأ التشييك كل 3 ثواني
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      await AuthService.instance.reloadCurrentUser();
+      final result = await AuthService.instance.getCurrentUserRole();
+
+      if (result == null) return;
+
+      if (!result.requiresVerification) {
+        _timer?.cancel();
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage1()),
+        );
+      }
+    });
+  }
 
   @override
   void dispose() {
-    for (final controller in controllers) {
-      controller.dispose();
-    }
+    _timer?.cancel();
     super.dispose();
+  }
+
+  Future<void> resendEmail() async {
+    await AuthService.instance.sendVerificationEmail();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Verification email sent")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF8F8FA),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
-            child: SizedBox(
-              width: 380,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 10),
-
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      size: 26,
-                      color: Color(0xff1F2230),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    "Enter your verification code",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff1F2230),
-                    ),
-                  ),
-
-                  AppSpacing.h40,
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(4, (index) {
-                      return SizedBox(
-                        width: 70,
-                        height: 70,
-                        child: TextField(
-                          controller: controllers[index],
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          maxLength: 1,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xff1F2230),
-                          ),
-                          decoration: InputDecoration(
-                            counterText: "",
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: EdgeInsets.zero,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                color: Color(0xffE8E8EE),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                color: Color(0xff8A79FF),
-                                width: 1.8,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-
-                  const SizedBox(height: 50),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: AppButton(
-                      text: 'Verification',
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Massage1(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Verify Your Email",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
+
+              const SizedBox(height: 16),
+
+              const Text(
+                "We sent a verification link to your email.\n\nWaiting for verification...",
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 40),
+
+              const CircularProgressIndicator(),
+
+              const SizedBox(height: 20),
+
+              TextButton(
+                onPressed: resendEmail,
+                child: const Text("Resend Email"),
+              ),
+            ],
           ),
         ),
       ),

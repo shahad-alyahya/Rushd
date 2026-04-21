@@ -25,7 +25,6 @@ class AuthService {
   CollectionReference<Map<String, dynamic>> get _usersRef =>
       _firestore.collection('users');
 
-  // 🔹 SIGN UP
   Future<String?> signUpUser({
     required String fullName,
     required String email,
@@ -61,14 +60,13 @@ class AuthService {
     }
   }
 
-  // 🔹 LOGIN
   Future<String?> login({
     required String email,
     required String password,
   }) async {
     try {
       await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password: password,
       );
       return null;
@@ -79,7 +77,6 @@ class AuthService {
     }
   }
 
-  // 🔹 SEND VERIFICATION
   Future<void> sendVerificationEmail() async {
     final user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
@@ -91,7 +88,6 @@ class AuthService {
     await _auth.currentUser?.reload();
   }
 
-  // 🔹 RESET PASSWORD
   Future<String?> sendPasswordReset(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email.trim());
@@ -103,7 +99,6 @@ class AuthService {
     }
   }
 
-  // 🔹 GET ROLE
   Future<AppUserRoleResult?> getCurrentUserRole() async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return null;
@@ -114,8 +109,8 @@ class AuthService {
     if (!doc.exists) return null;
 
     final data = doc.data()!;
-    final role = data['role'] ?? 'user';
-    final status = data['status'] ?? 'active';
+    final role = (data['role'] ?? 'user').toString().trim().toLowerCase();
+    final status = (data['status'] ?? 'active').toString().trim().toLowerCase();
 
     if (status != 'active') {
       await signOut();
@@ -125,7 +120,6 @@ class AuthService {
     final isVerifiedFromAuth = currentUser.emailVerified;
     final isVerifiedFromDb = data['isVerified'] ?? false;
 
-    // تحديث التحقق (بدون updatedAt)
     if (isVerifiedFromAuth && !isVerifiedFromDb) {
       await _usersRef.doc(currentUser.uid).update({
         'isVerified': true,
@@ -141,7 +135,6 @@ class AuthService {
     );
   }
 
-  // 🔹 UPDATE PROFILE
   Future<void> updateProfile({
     required String fullName,
     required String email,
@@ -158,7 +151,7 @@ class AuthService {
       'email': email.trim().toLowerCase(),
     });
   }
-  // 🔹 SIGN OUT
+
   Future<void> signOut() async {
     await _auth.signOut();
   }

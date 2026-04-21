@@ -1,10 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rushd/shared/app_button.dart';
 import 'package:rushd/shared/app_spacing.dart';
-import 'verify_email-2.dart';
 
-class ResetPassword extends StatelessWidget {
+class ResetPassword extends StatefulWidget {
   const ResetPassword({super.key});
+
+  @override
+  State<ResetPassword> createState() => _ResetPasswordState();
+}
+
+class _ResetPasswordState extends State<ResetPassword> {
+  final TextEditingController _emailController = TextEditingController();
+
+  Future<void> resetPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Enter your email")),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: email,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Password reset email sent"),
+        ),
+      );
+
+      Navigator.pop(context); // يرجع لصفحة اللوقن
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,16 +64,8 @@ class ResetPassword extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      size: 26,
-                      color: Colors.black,
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
                   ),
 
                   const SizedBox(height: 20),
@@ -41,23 +75,23 @@ class ResetPassword extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xff1F2230),
                     ),
                   ),
 
                   const SizedBox(height: 12),
 
                   const Text(
-                    "Please enter your email address to\nrequest a password reset",
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF120D26),
-                    ),
+                    "Enter your email to reset password",
                   ),
 
                   AppSpacing.h40,
 
-                  _buildEmailField(),
+                  TextField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      hintText: "abc@email.com",
+                    ),
+                  ),
 
                   const SizedBox(height: 42),
 
@@ -65,26 +99,7 @@ class ResetPassword extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: AppButton(
                       text: 'SEND',
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Verification(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  const Center(
-                    child: Text(
-                      "Re-send code in 0:20",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF7B7F9A),
-                      ),
+                      onPressed: resetPassword,
                     ),
                   ),
                 ],
@@ -92,36 +107,6 @@ class ResetPassword extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmailField() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE4DFDF),
-        ),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.mail_outline, color: Colors.grey),
-          SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "abc@email.com",
-                hintStyle: TextStyle(
-                  color: Color(0xFF747688),
-                ),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

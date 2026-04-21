@@ -3,18 +3,24 @@ import 'routes.dart';
 import 'package:rushd/map/riyadh_season_map.dart';
 import 'package:rushd/map/testAreaPage.dart';
 import 'package:rushd/map/test_area_preview_map.dart';
+import 'package:rushd/reading_listener.dart';
 
 class HomePage1 extends StatefulWidget {
   const HomePage1({super.key});
 
   @override
   State<HomePage1> createState() => _HomePage1State();
+
 }
 
 class _HomePage1State extends State<HomePage1> {
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kDark = Color(0xFF353841);
-
+  @override
+void initState() {
+  super.initState();
+  ReadingListener().startListening();
+}
   final Map<String, Map<String, dynamic>> placeData = {
     'Boulevard World': {
       'description':

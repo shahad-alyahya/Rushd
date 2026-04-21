@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'security_bottom_bar.dart';
 
 class EditProfilePageSecurity extends StatefulWidget {
@@ -10,42 +12,125 @@ class EditProfilePageSecurity extends StatefulWidget {
 }
 
 class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
-  // Key for form validation logic
   final _formKey = GlobalKey<FormState>();
 
-  // Input controllers to manage user text data
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Core function to handle database update simulation and UI refresh
-  Future<void> _processProfileUpdate() async {
-    // Validates the form state before proceeding
-    if (_formKey.currentState!.validate()) {
-      // Logic: Simulating network latency for database update
-      await Future.delayed(const Duration(seconds: 1));
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-      if (mounted) {
-        // UI Feedback: Notifying user of successful update
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile Updated Successfully! '),
-            backgroundColor: Color(0xFF867AB9),
-          ),
-        );
-        // Navigates back to the main profile page to reflect changes
-        Navigator.pop(context);
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    if (_currentUser == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .get();
+
+      final data = doc.data();
+
+      if (data != null) {
+        final fullName = (data['fullName'] ?? '').toString().trim();
+        final parts = fullName.split(' ').where((e) => e.isNotEmpty).toList();
+
+        _firstNameController.text = parts.isNotEmpty ? parts.first : '';
+        _lastNameController.text =
+            parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        _emailController.text = (data['email'] ?? '').toString();
+
+        // مجرد عرض شكلي، بدون تحديث فعلي للباسوورد
+        _passwordController.text = '************';
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user data: $e')),
+      );
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _processProfileUpdate() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_currentUser == null) return;
+
+    final fullName =
+        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+            .trim();
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update({
+        'fullName': fullName,
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile Updated Successfully!'),
+          backgroundColor: Color(0xFF867AB9),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Update failed: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
   @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // Standard iOS-style back button for intuitive navigation
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -57,7 +142,7 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 380, // Consistent container width for cross-device symmetry
+            width: 380,
             child: Column(
               children: [
                 Expanded(
@@ -79,30 +164,34 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
                           _buildProfileHeroIcon(),
                           const SizedBox(height: 40),
 
-                          // Standardized Input Fields with Validation
                           _buildCustomTextField(
                             "First Name",
                             _firstNameController,
                             Icons.person_outline,
                           ),
                           const SizedBox(height: 20),
+
                           _buildCustomTextField(
                             "Last Name",
                             _lastNameController,
                             Icons.person_outline,
                           ),
                           const SizedBox(height: 20),
+
                           _buildCustomTextField(
                             "Email Address",
                             _emailController,
                             Icons.email_outlined,
+                            enabled: false,
                           ),
                           const SizedBox(height: 20),
+
                           _buildCustomTextField(
                             "Password",
                             _passwordController,
                             Icons.lock_outline,
                             isObscured: true,
+                            enabled: false,
                           ),
 
                           const SizedBox(height: 50),
@@ -113,7 +202,6 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
                     ),
                   ),
                 ),
-                // Keeps the bottom bar active even during edit for navigation availability
                 const SecurityBottomBar(currentIndex: 0),
               ],
             ),
@@ -123,7 +211,6 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
     );
   }
 
-  // Component: The decorative security icon for the edit screen
   Widget _buildProfileHeroIcon() {
     return Container(
       height: 110,
@@ -137,31 +224,43 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
     );
   }
 
-  // Helper: Generates uniform text fields with built-in validation
   Widget _buildCustomTextField(
     String label,
     TextEditingController controller,
     IconData icon, {
     bool isObscured = false,
+    bool enabled = true,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: isObscured,
-      validator: (val) =>
-          (val == null || val.isEmpty) ? 'This field is required' : null,
+      enabled: enabled,
+      validator: (val) {
+        if (!enabled) return null;
+        return (val == null || val.isEmpty) ? 'This field is required' : null;
+      },
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF867AB9)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(color: Color(0xFF867AB9), width: 2),
         ),
+        filled: true,
+        fillColor: enabled ? Colors.white : Colors.grey.shade100,
       ),
     );
   }
 
-  // Component: The primary submit button for the form
   Widget _buildSaveActionBtn() {
     return SizedBox(
       width: double.infinity,

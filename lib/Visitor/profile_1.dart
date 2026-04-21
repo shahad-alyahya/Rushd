@@ -4,6 +4,10 @@ import 'edit_profile_1.dart';
 import 'faqs_1.dart';
 import 'loginPage.dart';
 
+// 🔥 Firebase
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ProfileVisitorPage extends StatefulWidget {
   const ProfileVisitorPage({super.key});
 
@@ -12,11 +16,10 @@ class ProfileVisitorPage extends StatefulWidget {
 }
 
 class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
-  String visitorName = "Sara Mohammed";
-  String visitorEmail = "saramohammed@gmail.com";
-
   String selectedLanguage = 'English';
   final List<String> languages = ['English', 'العربية'];
+
+  final user = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -35,137 +38,173 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: Center(
-          child: SizedBox(
-            width: 380,
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 25),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
 
-                        const CircleAvatar(
-                          radius: 55,
-                          backgroundColor: Color(0xFFF3F0FA),
-                          child: Icon(
-                            Icons.person,
-                            size: 80,
-                            color: Color(0xFF424242),
-                          ),
-                        ),
+      // 🔥 StreamBuilder لجلب بيانات المستخدم
+      body: user == null
+          ? const Center(child: Text("No user logged in"))
+          : StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user!.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                        const SizedBox(height: 15),
+                final data = snapshot.data!.data() as Map<String, dynamic>;
 
-                        Text(
-                          visitorName,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                final fullName = data['fullName'] ?? "No Name";
+                final email = data['email'] ?? "No Email";
 
-                        Text(
-                          visitorEmail,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
+                return SafeArea(
+                  child: Center(
+                    child: SizedBox(
+                      width: 380,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 25),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 20),
 
-                        const SizedBox(height: 10),
+                                  const CircleAvatar(
+                                    radius: 55,
+                                    backgroundColor: Color(0xFFF3F0FA),
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 80,
+                                      color: Color(0xFF424242),
+                                    ),
+                                  ),
 
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const EditProfilePage(),
+                                  const SizedBox(height: 15),
+
+                                  // ✅ الاسم من Firebase
+                                  Text(
+                                    fullName,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  // ✅ الإيميل من Firebase
+                                  Text(
+                                    email,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const EditProfilePage(),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          const Color(0xFF424242),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Edit Profile',
+                                      style:
+                                          TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 30),
+
+                                  _buildOptionTile(
+                                    Icons.language,
+                                    'Languages',
+                                    trailing: _buildLanguageDropdown(),
+                                  ),
+
+                                  _buildOptionTile(
+                                    Icons.help_outline,
+                                    'FAQ',
+                                    subtitle:
+                                        'Find answers to your questions',
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const FAQPage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+
+                                  _buildOptionTile(
+                                    Icons.email_outlined,
+                                    'Contact Us',
+                                    subtitle:
+                                        'Reach us at support@rushd.com',
+                                  ),
+
+                                  _buildOptionTile(
+                                    Icons.logout,
+                                    'Log out',
+                                    subtitle:
+                                        'Sign out of your account safely',
+                                    isDestructive: true,
+                                    onTap: () async {
+                                      await FirebaseAuth.instance
+                                          .signOut();
+
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginPage(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    },
+                                  ),
+
+                                  const SizedBox(height: 40),
+
+                                  const Text(
+                                    'App Version 1.0.0',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+                                ],
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF424242),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Edit Profile',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
 
-                        const SizedBox(height: 30),
-
-                        _buildOptionTile(
-                          Icons.language,
-                          'Languages',
-                          trailing: _buildLanguageDropdown(),
-                        ),
-
-                        _buildOptionTile(
-                          Icons.help_outline,
-                          'FAQ',
-                          subtitle: 'Find answers to your questions',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const FAQPage(),
-                              ),
-                            );
-                          },
-                        ),
-
-                        _buildOptionTile(
-                          Icons.email_outlined,
-                          'Contact Us',
-                          subtitle: 'Reach us at support@rushd.com',
-                        ),
-
-                       _buildOptionTile(
-  Icons.logout,
-  'Log out',
-  subtitle: 'Sign out of your account safely',
-  isDestructive: true,
-  onTap: () {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const LoginPage(),
-      ),
-      (route) => false,
-    );
-  },
-),
-
-                        const SizedBox(height: 40),
-
-                        const Text(
-                          'App Version 1.0.0',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-                      ],
+                          const VisitorBottomBar1(currentIndex: 0),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-
-                const VisitorBottomBar1(currentIndex: 0),
-              ],
+                );
+              },
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -184,7 +223,9 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
         backgroundColor: const Color(0xFFF3F0FA),
         child: Icon(
           icon,
-          color: isDestructive ? Colors.redAccent : const Color(0xFF673AB7),
+          color: isDestructive
+              ? Colors.redAccent
+              : const Color(0xFF673AB7),
         ),
       ),
       title: Text(

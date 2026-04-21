@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:rushd/map/map_view.dart';
 import 'security_bottom_bar.dart';
+import 'package:rushd/reading_listener.dart';
 
 class SecurityDashboardPage extends StatefulWidget {
   const SecurityDashboardPage({super.key});
 
   @override
   State<SecurityDashboardPage> createState() => _SecurityDashboardPageState();
+
+
+
+
+
 }
 
 class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
   String lastUpdate = "9:12"; // Dynamic update state
-
+  @override
+void initState() {
+  super.initState();
+  ReadingListener().startListening();
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'calculation_utils.dart';
 import 'processing_result.dart';
@@ -36,7 +35,10 @@ class RushdFirestoreService {
     if (result == null || !result.processed) return;
 
     await _upsertAlert(result);
-    await refreshStatisticsForLocation(result.locationId);
+    await refreshStatisticsForLocation(
+      locationId: result.locationId,
+      readingTimestamp: reading.timestamp.toDate(),
+    );
   }
 
   Future<ProcessingResult?> _processReadingTransaction(
@@ -58,6 +60,11 @@ class RushdFirestoreService {
 
       if (readingData == null) {
         throw Exception('Reading data is null: ${reading.id}');
+      }
+
+      if (readingData['status'] == 'processed') {
+        result = null;
+        return;
       }
 
       final currentStatus = (readingData['status'] ?? 'received') as String;
@@ -98,7 +105,8 @@ class RushdFirestoreService {
         exitCount: reading.exitCount,
       );
 
-      final int newCurrentCount = CalculationUtils.calculateCurrentCountFromInside(
+      final int newCurrentCount =
+          CalculationUtils.calculateCurrentCountFromInside(
         inside: reading.inside,
         oldCount: zone.currentCount,
         netChange: netCountChange,
@@ -112,7 +120,8 @@ class RushdFirestoreService {
 
       final double roundedDensity = CalculationUtils.roundTo2(density);
 
-      final String congestionLevel = CalculationUtils.calculateCongestionLevel(
+      final String congestionLevel =
+          CalculationUtils.calculateCongestionLevel(
         density: density,
         lowThreshold: zone.lowThreshold,
         mediumThreshold: zone.mediumThreshold,
@@ -132,14 +141,7 @@ class RushdFirestoreService {
 
       transaction.update(readingRef, {
         'netCountChange': netCountChange,
-
-
-
-
-
-
-
-'currentCountAfterReading': newCurrentCount,
+        'currentCountAfterReading': newCurrentCount,
         'densityAfterReading': roundedDensity,
         'congestionLevelAfterReading': congestionLevel,
         'status': 'processed',
@@ -205,40 +207,49 @@ class RushdFirestoreService {
     }
   }
 
-  Future<void> refreshStatisticsForLocation(String locationId) async {
-    final zonesSnapshot = await _zonesRef
-        .where('locationId', isEqualTo: locationId)
-        .get();
+  Future<void> refreshStatisticsForLocation({
+    required String locationId,
+    DateTime? readingTimestamp,
+  }) async {
+    final DateTime baseTime = readingTimestamp ?? DateTime.now();
+    final DateTime startOfDay =
+        DateTime(baseTime.year, baseTime.month, baseTime.day);
+    final DateTime endOfDay = startOfDay.add(const Duration(days: 1));
 
-    if (zonesSnapshot.docs.isEmpty) return;
+    final String date = _formatDate(startOfDay);
+    final String month =
+        '${startOfDay.year}-${startOfDay.month.toString().padLeft(2, '0')}';
+    final String year = startOfDay.year.toString();
 
-    int totalVisitors = 0;
-
-    for (final doc in zonesSnapshot.docs) {
-      final data = doc.data();
-      totalVisitors += ((data['currentCount'] ?? 0) as num).toInt();
-    }
+    final zonesSnapshot =
+        await _zonesRef.where('locationId', isEqualTo: locationId).get();
 
     final usersSnapshot = await _usersRef
         .where('assignedLocationId', isEqualTo: locationId)
+        .where('role', isEqualTo: 'security')
+        .where('status', isEqualTo: 'active')
         .get();
 
-    int totalSecurity = 0;
+    final readingsSnapshot = await _sensorReadingsRef
+        .where('locationId', isEqualTo: locationId)
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
+        .where(
+          'timestamp',
+          isLessThan: Timestamp.fromDate(endOfDay),
+        )
+        .get();
 
-    for (final doc in usersSnapshot.docs) {
+    int totalVisitors = 0;
+    for (final doc in readingsSnapshot.docs) {
       final data = doc.data();
-      final String role = (data['role'] ?? '').toString().toLowerCase();
-      final String status = (data['status'] ?? 'active').toString().toLowerCase();
-
-      if (role == 'security' && status == 'active') {
-        totalSecurity++;
-      }
+      totalVisitors += ((data['entryCount'] ?? 0) as num).toInt();
     }
 
-    final now = DateTime.now();
-    final date = now.toIso8601String().split('T').first;
-    final month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
-    final year = now.year.toString();
+    final int totalZones = zonesSnapshot.docs.length;
+    final int totalSecurity = usersSnapshot.docs.length;
 
     final existingStatsQuery = await _statisticsRef
         .where('locationId', isEqualTo: locationId)
@@ -254,7 +265,7 @@ class RushdFirestoreService {
       'month': month,
       'year': year,
       'totalVisitors': totalVisitors,
-      'totalZones': zonesSnapshot.docs.length,
+      'totalZones': totalZones,
       'totalSecurity': totalSecurity,
       'lastUpdated': FieldValue.serverTimestamp(),
     };
@@ -264,5 +275,12 @@ class RushdFirestoreService {
     } else {
       await _statisticsRef.add(statsData);
     }
+  }
+
+  String _formatDate(DateTime date) {
+    final year = date.year.toString();
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 }

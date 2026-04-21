@@ -3,65 +3,122 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 class ExportService {
-  static String _formatDateByFilter(DateTime date, String filter) {
-    switch (filter) {
-      case 'Daily':
-        return '${date.day}/${date.month}/${date.year}';
-      case 'Monthly':
-        return '${date.month}/${date.year}';
-      case 'Year':
-        return '${date.year}';
-      default:
-        return '${date.day}/${date.month}/${date.year}';
-    }
+  static String _formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
   }
 
-  static Future<Uint8List> _buildAdminReportPdf({
+  static Future<Uint8List> _buildFullAdminReport({
     required String location,
     required DateTime selectedDate,
-    required String filter,
     required int visitors,
     required int security,
     required int zones,
+    required List<String> zoneNames,
+    required List<String> securityNames,
+    required List<Map<String, dynamic>> readings,
   }) async {
     final pdf = pw.Document();
-    final formattedDate = _formatDateByFilter(selectedDate, filter);
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         margin: const pw.EdgeInsets.all(24),
-        build: (context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                'Admin Report',
-                style: pw.TextStyle(
-                  fontSize: 24,
-                  fontWeight: pw.FontWeight.bold,
+        build: (context) => [
+          // 🔹 Header
+          pw.Text(
+            'Rushd Admin Report',
+            style: pw.TextStyle(
+              fontSize: 26,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+
+          pw.SizedBox(height: 20),
+
+          pw.Text("Location: $location"),
+          pw.Text("Date: ${_formatDate(selectedDate)}"),
+
+          pw.Divider(),
+
+          // 🔹 Summary
+          pw.Text("Summary", style: pw.TextStyle(fontSize: 18)),
+          pw.SizedBox(height: 10),
+
+          pw.Text("Visitors: $visitors"),
+          pw.Text("Security Staff: $security"),
+          pw.Text("Zones: $zones"),
+
+          pw.SizedBox(height: 20),
+
+          // 🔹 Zones
+          pw.Text("Zones", style: pw.TextStyle(fontSize: 18)),
+          pw.SizedBox(height: 10),
+
+          ...zoneNames.map(
+            (z) => pw.Text("- $z"),
+          ),
+
+          pw.SizedBox(height: 20),
+
+          // 🔹 Security
+          pw.Text("Security Staff", style: pw.TextStyle(fontSize: 18)),
+          pw.SizedBox(height: 10),
+
+          ...securityNames.map(
+            (s) => pw.Text("- $s"),
+          ),
+
+          pw.SizedBox(height: 20),
+
+          // 🔹 Sensor Readings
+          pw.Text("Sensor Readings", style: pw.TextStyle(fontSize: 18)),
+          pw.SizedBox(height: 10),
+
+          ...readings.map((r) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  "Time: ${r['time']}",
+                  style: const pw.TextStyle(fontSize: 10),
                 ),
-              ),
-              pw.SizedBox(height: 20),
-              pw.Text('Location: $location'),
-              pw.SizedBox(height: 10),
-              pw.Text('Filter: $filter'),
-              pw.SizedBox(height: 10),
-              pw.Text('Date: $formattedDate'),
-              pw.SizedBox(height: 20),
-              pw.Text('Visitors: $visitors'),
-              pw.SizedBox(height: 10),
-              pw.Text('Security: $security'),
-              pw.SizedBox(height: 10),
-              pw.Text('Zones: $zones'),
-            ],
-          );
-        },
+                pw.Text("Entry: ${r['entry']}"),
+                pw.Text("Exit: ${r['exit']}"),
+                pw.Text("Inside: ${r['inside']}"),
+                pw.Divider(),
+              ],
+            );
+          }),
+        ],
       ),
     );
 
     return Uint8List.fromList(await pdf.save());
   }
 
+  // 🔹 هذا اللي تستدعينه من Admin Page
+  static Future<void> exportFullReport({
+    required String location,
+    required DateTime selectedDate,
+    required int visitors,
+    required int security,
+    required int zones,
+    required List<String> zoneNames,
+    required List<String> securityNames,
+    required List<Map<String, dynamic>> readings,
+  }) async {
+    final bytes = await _buildFullAdminReport(
+      location: location,
+      selectedDate: selectedDate,
+      visitors: visitors,
+      security: security,
+      zones: zones,
+      zoneNames: zoneNames,
+      securityNames: securityNames,
+      readings: readings,
+    );
+
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
+  }
   static Future<Uint8List> _buildZonesReportPdf({
     required String location,
     required List<String> zoneNames,
@@ -133,57 +190,13 @@ class ExportService {
                   child: pw.Text('- $name'),
                 ),
               ),
-            ],);
+            ],
+          );
         },
       ),
     );
 
     return Uint8List.fromList(await pdf.save());
-  }
-
-  static Future<void> exportAdminReport({
-    required String location,
-    required DateTime selectedDate,
-    required String filter,
-    required int visitors,
-    required int security,
-    required int zones,
-  }) async {
-    final bytes = await _buildAdminReportPdf(
-      location: location,
-      selectedDate: selectedDate,
-      filter: filter,
-      visitors: visitors,
-      security: security,
-      zones: zones,
-    );
-
-    await Printing.layoutPdf(
-      onLayout: (format) async => bytes,
-    );
-  }
-
-  static Future<void> shareAdminReport({
-    required String location,
-    required DateTime selectedDate,
-    required String filter,
-    required int visitors,
-    required int security,
-    required int zones,
-  }) async {
-    final bytes = await _buildAdminReportPdf(
-      location: location,
-      selectedDate: selectedDate,
-      filter: filter,
-      visitors: visitors,
-      security: security,
-      zones: zones,
-    );
-
-    await Printing.sharePdf(
-      bytes: bytes,
-      filename: 'admin_report.pdf',
-    );
   }
 
   static Future<void> exportZonesReport({
@@ -241,6 +254,32 @@ class ExportService {
     await Printing.sharePdf(
       bytes: bytes,
       filename: 'security_report.pdf',
+    );
+  }
+  static Future<void> shareFullReport({
+    required String location,
+    required DateTime selectedDate,
+    required int visitors,
+    required int security,
+    required int zones,
+    required List<String> zoneNames,
+    required List<String> securityNames,
+    required List<Map<String, dynamic>> readings,
+  }) async {
+    final bytes = await _buildFullAdminReport(
+      location: location,
+      selectedDate: selectedDate,
+      visitors: visitors,
+      security: security,
+      zones: zones,
+      zoneNames: zoneNames,
+      securityNames: securityNames,
+      readings: readings,
+    );
+
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: 'rushd_report.pdf',
     );
   }
 }

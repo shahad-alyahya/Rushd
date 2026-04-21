@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -10,17 +12,81 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _firstNameController =
-      TextEditingController(text: 'Sara');
-  final TextEditingController _lastNameController =
-      TextEditingController(text: 'Mohammed');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'saramohammed@gmail.com');
-  final TextEditingController _passwordController =
-      TextEditingController(text: '************');
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-  void _submitData() {
-    if (_formKey.currentState!.validate()) {
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    if (_currentUser == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .get();
+
+      final data = doc.data();
+
+      if (data != null) {
+        final fullName = (data['fullName'] ?? '').toString().trim();
+        final parts = fullName.split(' ').where((e) => e.isNotEmpty).toList();
+
+        _firstNameController.text = parts.isNotEmpty ? parts.first : '';
+        _lastNameController.text =
+            parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        _emailController.text = (data['email'] ?? '').toString();
+        _passwordController.text = '************';
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load user data: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _submitData() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_currentUser == null) return;
+
+    final fullName =
+        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+            .trim();
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update({
+        'fullName': fullName,
+      });
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile Updated Successfully! ✅'),
@@ -34,6 +100,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
           Navigator.pop(context);
         }
       });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
@@ -48,6 +123,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -113,12 +197,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                     const SizedBox(height: 16),
 
-                    _buildField(
-                      "Password",
-                      _passwordController,
-                      Icons.lock_outline,
-                      isPass: true,
-                    ),
+                    _buildPasswordField(),
 
                     const SizedBox(height: 38),
 
@@ -155,14 +234,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildField(
     String label,
     TextEditingController controller,
-    IconData icon, {
-    bool isPass = false,
-  }) {
+    IconData icon,
+  ) {
     return SizedBox(
       width: double.infinity,
       child: TextFormField(
         controller: controller,
-        obscureText: isPass,
         validator: (value) =>
             (value == null || value.isEmpty) ? 'Enter $label' : null,
         decoration: InputDecoration(
@@ -200,12 +277,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       width: double.infinity,
       child: TextFormField(
         controller: _emailController,
-        validator: (value) {
-          if (value == null || !value.contains('@') || !value.contains('.')) {
-            return 'Enter a valid email';
-          }
-          return null;
-        },
+        enabled: false,
         decoration: InputDecoration(
           labelText: "Email Address",
           labelStyle: const TextStyle(fontSize: 15),
@@ -221,15 +293,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
             borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
           ),
-          focusedBorder: OutlineInputBorder(
+          disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(
-              color: Color(0xFF673AB7),
-              width: 1.4,
-            ),
+            borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
           ),
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: Colors.grey.shade200,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return SizedBox(
+      width: double.infinity,
+      child: TextFormField(
+        controller: _passwordController,
+        enabled: false,
+        obscureText: true,
+        decoration: InputDecoration(
+          labelText: "Password",
+          labelStyle: const TextStyle(fontSize: 15),
+          prefixIcon: const Icon(
+            Icons.lock_outline,
+            size: 22,
+            color: Color(0xFF673AB7),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Color(0xFFBFC3CF)),
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade200,
           contentPadding: const EdgeInsets.symmetric(vertical: 18),
         ),
       ),

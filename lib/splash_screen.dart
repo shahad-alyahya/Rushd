@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // import 'package:rushd/Security/home_page2.dart'; // [DEPRECATED] Original destination commented out
 //import 'package:rushd/Admin/HomePage-3.dart'; // [UPDATED] Redirecting to Admin Dashboard
 import 'package:rushd/Visitor/loginPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -40,22 +41,19 @@ class _SplashScreenState extends State<SplashScreen>
     // --- Navigation Logic Implementation ---
     // Executing the transition after a 3-second delay for branding exposure
     Future.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return;
+  if (!mounted) return;
 
-      // Routing to the Administrative Module
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              // const SecurityDashboardPage(), // [Original Destination Commented Out]
-              const LoginPage(), // [New Destination: Admin Dashboard]
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // Smooth Cross-Fade transition for premium UI feel
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
-      );
-    });
+  Navigator.of(context).pushReplacement(
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const LoginPage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+      transitionDuration: const Duration(milliseconds: 800),
+    ),
+  );
+});
   }
 
   @override

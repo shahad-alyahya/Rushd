@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rushd/Admin/export.dart';
-// --- Navigation & Core Modules ---
 import 'admin_bottom_bar.dart';
 import 'package:rushd/Visitor/loginPage.dart';
 
@@ -13,15 +14,52 @@ class AdminHomePage extends StatefulWidget {
 
 class _AdminHomePageState extends State<AdminHomePage> {
   String activeFilter = 'Daily';
-  String selectedLocation = 'Boulevard World';
-  DateTime selectedDate = DateTime(2025, 10, 15);
+  String? selectedLocationId;
+  String selectedLocationName = 'Select Location';
+  DateTime selectedDate = DateTime.now();
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  List<Map<String, String>> locations = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final snapshot = await _firestore.collection('locations').get();
+
+      final loadedLocations = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'name': (data['locationName'] ?? doc.id).toString(),
+        };
+      }).toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        locations = loadedLocations;
+        if (loadedLocations.isNotEmpty) {
+          selectedLocationId = loadedLocations.first['id'];
+          selectedLocationName = loadedLocations.first['name']!;
+        }
+      });
+    } catch (e) {
+      debugPrint('Error loading locations: $e');
+    }
+  }
 
   Future<void> _pickDate() async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      lastDate: DateTime(2035),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -31,18 +69,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
         );
       },
     );
+
     if (picked != null && picked != selectedDate) {
       setState(() => selectedDate = picked);
     }
   }
 
   void _showLocationPicker() {
-    final List<String> locations = [
-      'Boulevard World',
-      'Bujairi Terrace',
-      'Boulevard City',
-      'Via Riyadh',
-    ];
+    if (locations.isEmpty) return;
 
     showModalBottomSheet(
       context: context,
@@ -62,9 +96,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
               const Divider(),
               ...locations.map(
                 (loc) => ListTile(
-                  title: Text(loc, textAlign: TextAlign.center),
+                  title: Text(
+                    loc['name']!,
+                    textAlign: TextAlign.center,
+                  ),
                   onTap: () {
-                    setState(() => selectedLocation = loc);
+                    setState(() {
+                      selectedLocationId = loc['id'];
+                      selectedLocationName = loc['name']!;
+                    });
                     Navigator.pop(context);
                   },
                 ),
@@ -75,6 +115,277 @@ class _AdminHomePageState extends State<AdminHomePage> {
       },
     );
   }
+
+  DateTime get _startOfDay =>
+      DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+
+  DateTime get _endOfDay => _startOfDay.add(const Duration(days: 1));
+
+  DateTime get _startOfMonth =>
+      DateTime(selectedDate.year, selectedDate.month, 1);
+
+  DateTime get _endOfMonth => selectedDate.month == 12
+      ? DateTime(selectedDate.year + 1, 1, 1)
+      : DateTime(selectedDate.year, selectedDate.month + 1, 1);
+
+  DateTime get _startOfYear => DateTime(selectedDate.year, 1, 1);
+
+  DateTime get _endOfYear => DateTime(selectedDate.year + 1, 1, 1);
+
+  ({DateTime start, DateTime end}) _getSelectedRange() {
+    if (activeFilter == 'Daily') {
+      return (start: _startOfDay, end: _endOfDay);
+    } else if (activeFilter == 'Monthly') {
+      return (start: _startOfMonth, end: _endOfMonth);
+    } else {
+      return (start: _startOfYear, end: _endOfYear);
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final year = date.year.toString();
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
+  String _formatMonth(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    return '${date.year}-$month';
+  }
+
+  Future<Map<String, dynamic>> _fetchPanelStats() async {
+    if (selectedLocationId == null) {
+      return {
+        'visitors': 0,
+        'security': 0,
+        'zones': 0,
+      };
+    }
+
+    try {
+      Query<Map<String, dynamic>> query = _firestore
+          .collection('statistics')
+          .where('locationId', isEqualTo: selectedLocationId)
+          .where('periodType', isEqualTo: 'day');
+
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+
+      if (activeFilter == 'Daily') {
+        final date = _formatDate(selectedDate);
+        snapshot = await query.where('date', isEqualTo: date).get();
+
+        if (snapshot.docs.isEmpty) {
+          return {
+            'visitors': 0,
+            'security': 0,
+            'zones': 0,
+          };
+        }
+
+        final data = snapshot.docs.first.data();
+        return {
+          'visitors': ((data['totalVisitors'] ?? 0) as num).toInt(),
+          'security': ((data['totalSecurity'] ?? 0) as num).toInt(),
+          'zones': ((data['totalZones'] ?? 0) as num).toInt(),
+        };
+      } else if (activeFilter == 'Monthly') {
+        final month = _formatMonth(selectedDate);
+        snapshot = await query.where('month', isEqualTo: month).get();
+      } else {
+        final year = selectedDate.year.toString();
+        snapshot = await query.where('year', isEqualTo: year).get();
+      }
+
+      if (snapshot.docs.isEmpty) {
+        return {
+          'visitors': 0,
+          'security': 0,
+          'zones': 0,
+        };
+      }
+
+      int totalVisitors = 0;
+      int totalSecurity = 0;
+      int totalZones = 0;
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        totalVisitors += ((data['totalVisitors'] ?? 0) as num).toInt();
+
+        final security = ((data['totalSecurity'] ?? 0) as num).toInt();
+        final zones = ((data['totalZones'] ?? 0) as num).toInt();
+
+        if (security > totalSecurity) totalSecurity = security;
+        if (zones > totalZones) totalZones = zones;
+      }
+
+      return {
+        'visitors': totalVisitors,
+        'security': totalSecurity,
+        'zones': totalZones,
+      };
+    } catch (e) {
+      debugPrint('Error fetching panel stats: $e');
+      return {
+        'visitors': 0,
+        'security': 0,
+        'zones': 0,
+      };
+    }
+  }
+Future<Map<String, dynamic>> _fetchReportDetails() async {
+  if (selectedLocationId == null) {
+    return {
+      'zoneNames': <String>[],
+      'securityNames': <String>[],
+      'readings': <Map<String, dynamic>>[],
+      'visitors': 0,
+      'security': 0,
+      'zones': 0,
+    };
+  }
+
+  try {
+    final zonesFuture = _firestore
+        .collection('zones')
+        .where('locationId', isEqualTo: selectedLocationId)
+        .get();
+
+    final securityFuture = _firestore
+        .collection('users')
+        .where('assignedLocationId', isEqualTo: selectedLocationId)
+        .where('role', isEqualTo: 'security')
+        .where('status', isEqualTo: 'active')
+        .get();
+
+    // ✅ بدون فلترة تاريخ
+    final readingsFuture = _firestore
+        .collection('sensor_readings')
+        .where('locationId', isEqualTo: selectedLocationId)
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    final results = await Future.wait([
+      zonesFuture,
+      securityFuture,
+      readingsFuture,
+    ]);
+
+    final zonesSnap = results[0] as QuerySnapshot<Map<String, dynamic>>;
+    final securitySnap = results[1] as QuerySnapshot<Map<String, dynamic>>;
+    final readingsSnap = results[2] as QuerySnapshot<Map<String, dynamic>>;
+
+    final zoneNames = zonesSnap.docs
+        .map((e) => (e.data()['zoneName'] ?? 'Unknown Zone').toString())
+        .toList();
+
+    final securityNames = securitySnap.docs
+        .map((e) => (e.data()['fullName'] ?? 'Unknown Security').toString())
+        .toList();
+
+    int totalVisitors = 0;
+
+    final readings = readingsSnap.docs.map((doc) {
+      final d = doc.data();
+
+      final entry = ((d['entryCount'] ?? 0) as num).toInt();
+      final exit = ((d['exitCount'] ?? 0) as num).toInt();
+      final inside = ((d['inside'] ?? 0) as num).toInt();
+      final deviceId = (d['deviceId'] ?? '').toString();
+      final zoneId = (d['zoneId'] ?? '').toString();
+      final status = (d['status'] ?? '').toString();
+
+      totalVisitors += entry;
+
+      final ts = d['timestamp'];
+      String timeText = '';
+      if (ts is Timestamp) {
+        final dt = ts.toDate();
+        timeText =
+            '${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+      }
+
+      return {
+        'time': timeText,
+        'entry': entry,
+        'exit': exit,
+        'inside': inside,
+        'deviceId': deviceId,
+        'zoneId': zoneId,
+        'status': status,
+      };
+    }).toList();
+
+    return {
+      'zoneNames': zoneNames,
+      'securityNames': securityNames,
+      'readings': readings,
+      'visitors': totalVisitors,
+      'security': securitySnap.docs.length,
+      'zones': zonesSnap.docs.length,
+    };
+  } catch (e) {
+    debugPrint('Error fetching report details: $e');
+    return {
+      'zoneNames': <String>[],
+      'securityNames': <String>[],
+      'readings': <Map<String, dynamic>>[],
+      'visitors': 0,
+      'security': 0,
+      'zones': 0,
+    };
+  }
+}
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
+  String _formattedSelectedDate() {
+    if (activeFilter == 'Daily') {
+      return '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+    } else if (activeFilter == 'Monthly') {
+      return '${selectedDate.month}/${selectedDate.year}';
+    } else {
+      return '${selectedDate.year}';
+    }
+  }
+Future<void> _shareReport() async {
+  final details = await _fetchReportDetails();
+
+  await ExportService.shareFullReport(
+    location: selectedLocationName,
+    selectedDate: selectedDate,
+    visitors: details['visitors'] as int,
+    security: details['security'] as int,
+    zones: details['zones'] as int,
+    zoneNames: (details['zoneNames'] as List).cast<String>(),
+    securityNames: (details['securityNames'] as List).cast<String>(),
+    readings: (details['readings'] as List).cast<Map<String, dynamic>>(),
+  );
+}
+  Future<void> _printReport() async {
+  final details = await _fetchReportDetails();
+
+  await ExportService.exportFullReport(
+    location: selectedLocationName,
+    selectedDate: selectedDate,
+    visitors: details['visitors'] as int,
+    security: details['security'] as int,
+    zones: details['zones'] as int,
+    zoneNames: (details['zoneNames'] as List).cast<String>(),
+    securityNames: (details['securityNames'] as List).cast<String>(),
+    readings: (details['readings'] as List).cast<Map<String, dynamic>>(),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -90,47 +401,63 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 25),
-                        _buildHeader(context),
-                        const SizedBox(height: 30),
-                        _buildMetricOverview(),
-                        const SizedBox(height: 30),
-                        _buildPeriodToggle(),
-                        const SizedBox(height: 35),
-                        const Text(
-                          'Select Location',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        _buildSelectionBox(
-                          selectedLocation,
-                          Icons.keyboard_arrow_down,
-                          _showLocationPicker,
-                        ),
-                        const SizedBox(height: 25),
-                        const Text(
-                          'Date',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        _buildSelectionBox(
-                          "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-                          Icons.calendar_month,
-                          _pickDate,
-                        ),
-                        const SizedBox(height: 40),
-                        _buildQuickActions(),
-                        const SizedBox(height: 20),
-                      ],
+                    child: FutureBuilder<Map<String, dynamic>>(
+                      future: _fetchPanelStats(),
+                      builder: (context, snapshot) {
+                        final stats = snapshot.data ??
+                            {
+                              'visitors': 0,
+                              'security': 0,
+                              'zones': 0,
+                            };
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 25),
+                            _buildHeader(context),
+                            const SizedBox(height: 30),
+                            _buildMetricOverview(
+                              visitors: stats['visitors'] as int,
+                              security: stats['security'] as int,
+                              zones: stats['zones'] as int,
+                            ),
+                            const SizedBox(height: 30),
+                            _buildPeriodToggle(),
+                            const SizedBox(height: 35),
+                            const Text(
+                              'Select Location',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildSelectionBox(
+                              selectedLocationName,
+                              Icons.keyboard_arrow_down,
+                              _showLocationPicker,
+                            ),
+                            const SizedBox(height: 25),
+                            const Text(
+                              'Date',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildSelectionBox(
+                              _formattedSelectedDate(),
+                              Icons.calendar_month,
+                              _pickDate,
+                            ),
+                            const SizedBox(height: 40),
+                            _buildQuickActions(),
+                            const SizedBox(height: 20),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -148,9 +475,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
+        const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Hi Admin!',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -162,17 +489,18 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ],
         ),
         GestureDetector(
-          onTap: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          ),
+          onTap: _logout,
           child: const Icon(Icons.logout, color: Color(0xFFA61A22), size: 26),
         ),
       ],
     );
   }
 
-  Widget _buildMetricOverview() {
+  Widget _buildMetricOverview({
+    required int visitors,
+    required int security,
+    required int zones,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -181,14 +509,19 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
       child: Column(
         children: [
-          _buildSimpleCard('Visitors', '7,783', height: 90, fullWidth: true),
+          _buildSimpleCard(
+            'Visitors',
+            visitors.toString(),
+            height: 90,
+            fullWidth: true,
+          ),
           const SizedBox(height: 15),
           Row(
             children: [
               Expanded(
                 child: _buildSimpleCard(
                   'Security',
-                  '4,120',
+                  security.toString(),
                   height: 110,
                   icon: Icons.security,
                 ),
@@ -197,7 +530,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               Expanded(
                 child: _buildSimpleCard(
                   'Zones',
-                  '87',
+                  zones.toString(),
                   height: 110,
                   icon: Icons.location_on_outlined,
                 ),
@@ -221,7 +554,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
       child: Row(
         children: ['Daily', 'Monthly', 'Year'].map((label) {
-          final bool isSelected = activeFilter == label;
+          final isSelected = activeFilter == label;
           return Expanded(
             child: GestureDetector(
               onTap: () => setState(() => activeFilter = label),
@@ -323,54 +656,41 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-Widget _buildQuickActions() {
+  Widget _buildQuickActions() {
   return Row(
     mainAxisAlignment: MainAxisAlignment.end,
     children: [
       _buildCircleIcon(
         Icons.ios_share_outlined,
         () async {
-          await ExportService.shareAdminReport(
-            location: selectedLocation,
-            selectedDate: selectedDate,
-            filter: activeFilter,
-            visitors: 7783,
-            security: 4120,
-            zones: 87,
-          );
+          await _shareReport();
         },
       ),
       const SizedBox(width: 15),
       _buildCircleIcon(
         Icons.print,
         () async {
-          await ExportService.exportAdminReport(
-            location: selectedLocation,
-            selectedDate: selectedDate,
-            filter: activeFilter,
-            visitors: 7783,
-            security: 4120,
-            zones: 87,
-          );
+          await _printReport();
         },
       ),
     ],
   );
 }
+
   Widget _buildCircleIcon(IconData icon, VoidCallback onTap) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 6),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: Colors.black12, blurRadius: 6),
+          ],
+        ),
+        child: Icon(icon, size: 22, color: Colors.black87),
       ),
-      child: Icon(icon, size: 22, color: Colors.black87),
-    ),
-  );
-}
+    );
+  }
 }
