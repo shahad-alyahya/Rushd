@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:rushd/map/map_view.dart';
-import 'package:rushd/map/test_area_preview_map.dart';
+import 'package:rushd/map/testAreaPage.dart';
 import 'security_bottom_bar.dart';
 import 'package:rushd/reading_listener.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SecurityDashboardPage extends StatefulWidget {
   const SecurityDashboardPage({super.key});
@@ -45,13 +46,9 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                       children: [
                         _buildHeader(),
                         const SizedBox(height: 20),
-
                         _buildTopDropdown(),
-
                         const SizedBox(height: 20),
-
                         _buildMapSection(),
-
                         const SizedBox(height: 30),
                         const Text(
                           'Real-Time Status of all Zones',
@@ -62,22 +59,9 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                           ),
                         ),
                         const SizedBox(height: 15),
-                        _buildHighLevelZoneCard(
-                          'Saudi Arabia Zone',
-                          '4 minutes ago',
-                        ),
-                        _buildMediumLevelZoneCard(
-                          'Turkey Zone',
-                          '12 minutes ago',
-                        ),
-                        _buildLowLevelZoneCard(
-                          'Japanese Zone',
-                          '6 minutes ago',
-                        ),
-                        _buildLowLevelZoneCard(
-                          'Greek Subzone',
-                          '5 minutes ago',
-                        ),
+                        selectedLocation == 'Test Area'
+                            ? _buildTestAreaCards()
+                            : _buildBoulevardCards(),
                       ],
                     ),
                   ),
@@ -95,7 +79,7 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6EFF8),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
@@ -121,7 +105,8 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                 });
               },
               itemBuilder: (context) {
-                return locations.map((item) {final isSelected = item == selectedLocation;
+                return locations.map((item) {
+                  final isSelected = item == selectedLocation;
                   return PopupMenuItem<String>(
                     value: item,
                     height: 48,
@@ -135,8 +120,7 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                           color: isSelected
                               ? const Color(0xFF867AB9)
                               : const Color(0xFFB7B9C0),
-                        ),
-                        const SizedBox(width: 10),
+                        ),const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             item,
@@ -240,17 +224,133 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: selectedLocation == 'Test Area'
-            ? const TestAreaPreviewMap()
+            ? const TestAreaPage()
             : const MapView(mode: MapMode.viewOnly),
       ),
     );
   }
 
+  Widget _buildBoulevardCards() {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('zones')
+        .where('locationId', isEqualTo: 'location_001')
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        );
+      }
+
+      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        return const Text('No boulevard zones found');
+      }
+
+      final docs = snapshot.data!.docs;
+
+      return Column(
+        children: docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          final zoneName = data['zoneName'] ?? 'Unknown';
+          final level =
+              (data['congestionLevel'] ?? 'low').toString().toLowerCase();
+
+          String timeAgo = 'Updated';
+
+          final lastUpdated = data['lastUpdated'];
+          if (lastUpdated is Timestamp) {
+            final diff = DateTime.now().difference(lastUpdated.toDate());
+
+            if (diff.inMinutes < 1) {
+              timeAgo = 'Just now';
+            } else if (diff.inMinutes < 60) {
+              timeAgo = '${diff.inMinutes} min ago';
+            } else if (diff.inHours < 24) {
+              timeAgo = '${diff.inHours} hr ago';
+            } else {
+              timeAgo = '${diff.inDays} day ago';
+            }
+          }
+
+          if (level == 'high') {
+            return _buildHighLevelZoneCard(zoneName, timeAgo);
+          } else if (level == 'medium') {
+            return _buildMediumLevelZoneCard(zoneName, timeAgo);
+          } else {
+            return _buildLowLevelZoneCard(zoneName, timeAgo);
+          }
+        }).toList(),
+      );
+    },
+  );
+}
+
+  Widget _buildTestAreaCards() {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('zones')
+        .where('locationId', isEqualTo: 'test_area_001')
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        );
+      }
+
+      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        return const Text('No test area zones found');
+      }
+
+      final docs = snapshot.data!.docs;
+
+      return Column(
+        children: docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          final zoneName = data['zoneName'] ?? 'Unknown';
+          final level =
+              (data['congestionLevel'] ?? 'low').toString().toLowerCase();
+
+          String timeAgo = 'Updated';
+
+          final lastUpdated = data['lastUpdated'];
+          if (lastUpdated is Timestamp) {
+            final diff = DateTime.now().difference(lastUpdated.toDate());
+
+            if (diff.inMinutes < 1) {
+              timeAgo = 'Just now';
+            } else if (diff.inMinutes < 60) {
+              timeAgo = '${diff.inMinutes} min ago';
+            } else if (diff.inHours < 24) {
+              timeAgo = '${diff.inHours} hr ago';
+            } else {
+              timeAgo = '${diff.inDays} day ago';
+            }
+          }
+
+          if (level == 'high') {
+            return _buildHighLevelZoneCard(zoneName, timeAgo);
+          } else if (level == 'medium') {
+            return _buildMediumLevelZoneCard(zoneName, timeAgo);
+          } else {
+            return _buildLowLevelZoneCard(zoneName, timeAgo);
+          }
+        }).toList(),
+      );
+    },
+  );
+}
+
   Widget _buildZoneCard({
     required String zoneName,
-    required String timeAgo,required String levelText,
-    required Color levelColor,
-    required Color levelTextColor,
+    required String timeAgo,
+    required String levelText,
+    required Color levelColor,required Color levelTextColor,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
