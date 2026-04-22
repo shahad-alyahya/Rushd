@@ -1,52 +1,115 @@
+
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'Mesgsage_4.dart';
 import 'add_security.dart';
 import 'admin_bottom_bar.dart';
 import 'package:rushd/Admin/export.dart';
 
-
-/// [SecurityStaffList] acts as the centralized view for all active personnel.
-/// It maintains high-fidelity synchronization with the AddSecurity module for record persistence.
 class SecurityStaffList extends StatefulWidget {
   const SecurityStaffList({super.key});
+
   @override
   State<SecurityStaffList> createState() => _SecurityStaffListState();
 }
 
 class _SecurityStaffListState extends State<SecurityStaffList> {
   static const Color kRushdPurple = Color(0xFF867AB9);
-  String selectedLocation = "Boulevard World";
 
-  // --- Updated: Dynamic location list matching the UI requirements ---
-  final List<String> _locations = [
-    "Boulevard World",
-    "Boulevard City",
-    "Al-Bujairi",
-    "Riyadh Zoo",
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // --- Simulated Registry Database ---
-  final List<Map<String, String>> staff = [
-    {"name": "Fahad Mohammed", "email": "fahadmohammed@gmail.com"},
-    {"name": "Abdurahman Almutari", "email": "abdurahmanalmutari@gmail.com"},
-  ];
+  String? selectedLocationId;
+  String selectedLocation = "Select Location";
+  bool isLoadingLocations = true;
 
-  /// Navigates to the onboarding form and synchronizes returned data with the local registry.
-  void _navigateToAddSecurity() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddSecurity()),
-    );
+  List<Map<String, String>> locations = [];
 
-    // [DATABASE SYNC] Append new personnel record to the state list if returned
-    if (result != null && result is Map<String, String>) {
+  @override
+  void initState() {
+    super.initState();
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final snapshot = await _firestore.collection('locations').get();
+
+      final loadedLocations = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'name': (data['locationName'] ?? doc.id).toString(),
+        };
+      }).toList();
+
+      if (!mounted) return;
+
       setState(() {
-        staff.add(result);
+        locations = loadedLocations;
+        isLoadingLocations = false;
+
+        if (loadedLocations.isNotEmpty) {
+          selectedLocationId = loadedLocations.first['id'];
+          selectedLocation = loadedLocations.first['name']!;
+        }
+      });
+    } catch (e) {
+      debugPrint('Error loading locations: $e');
+
+      if (!mounted) return;
+      setState(() {
+        isLoadingLocations = false;
       });
     }
   }
 
-  void _triggerDeleteFlow(int index) {
+  bool _isSecurityRole(dynamic roleValue) {
+    final role = (roleValue ?? '').toString().trim().toLowerCase();
+    return role == 'security' ||
+        role == 'security staff' ||
+        role == 'security_staff' ||
+        role == 'securitystaff';
+  }
+
+  Stream<List<Map<String, dynamic>>> _staffStream() {
+    if (selectedLocationId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('users')
+        .where('assignedLocationId', isEqualTo: selectedLocationId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+
+            return {
+              'id': doc.id,
+              'name': (data['fullName'] ?? '').toString(),
+              'email': (data['email'] ?? '').toString(),
+              'role': (data['role'] ?? '').toString(),
+              'status': (data['status'] ?? '').toString(),
+              'assignedLocationId':
+                  (data['assignedLocationId'] ?? '').toString(),
+              'createdAt': data['createdAt'],
+              'isVerified': data['isVerified'],
+            };
+          })
+          .where((user) => _isSecurityRole(user['role']))
+          .toList();
+    });
+  }
+
+  Future<void> _navigateToAddSecurity() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddSecurity()),
+    );
+  }
+
+  void _triggerDeleteFlow(Map<String, dynamic> user) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -79,15 +142,25 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        setState(() => staff.removeAt(index));
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Message4(),
-                          ),
-                        );
+                      onPressed: () async {
+                        try {
+                          await _firestore
+                              .collection('users')
+                              .doc(user['id'].toString())
+                              .delete();
+
+                          if (!mounted) return;
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Message4(),
+                            ),
+                          );
+                        } catch (e) {
+                          Navigator.pop(context);
+                          debugPrint('Error deleting user: $e');
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF353841),
@@ -113,6 +186,42 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     );
   }
 
+  String _formatValue(dynamic value) {
+    if (value == null) return '';
+    if (value is Timestamp) {
+      final dt = value.toDate();
+      return '${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    }
+    return value.toString();
+  }
+
+  Map<String, dynamic> _normalizeUserForExport(Map<String, dynamic> user) {
+    return {
+      'documentId': _formatValue(user['id']),
+      'fullName': _formatValue(user['name']),
+      'email': _formatValue(user['email']),
+      'role': _formatValue(user['role']),
+      'status': _formatValue(user['status']),
+      'assignedLocationId': _formatValue(user['assignedLocationId']),
+      'createdAt': _formatValue(user['createdAt']),
+      'isVerified': _formatValue(user['isVerified']),
+    };
+  }
+
+  Future<void> _shareSecurity(List<Map<String, dynamic>> users) async {
+    await ExportService.shareSecurityReport(
+      location: selectedLocation,
+      userDocs: users.map(_normalizeUserForExport).toList(),
+    );
+  }
+
+  Future<void> _printSecurity(List<Map<String, dynamic>> users) async {
+    await ExportService.exportSecurityReport(
+      location: selectedLocation,
+      userDocs: users.map(_normalizeUserForExport).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,8 +229,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width:
-                380, // Ensuring consistent iPhone aesthetic for the Admin Panel
+            width: 380,
             child: Stack(
               children: [
                 Column(
@@ -137,7 +245,30 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                     const SizedBox(height: 20),
                     _buildHeader(),
                     const SizedBox(height: 15),
-                    Expanded(child: _buildStaffList()),
+                    Expanded(
+                      child: selectedLocationId == null
+                          ? _buildEmptyState()
+                          : StreamBuilder<List<Map<String, dynamic>>>(
+                              stream: _staffStream(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                        ConnectionState.waiting &&
+                                    !snapshot.hasData) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+
+                                final staff = snapshot.data ?? [];
+
+                                if (staff.isEmpty) {
+                                  return _buildEmptyState();
+                                }
+
+                                return _buildStaffList(staff);
+                              },
+                            ),
+                    ),
                     const AdminBottomBar(currentIndex: 0),
                     const SizedBox(height: 10),
                   ],
@@ -149,7 +280,8 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                     width: 62,
                     height: 62,
                     child: FloatingActionButton(
-                      onPressed: _navigateToAddSecurity,
+                      onPressed:
+                          selectedLocationId == null ? null : _navigateToAddSecurity,
                       backgroundColor: const Color(0xFFA79ECC),
                       elevation: 5,
                       shape: const CircleBorder(),
@@ -169,96 +301,158 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     );
   }
 
-  /// Builds the contextual filtering header with dynamic location selection.
   Widget _buildHeader() => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 10),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: selectedLocation,
-            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-            // Mapping the full location list to dropdown entries
-            items: _locations
-                .map((loc) => DropdownMenuItem(value: loc, child: Text(loc)))
-                .toList(),
-            onChanged: (val) => setState(() => selectedLocation = val!),
-          ),
-        ),
-       Row(
-  children: [
-    GestureDetector(
-  onTap: () async {
-    await ExportService.shareSecurityReport(
-      location: selectedLocation,
-      securityNames: staff.map((s) => s['name']!).toList(),
-    );
-  },
-  child: const Icon(Icons.ios_share, size: 22),
-),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: _staffStream(),
+          builder: (context, snapshot) {
+            final staff = snapshot.data ?? [];
 
-const SizedBox(width: 15),
-
-GestureDetector(
-  onTap: () async {
-    await ExportService.exportSecurityReport(
-      location: selectedLocation,
-      securityNames: staff.map((s) => s['name']!).toList(),
-    );
-  },
-  child: const Icon(Icons.print, size: 22),
-),
-  ],
-),
-        
-      ],
-    ),
-  );
-
-  Widget _buildStaffList() => ListView.separated(
-    physics: const BouncingScrollPhysics(),
-    padding: const EdgeInsets.all(10),
-    itemCount: staff.length,
-    separatorBuilder: (_, __) => const SizedBox(height: 18),
-    itemBuilder: (context, index) => Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF353841).withOpacity(0.06),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Image.asset("assets/images/user.png", width: 45, height: 45),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  staff[index]["name"]!,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF6F5FB).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: isLoadingLocations
+                        ? const Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedLocationId,
+                              isExpanded: true,
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 20,
+                              ),
+                              hint: const Text('Select Location'),
+                              items: locations
+                                  .map(
+                                    (loc) => DropdownMenuItem<String>(
+                                      value: loc['id'],
+                                      child: Text(loc['name']!),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (val) {
+                                if (val == null) return;
+
+                                final location = locations.firstWhere(
+                                  (loc) => loc['id'] == val,
+                                );
+
+                                setState(() {
+                                  selectedLocationId = location['id'];
+                                  selectedLocation = location['name']!;
+                                });
+                              },
+                            ),
+                          ),
                   ),
                 ),
-                Text(
-                  staff[index]["email"]!,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                const SizedBox(width: 12),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: selectedLocationId == null
+                          ? null
+                          : () async {
+                              await _shareSecurity(staff);
+                            },
+                      child: Icon(
+                        Icons.ios_share,
+                        size: 22,
+                        color: selectedLocationId == null
+                            ? Colors.grey
+                            : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    GestureDetector(
+                      onTap: selectedLocationId == null
+                          ? null
+                          : () async {
+                              await _printSecurity(staff);
+                            },
+                      child: Icon(
+                        Icons.print,
+                        size: 22,
+                        color: selectedLocationId == null
+                            ? Colors.grey
+                            : Colors.black,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
+            );
+          },
+        ),
+      );
+
+  Widget _buildStaffList(List<Map<String, dynamic>> staff) => ListView.separated(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(10),
+        itemCount: staff.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 18),
+        itemBuilder: (context, index) => Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF353841).withOpacity(0.06),
+            borderRadius: BorderRadius.circular(20),
           ),
-          IconButton(
-            onPressed: () => _triggerDeleteFlow(index),
-            icon: const Icon(
-              Icons.delete_outline,
-              color: Color(0xFFA61A22),
-              size: 26,
-            ),
+          child: Row(
+            children: [
+              Image.asset("assets/images/user.png", width: 45, height: 45),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      (staff[index]["name"] ?? '').toString(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      (staff[index]["email"] ?? '').toString(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => _triggerDeleteFlow(staff[index]),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Color(0xFFA61A22),
+                  size: 26,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
+
+  Widget _buildEmptyState() => const Center(
+        child: Text(
+          'No data available',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
 }

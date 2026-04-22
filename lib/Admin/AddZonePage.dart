@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 
-/// [AddZonePage] facilitates the creation of new operational zones.
-/// Features mandatory field validation and dynamic placeholder (hint) for location guidance.
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AddZonePage extends StatefulWidget {
   final String selectedLocation;
   final List<String> existingZoneNames;
@@ -20,24 +20,100 @@ class _AddZonePageState extends State<AddZonePage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   static const Color kRushdPurple = Color(0xFF867AB9);
 
-  // Controller initialized as empty to allow the 'hintText' to be visible as an example
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _areaController = TextEditingController();
+  final TextEditingController _capacityController = TextEditingController();
+
+  String? _locationId;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocationId();
+  }
+
+  Future<void> _loadLocationId() async {
+    try {
+      final snapshot = await _firestore
+          .collection('locations')
+          .where('locationName', isEqualTo: widget.selectedLocation)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        _locationId = snapshot.docs.first.id;
+      }
+    } catch (e) {
+      debugPrint('Error loading locationId: $e');
+    }
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _locationController.dispose();
+    _areaController.dispose();
+    _capacityController.dispose();
     super.dispose();
   }
 
-  /// Validates input integrity and pop back the zone data to the main registry.
-  void _handleSave() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pop(context, {
-        'name': _nameController.text.trim(),
-        'location': _locationController.text.trim(),
+  Future<void> _handleSave() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_locationId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location not found')),
+      );
+      return;
+    }
+
+    final zoneName = _nameController.text.trim();
+    final areaSize = int.tryParse(_areaController.text.trim()) ?? 0;
+    final capacity = int.tryParse(_capacityController.text.trim()) ?? 0;
+
+    final exists = widget.existingZoneNames.any(
+      (name) => name.toLowerCase() == zoneName.toLowerCase(),
+    );
+
+    if (exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Zone already exists')),
+      );
+      return;
+    }
+
+    try {
+      setState(() => _isSaving = true);
+
+      await _firestore.collection('zones').add({
+        'zoneName': zoneName,
+        'locationId': _locationId,
+        'areaSize': areaSize,
+        'capacity': capacity,
+        'congestionLevel': 'low',
+        'currentCount': 0,
+        'density': 0,
+        'highThreshold': 1,
+        'lowThreshold': 0.3,
+        'mediumThreshold': 0.7,
+        'lastUpdated': FieldValue.serverTimestamp(),
       });
+
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint('Error adding zone: $e');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save zone')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -72,12 +148,44 @@ class _AddZonePageState extends State<AddZonePage> {
                       const SizedBox(height: 10),
                       _buildField(
                         controller: _nameController,
-                        hint: 'e.g. Türkiye Section',
+                        hint: 'e.g. Zone A',
+                        isNumber: false,
                       ),
 
                       const SizedBox(height: 25),
 
-                      // --- Updated: Label changed to "Location" only ---
+                      const Text(
+                        'Area Size',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildField(
+                        controller: _areaController,
+                        hint: 'e.g. 25',
+                        isNumber: true,
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      const Text(
+                        'Capacity',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildField(
+                        controller: _capacityController,
+                        hint: 'e.g. 25',
+                        isNumber: true,
+                      ),
+
+                      const SizedBox(height: 25),
+
                       const Text(
                         'Location',
                         style: TextStyle(
@@ -86,10 +194,24 @@ class _AddZonePageState extends State<AddZonePage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      // --- Updated: Placeholder/Hint example provided ---
-                      _buildField(
-                        controller: _locationController,
-                        hint: 'Boulevard World',
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Text(
+                          widget.selectedLocation,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 60),
@@ -100,20 +222,29 @@ class _AddZonePageState extends State<AddZonePage> {
                           width: 150,
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: _handleSave,
+                            onPressed: _isSaving ? null : _handleSave,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kRushdPurple,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
                               ),
                             ),
-                            child: const Text(
-                              'Save Zone',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Save Zone',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
@@ -131,13 +262,22 @@ class _AddZonePageState extends State<AddZonePage> {
   Widget _buildField({
     required TextEditingController controller,
     required String hint,
+    required bool isNumber,
   }) {
     return TextFormField(
       controller: controller,
-      validator: (val) =>
-          (val == null || val.trim().isEmpty) ? 'Required field' : null,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) {
+          return 'Required field';
+        }
+        if (isNumber && int.tryParse(val.trim()) == null) {
+          return 'Enter a valid number';
+        }
+        return null;
+      },
       decoration: InputDecoration(
-        hintText: hint, // Transparent placeholder text
+        hintText: hint,
         hintStyle: const TextStyle(
           color: Colors.grey,
           fontSize: 14,
