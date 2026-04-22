@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'zonePoint.dart';
@@ -22,6 +23,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _zonesSub;
+  String selectedZoneId = '';
 
   Map<String, String> zoneLevels = {
     'zone_001': 'low',
@@ -318,29 +320,31 @@ class _TestAreaPageState extends State<TestAreaPage> {
   }
 
   String _zoneId(ZonePoint zone) {
-    switch (zone) {
-      case ZonePoint.a:
-        return "zone_a";
-      case ZonePoint.b:
-        return "zone_b";
-      case ZonePoint.c:
-        return "zone_c";
-      case ZonePoint.hall:
-        return "hall";
-    }
+  switch (zone) {
+    case ZonePoint.a:
+      return "zone_001";
+    case ZonePoint.b:
+      return "zone_002";
+    case ZonePoint.c:
+      return "zone_003";
+    case ZonePoint.hall:
+      return "hall";
   }
+}
+ void _resetSelection() {
+  setState(() {
+    currentLocation = null;
+    circles.clear();
+  });
 
-  void _resetSelection() {
-    setState(() {
-      currentLocation = null;
-      circles.clear();
-    });
-  }
+  widget.onLocationSelected?.call(center, "");
+}
 
   void handleZoneTap(ZonePoint zone) {
     if (currentLocation == null) {
       setState(() {
         currentLocation = zone;
+        selectedZoneId = _zoneId(zone);
         circles.clear();
 
         circles.add(
@@ -370,6 +374,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
 
     setState(() {
       currentLocation = zone;
+      selectedZoneId = _zoneId(zone);
       circles.clear();
 
       circles.add(

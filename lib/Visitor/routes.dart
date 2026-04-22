@@ -4,6 +4,11 @@ import 'package:rushd/shared/VisitorBottomBar1.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rushd/map/map_view.dart';
 import 'package:rushd/map/testAreaPage.dart';
+import 'package:rushd/map/routeData.dart';
+import 'package:rushd/map/route_utils.dart';
+import 'package:rushd/map/zonePoint.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 class RoutesPage extends StatefulWidget {
   final String selectedLocation;
@@ -20,12 +25,70 @@ class RoutesPage extends StatefulWidget {
 class _RoutesPageState extends State<RoutesPage> {
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kDark = Color(0xFF353841);
+  
 
   late String _selectedLocation;
   DateTime _lastUpdate = DateTime.now();
 
   LatLng? _selectedUserLocation;
   String? _selectedTestAreaZoneId;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+StreamSubscription? _zonesSub;
+
+Map<String, String> zoneLevels = {};
+void _listenToZones() {
+  _zonesSub =
+      _firestore.collection('zones').snapshots().listen((snapshot) {
+    final updated = <String, String>{};
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      updated[doc.id] = (data['congestionLevel'] ?? 'low').toString();
+    }
+
+    setState(() {
+      zoneLevels = updated;
+    });
+  });
+}
+Color _getLevelColor(String zoneId) {
+  final level = zoneLevels[zoneId] ?? 'low';
+
+  switch (level) {
+    case 'high':
+      return Colors.red;
+    case 'medium':
+      return Colors.orange;
+    default:
+      return Colors.green;
+  }
+}
+
+String _getLevelText(String zoneId) {
+  final level = zoneLevels[zoneId] ?? 'low';
+
+  switch (level) {
+    case 'high':
+      return 'High Level';
+    case 'medium':
+      return 'Medium Level';
+    default:
+      return 'Low Level';
+  }
+}
+
+
+ @override
+void initState() {
+  super.initState();
+  _selectedLocation = widget.selectedLocation;
+  _listenToZones(); // 👈 مهم
+}
+@override
+void dispose() {
+  _zonesSub?.cancel();
+  super.dispose();
+}
 
   void _refresh() {
     setState(() {
@@ -34,21 +97,65 @@ class _RoutesPageState extends State<RoutesPage> {
   }
 
   String _formattedTime(DateTime dateTime) {
-    final hh = dateTime.hour.toString().padLeft(2, '0');
-    final mm = dateTime.minute.toString().padLeft(2, '0');
-    return '$hh:$mm';
+    return "${dateTime.hour}:${dateTime.minute}";
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedLocation = widget.selectedLocation;
+  // 🔥 تحويل zoneId → ZonePoint
+  ZonePoint _mapZoneIdToPoint(String id) {
+    switch (id) {
+      case 'zone_001':
+        return ZonePoint.a;
+      case 'zone_002':
+        return ZonePoint.b;
+      case 'zone_003':
+        return ZonePoint.c;
+        case 'hall':
+      return ZonePoint.hall;
+      default:
+        return ZonePoint.a;
+    }
   }
+
+  // 🔥 حساب الوقت
+  String _getTime(ZonePoint to) {
+    if (_selectedTestAreaZoneId == null) return "--";
+
+    final from = _mapZoneIdToPoint(_selectedTestAreaZoneId!);
+    final route = RouteData.getDirectRoute(from, to);
+
+    if (route == null) return "--";
+
+    return RouteUtils.estimateTime(route.points);
+  }
+  String _getDistance(ZonePoint to) {
+  if (_selectedTestAreaZoneId == null || _selectedTestAreaZoneId!.isEmpty) {
+    return "--";
+  }
+
+  final from = _mapZoneIdToPoint(_selectedTestAreaZoneId!);
+  final route = RouteData.getDirectRoute(from, to);
+
+  if (route == null) return "--";
+
+  return RouteUtils.formatDistance(route.points);
+}
+  String _routeZoneId(String id) {
+  switch (id) {
+    case 'zone_001':
+      return 'zone_a';
+    case 'zone_002':
+      return 'zone_b';
+    case 'zone_003':
+      return 'zone_c';
+    default:
+      return id;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
     final bool isTestArea = _selectedLocation == 'Test Area';
-    final bool hasTestAreaSelection =
+    final bool hasSelection =
         _selectedTestAreaZoneId != null && _selectedTestAreaZoneId!.isNotEmpty;
 
     return Scaffold(
@@ -64,295 +171,189 @@ class _RoutesPageState extends State<RoutesPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                     children: [
                       const SizedBox(height: 28),
+
+                      /// HEADER
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(
-                                Icons.location_on,
-                                size: 26,
-                                color: kPurple,
-                              ),
+                              const Icon(Icons.location_on,
+                                  size: 26, color: kPurple),
                               const SizedBox(width: 4),
                               Text(
                                 _selectedLocation,
                                 style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: _refresh,
-                                  icon: const Icon(Icons.refresh, size: 18),
-                                  label: const Text("Refresh"),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: kDark,
-                                    foregroundColor: Colors.white,
-                                    minimumSize: const Size(0, 28),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 0,
-                                    ),
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
+                          Column(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _refresh,
+                                icon: const Icon(Icons.refresh, size: 18),
+                                label: const Text("Refresh"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kDark,
+                                  foregroundColor: Colors.white,
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  "Last update: ${_formattedTime(_lastUpdate)}",
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                              ),
+                              Text(
+                                "Last update: ${_formattedTime(_lastUpdate)}",
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                            )
                         ],
                       ),
+
                       const SizedBox(height: 20),
-                      const Text(
-                        "Routes",
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
+
+                      const Text("Routes",
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold)),
+
                       const SizedBox(height: 8),
-                      Text(
-  "Select location on the map",
-  style: const TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: Colors.black,
-  ),
-),
+
+                      const Text("Select location on the map"),
+
                       const SizedBox(height: 16),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(40),
-                        child: SizedBox(
-                          height: 291,
-                          width: double.infinity,
-                          child: isTestArea
-                              ? TestAreaPage(
-                                  onLocationSelected:
-                                      (LatLng point, String zoneId) {
-                                    setState(() {
-                                      if (zoneId.isEmpty) {
-                                        _selectedUserLocation = null;
-                                        _selectedTestAreaZoneId = null;
-                                      } else {
-                                        _selectedUserLocation = point;
-                                        _selectedTestAreaZoneId = zoneId;
-                                      }
-                                    });
-                                  },
-                                )
-                              : MapView(
-                                  mode: MapMode.selectLocation,
-                                  onLocationSelected: (LatLng point) {
+
+                      /// MAP
+                      SizedBox(
+                        height: 280,
+                        child: isTestArea
+                            ? TestAreaPage(
+                                onLocationSelected:
+                                    (LatLng point, String zoneId) {
+                                  setState(() {
                                     _selectedUserLocation = point;
-                                  },
-                                ),
-                        ),
+                                    _selectedTestAreaZoneId = zoneId;
+                                  });
+                                },
+                              )
+                            : MapView(
+                                mode: MapMode.selectLocation,
+                                onLocationSelected: (point) {
+                                  _selectedUserLocation = point;
+                                },
+                              ),
                       ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        "Best Nearby Destinations (Low Crowd)",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Colors.black,
-                        ),
-                      ),
+
+                      const SizedBox(height: 20),
+
+                      const Text("Best Nearby Destinations",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+
                       const SizedBox(height: 12),
 
-                      if (isTestArea) ...[
-                        if (!hasTestAreaSelection)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 6, bottom: 6),
-                            child: Text(
-                              "Tap your current zone on the map first.",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF7D7B7B),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
+                      /// ⚠️ لازم يختار زون أول
+                      if (!hasSelection)
+                        const Text("Tap your zone first"),
 
-                        if (hasTestAreaSelection &&
-                            _selectedTestAreaZoneId != "zone_c")
+                      /// 🔥 الكروت
+                      if (hasSelection) ...[
+                        if (_selectedTestAreaZoneId != "zone_001")
+                         destinationCard(
+  title: "Zone A",
+  time: _getTime(ZonePoint.a),
+  zoneId: "zone_001",
+  onGo: () {
+    if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your current location first'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AlternativeRoute(
+          zoneName: "Zone A",
+          locationName: "Test Area",
+         distance: _getDistance(ZonePoint.a),
+          estimatedTime: _getTime(ZonePoint.a),
+        zoneId: _routeZoneId("zone_001"),
+startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
+          userLocation: _selectedUserLocation!,
+        ),
+      ),
+    );
+  },
+),
+                        if (_selectedTestAreaZoneId != "zone_002")
+                         destinationCard(
+  title: "Zone B",
+  time: _getTime(ZonePoint.b),
+  zoneId: "zone_002",
+  onGo: () {
+    if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your current location first'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AlternativeRoute(
+          zoneName: "Zone B",
+          locationName: "Test Area",
+        distance: _getDistance(ZonePoint.b),
+          estimatedTime: _getTime(ZonePoint.b),
+         zoneId: _routeZoneId("zone_002"),
+startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
+          userLocation: _selectedUserLocation!,
+        ),
+      ),
+    );
+  },
+),
+
+                        if (_selectedTestAreaZoneId != "zone_003")
                           destinationCard(
-                            title: "Zone C",
-                            time: "4 min away!",
-                            image: "assets/images/morocco.png",
-                            onGo: () {
-                              if (_selectedUserLocation == null) return;
+  title: "Zone C",
+  time: _getTime(ZonePoint.c),
+  zoneId: "zone_003",
+  onGo: () {
+    if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your current location first'),
+        ),
+      );
+      return;
+    }
 
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AlternativeRoute(
-                                    zoneName: "Zone C",
-                                    locationName: "Test Area",
-                                    distance: "250 m",
-                                    estimatedTime: "4 min",
-                                    zoneId: "zone_c",
-                                    startZoneId: _selectedTestAreaZoneId!,
-                                    userLocation: _selectedUserLocation!,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                        if (hasTestAreaSelection &&
-                            _selectedTestAreaZoneId != "zone_c" &&
-                            _selectedTestAreaZoneId != "zone_b")
-                          const SizedBox(height: 18),
-
-                        if (hasTestAreaSelection &&
-                            _selectedTestAreaZoneId != "zone_b")
-                          destinationCard(
-                            title: "Zone B",
-                            time: "7 min away!",
-                            image: "assets/images/china.png",
-                            onGo: () {
-                              if (_selectedUserLocation == null) return;
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AlternativeRoute(
-                                    zoneName: "Zone B",
-                                    locationName: "Test Area",
-                                    distance: "430 m",
-                                    estimatedTime: "7 min",
-                                    zoneId: "zone_b",
-                                    startZoneId: _selectedTestAreaZoneId!,
-                                    userLocation: _selectedUserLocation!,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                        if (hasTestAreaSelection &&
-                            _selectedTestAreaZoneId != "zone_b" &&
-                            _selectedTestAreaZoneId != "zone_a")
-                          const SizedBox(height: 18),
-
-                        if (hasTestAreaSelection &&
-                            _selectedTestAreaZoneId != "zone_a")
-                          destinationCard(
-                            title: "Zone A",
-                            time: "5 min away!",
-                            image: "assets/images/morocco.png",
-                            onGo: () {
-                              if (_selectedUserLocation == null) return;
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AlternativeRoute(
-                                    zoneName: "Zone A",
-                                    locationName: "Test Area",
-                                    distance: "300 m",
-                                    estimatedTime: "5 min",
-                                    zoneId: "zone_a",
-                                    startZoneId: _selectedTestAreaZoneId!,
-                                    userLocation: _selectedUserLocation!,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                      ] else ...[
-                        destinationCard(
-                          title: "Morocco Zone",
-                          time: "5 min away!",
-                          image: "assets/images/morocco.png",
-                          onGo: () {
-                            if (_selectedUserLocation == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Please select your current location first',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AlternativeRoute(
-                                  zoneName: "Morocco Zone",
-                                  locationName: "Boulevard World",
-                                  distance: "320 m",
-                                  estimatedTime: "4 min",
-                                  zoneId: "moroco",
-                                  startZoneId: "dummy",
-                                  userLocation: _selectedUserLocation!,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 18),
-                        destinationCard(
-                          title: "China Zone",
-                          time: "11 min away!",
-                          image: "assets/images/china.png",
-                          onGo: () {
-                            if (_selectedUserLocation == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Please select your current location first',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AlternativeRoute(
-                                  zoneName: "China Zone",
-                                  locationName: "Boulevard World",
-                                  distance: "700 m",
-                                  estimatedTime: "11 min",
-                                  zoneId: "china",
-                                  startZoneId: "dummy",
-                                  userLocation: _selectedUserLocation!,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AlternativeRoute(
+          zoneName: "Zone C",
+          locationName: "Test Area",
+         distance: _getDistance(ZonePoint.c),
+          estimatedTime: _getTime(ZonePoint.c),
+         zoneId: _routeZoneId("zone_003"),
+startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
+          userLocation: _selectedUserLocation!,
+        ),
+      ),
+    );
+  },
+),
                       ],
-
-                      const SizedBox(height: 18),
                     ],
                   ),
                 ),
+
                 const VisitorBottomBar1(currentIndex: 2),
               ],
             ),
@@ -362,110 +363,50 @@ class _RoutesPageState extends State<RoutesPage> {
     );
   }
 
+  /// CARD
   Widget destinationCard({
-    required String title,
-    required String time,
-    required String image,
-    required VoidCallback onGo,
+   required String title,
+required String time,
+required String zoneId, // 👈 أضيفي هذا
+required VoidCallback onGo,
   }) {
     return Container(
-      height: 141,
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.18),
-            blurRadius: 18,
-            offset: Offset(0, 7),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 12),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                image,
-                width: 146,
-                height: 116,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      time,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF7D7B7B),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0x3337C222),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    "Low Level",
-                    style: TextStyle(
-                      color: Color(0xFF27AE61),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: onGo,
-                  child: Container(
-                    width: 116,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF353841),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      "GO !",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text("$time away"),
+          const SizedBox(height: 6),
+
+Container(
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+  decoration: BoxDecoration(
+    color: _getLevelColor(zoneId).withOpacity(0.2),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Text(
+    _getLevelText(zoneId),
+    style: TextStyle(
+      color: _getLevelColor(zoneId),
+      fontWeight: FontWeight.bold,
+      fontSize: 12,
+    ),
+  ),
+),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: onGo,
+            child: const Text("GO"),
+          )
         ],
       ),
     );
