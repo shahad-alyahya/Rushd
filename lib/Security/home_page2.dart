@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rushd/map/map_view.dart';
+import 'package:rushd/map/test_area_preview_map.dart';
 import 'security_bottom_bar.dart';
 import 'package:rushd/reading_listener.dart';
 
@@ -8,20 +9,23 @@ class SecurityDashboardPage extends StatefulWidget {
 
   @override
   State<SecurityDashboardPage> createState() => _SecurityDashboardPageState();
-
-
-
-
-
 }
 
 class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
-  String lastUpdate = "9:12"; // Dynamic update state
+  String lastUpdate = "9:12";
+
+  String selectedLocation = 'Boulevard World';
+  final List<String> locations = const [
+    'Boulevard World',
+    'Test Area',
+  ];
+
   @override
-void initState() {
-  super.initState();
-  ReadingListener().startListening();
-}
+  void initState() {
+    super.initState();
+    ReadingListener().startListening();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +33,7 @@ void initState() {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 380, // iPhone shape constraint
+            width: 380,
             child: Column(
               children: [
                 Expanded(
@@ -40,8 +44,14 @@ void initState() {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHeader(),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 20),
+
+                        _buildTopDropdown(),
+
+                        const SizedBox(height: 20),
+
                         _buildMapSection(),
+
                         const SizedBox(height: 30),
                         const Text(
                           'Real-Time Status of all Zones',
@@ -72,12 +82,104 @@ void initState() {
                     ),
                   ),
                 ),
-                // Home index is 1
                 const SecurityBottomBar(currentIndex: 1),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTopDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6EFF8),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.location_on_outlined,
+            color: Color(0xFF867AB9),
+            size: 24,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: PopupMenuButton<String>(
+              tooltip: '',
+              color: Colors.white,
+              elevation: 10,
+              offset: const Offset(-8, 40),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              onSelected: (value) {
+                setState(() {
+                  selectedLocation = value;
+                });
+              },
+              itemBuilder: (context) {
+                return locations.map((item) {final isSelected = item == selectedLocation;
+                  return PopupMenuItem<String>(
+                    value: item,
+                    height: 48,
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          size: 18,
+                          color: isSelected
+                              ? const Color(0xFF867AB9)
+                              : const Color(0xFFB7B9C0),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            item,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: const Color(0xFF1F2430),
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList();
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      selectedLocation,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Color(0xFF1F2430),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Color(0xFF1F2430),
+                    size: 28,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -104,7 +206,6 @@ void initState() {
         ),
         TextButton.icon(
           onPressed: () {
-            // Logic to refresh data and update timestamp
             setState(() {
               final now = DateTime.now();
               lastUpdate =
@@ -138,15 +239,16 @@ void initState() {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: const MapView(mode: MapMode.viewOnly),
+        child: selectedLocation == 'Test Area'
+            ? const TestAreaPreviewMap()
+            : const MapView(mode: MapMode.viewOnly),
       ),
     );
   }
 
   Widget _buildZoneCard({
     required String zoneName,
-    required String timeAgo,
-    required String levelText,
+    required String timeAgo,required String levelText,
     required Color levelColor,
     required Color levelTextColor,
   }) {
@@ -201,25 +303,30 @@ void initState() {
     );
   }
 
-  Widget _buildHighLevelZoneCard(String name, String time) => _buildZoneCard(
-    zoneName: name,
-    timeAgo: time,
-    levelText: 'High Level',
-    levelColor: const Color(0xFFFFEAEA),
-    levelTextColor: const Color(0xFFEF5350),
-  );
-  Widget _buildMediumLevelZoneCard(String name, String time) => _buildZoneCard(
-    zoneName: name,
-    timeAgo: time,
-    levelText: 'Medium Level',
-    levelColor: const Color(0xFFFFF3E0),
-    levelTextColor: const Color(0xFFFF9800),
-  );
-  Widget _buildLowLevelZoneCard(String name, String time) => _buildZoneCard(
-    zoneName: name,
-    timeAgo: time,
-    levelText: 'Low Level',
-    levelColor: const Color(0xFFE8F5E9),
-    levelTextColor: const Color(0xFF66BB6A),
-  );
+  Widget _buildHighLevelZoneCard(String name, String time) =>
+      _buildZoneCard(
+        zoneName: name,
+        timeAgo: time,
+        levelText: 'High Level',
+        levelColor: const Color(0xFFFFEAEA),
+        levelTextColor: const Color(0xFFEF5350),
+      );
+
+  Widget _buildMediumLevelZoneCard(String name, String time) =>
+      _buildZoneCard(
+        zoneName: name,
+        timeAgo: time,
+        levelText: 'Medium Level',
+        levelColor: const Color(0xFFFFF3E0),
+        levelTextColor: const Color(0xFFFF9800),
+      );
+
+  Widget _buildLowLevelZoneCard(String name, String time) =>
+      _buildZoneCard(
+        zoneName: name,
+        timeAgo: time,
+        levelText: 'Low Level',
+        levelColor: const Color(0xFFE8F5E9),
+        levelTextColor: const Color(0xFF66BB6A),
+      );
 }
