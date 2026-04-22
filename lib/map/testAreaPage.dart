@@ -26,16 +26,16 @@ class _TestAreaPageState extends State<TestAreaPage> {
   String selectedZoneId = '';
 
   Map<String, String> zoneLevels = {
-    'zone_001': 'low',
-    'zone_002': 'low',
-    'zone_003': 'low',
+    'zone_00A': 'low',
+    'zone_00B': 'low',
+    'zone_00C': 'low',
     'zone_004': 'low',
   };
 
   Map<String, int> zoneCounts = {
-    'zone_001': 0,
-    'zone_002': 0,
-    'zone_003': 0,
+    'zone_00A': 0,
+    'zone_00B': 0,
+    'zone_00C': 0,
   };
 
   static const LatLng center = LatLng(24.8260231, 46.6636767);
@@ -167,7 +167,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
           LatLng(24.8239940, 46.6634118),
           LatLng(24.8240427, 46.6632834),
           LatLng(24.8264287, 46.6620841),
-          LatLng(24.8265251, 46.6621002),
+          LatLng(24.8265251, 46.662100B),
           LatLng(24.8270284, 46.6633498),
           LatLng(24.8276008, 46.6647097),
         ],
@@ -179,7 +179,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
         polygonId: const PolygonId('zoneC'),
         points: const [
           LatLng(24.827674146566494, 46.66478343307972),
-          LatLng(24.827655584987614, 46.66482400149107),
+          LatLng(24.827655584987614, 46.66482400A49107),
           LatLng(24.827013230929264, 46.66515324264765),
           LatLng(24.826779536158234, 46.66521392762661),
           LatLng(24.82653823367279, 46.66520554572344),
@@ -188,7 +188,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
           LatLng(24.82708656474439, 46.66345104575157),
           LatLng(24.827422195717485, 46.664228551089764),
         ],
-        fillColor: _zoneFillColor('zone_003', const Color(0x44EF5350)),
+        fillColor: _zoneFillColor('zone_00C', const Color(0x44EF5350)),
         strokeWidth: 0,
         consumeTapEvents: true,
         onTap: () {
@@ -204,7 +204,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
           LatLng(24.825709342360998, 46.662453934550285),
           LatLng(24.826312753876245, 46.66392210870981),
         ],
-        fillColor: _zoneFillColor('zone_002', const Color(0x4456C271)),
+        fillColor: _zoneFillColor('zone_00B', const Color(0x4456C271)),
         strokeWidth: 0,
         consumeTapEvents: true,
         onTap: () {
@@ -223,7 +223,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
           LatLng(24.82456306538995, 46.66436433792114),
           LatLng(24.826341661565415, 46.66392210870981),
         ],
-        fillColor: _zoneFillColor('zone_001', const Color(0x445AA9FF)),
+        fillColor: _zoneFillColor('zone_00A', const Color(0x445AA9FF)),
         strokeWidth: 0,
         consumeTapEvents: true,
         onTap: () {
@@ -268,13 +268,13 @@ class _TestAreaPageState extends State<TestAreaPage> {
 
   void _loadLabels() async {
     final a = await _createTextMarker(
-      "Zone A\n${zoneCounts['zone_001'] ?? 0}",
+      "Zone A\n${zoneCounts['zone_00A'] ?? 0}",
     );
     final b = await _createTextMarker(
-      "Zone B\n${zoneCounts['zone_002'] ?? 0}",
+      "Zone B\n${zoneCounts['zone_00B'] ?? 0}",
     );
     final c = await _createTextMarker(
-      "Zone C\n${zoneCounts['zone_003'] ?? 0}",
+      "Zone C\n${zoneCounts['zone_00C'] ?? 0}",
     );
 
     if (!mounted) return;
@@ -322,11 +322,11 @@ class _TestAreaPageState extends State<TestAreaPage> {
   String _zoneId(ZonePoint zone) {
   switch (zone) {
     case ZonePoint.a:
-      return "zone_001";
+      return "zone_00A";
     case ZonePoint.b:
-      return "zone_002";
+      return "zone_00B";
     case ZonePoint.c:
-      return "zone_003";
+      return "zone_00C";
     case ZonePoint.hall:
       return "hall";
   }
