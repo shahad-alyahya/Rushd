@@ -1,7 +1,5 @@
 
 
-// admin_home_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -255,97 +253,92 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Future<Map<String, dynamic>> _fetchAllAdminData() async {
-    if (selectedLocationId == null) {
-      return {
-        'visitors': 0,
-        'security': 0,
-        'zones': 0,
-        'zoneDocs': <Map<String, dynamic>>[],
-        'userDocs': <Map<String, dynamic>>[],
-        'readingDocs': <Map<String, dynamic>>[],
-      };
-    }
-
-    try {
-      final zonesSnap = await _firestore
-          .collection('zones')
-          .where('locationId', isEqualTo: selectedLocationId)
-          .get();
-
-      final usersSnap = await _firestore
-          .collection('users')
-          .where('assignedLocationId', isEqualTo: selectedLocationId)
-          .get();
-
-      final zoneIds = zonesSnap.docs.map((e) => e.id).toSet();
-
-      final readingsSnap = await _firestore.collection('sensor_readings').get();
-
-      final zoneDocs = zonesSnap.docs.map((doc) {
-        final data = _normalizeMap(doc.data());
-        data['documentId'] = doc.id;
-        return data;
-      }).toList();
-
-      final userDocs = usersSnap.docs.map((doc) {
-        final data = _normalizeMap(doc.data());
-        data['documentId'] = doc.id;
-        return data;
-      }).toList();
-
-      final filteredReadings = <Map<String, dynamic>>[];
-      int totalVisitors = 0;
-
-      for (final doc in readingsSnap.docs) {
-        final raw = doc.data();
-        final readingDate = _extractReadingDate(raw);
-        if (!_isInSelectedRange(readingDate)) continue;
-
-        final zoneId = (raw['zoneId'] ?? '').toString();
-        final locationId = (raw['locationId'] ?? '').toString();
-
-        final matchesLocation =
-            locationId == selectedLocationId || zoneIds.contains(zoneId);
-
-        if (!matchesLocation) continue;
-
-        totalVisitors += ((raw['entryCount'] ?? 0) as num).toInt();
-
-        final data = _normalizeMap(raw);
-        data['documentId'] = doc.id;
-        data['readingDate'] =
-            readingDate != null ? _formatDateTime(readingDate) : '';
-        filteredReadings.add(data);
-      }
-
-      filteredReadings.sort((a, b) {
-        final aDate = a['readingDate'].toString();
-        final bDate = b['readingDate'].toString();
-        return bDate.compareTo(aDate);
-      });
-
-      final securityCount = userDocs.where((u) => _isSecurityRole(u['role'])).length;
-
-      return {
-        'visitors': totalVisitors,
-        'security': securityCount,
-        'zones': zoneDocs.length,
-        'zoneDocs': zoneDocs,
-        'userDocs': userDocs,
-        'readingDocs': filteredReadings,
-      };
-    } catch (e) {
-      debugPrint('Error fetching admin data: $e');
-      return {
-        'visitors': 0,
-        'security': 0,
-        'zones': 0,
-        'zoneDocs': <Map<String, dynamic>>[],
-        'userDocs': <Map<String, dynamic>>[],
-        'readingDocs': <Map<String, dynamic>>[],
-      };
-    }
+  if (selectedLocationId == null) {
+    return {
+      'visitors': 0,
+      'security': 0,
+      'zones': 0,
+      'zoneDocs': <Map<String, dynamic>>[],
+      'userDocs': <Map<String, dynamic>>[],
+      'readingDocs': <Map<String, dynamic>>[],
+    };
   }
+
+  try {
+    final zonesSnap = await _firestore
+        .collection('zones')
+        .where('locationId', isEqualTo: selectedLocationId)
+        .get();
+
+    final usersSnap = await _firestore
+        .collection('users')
+        .where('assignedLocationId', isEqualTo: selectedLocationId)
+        .get();
+
+    final readingsSnap = await _firestore.collection('sensor_readings').get();
+
+    final zoneDocs = zonesSnap.docs.map((doc) {
+      final data = _normalizeMap(doc.data());
+      data['documentId'] = doc.id;
+      return data;
+    }).toList();
+
+    final userDocs = usersSnap.docs.map((doc) {
+      final data = _normalizeMap(doc.data());
+      data['documentId'] = doc.id;
+      return data;
+    }).toList();
+
+    final filteredReadings = <Map<String, dynamic>>[];
+    int totalVisitors = 0;
+
+    for (final doc in readingsSnap.docs) {
+      final raw = doc.data();
+      final readingDate = _extractReadingDate(raw);
+      if (!_isInSelectedRange(readingDate)) continue;
+
+      final locationId = (raw['locationId'] ?? '').toString();
+
+      if (locationId != selectedLocationId) continue;
+
+      totalVisitors += ((raw['entryCount'] ?? 0) as num).toInt();
+
+      final data = _normalizeMap(raw);
+      data['documentId'] = doc.id;
+      data['readingDate'] =
+          readingDate != null ? _formatDateTime(readingDate) : '';
+      filteredReadings.add(data);
+    }
+
+    filteredReadings.sort((a, b) {
+      final aDate = a['readingDate'].toString();
+      final bDate = b['readingDate'].toString();
+      return bDate.compareTo(aDate);
+    });
+
+    final securityCount =
+        userDocs.where((u) => _isSecurityRole(u['role'])).length;
+
+    return {
+      'visitors': totalVisitors,
+      'security': securityCount,
+      'zones': zoneDocs.length,
+      'zoneDocs': zoneDocs,
+      'userDocs': userDocs,
+      'readingDocs': filteredReadings,
+    };
+  } catch (e) {
+    debugPrint('Error fetching admin data: $e');
+    return {
+      'visitors': 0,
+      'security': 0,
+      'zones': 0,
+      'zoneDocs': <Map<String, dynamic>>[],
+      'userDocs': <Map<String, dynamic>>[],
+      'readingDocs': <Map<String, dynamic>>[],
+    };
+  }
+}
 
   Future<Map<String, dynamic>> _fetchPanelStats() async {
     final data = await _fetchAllAdminData();
@@ -566,7 +559,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         ],
       ),
       child: Row(
-        children: ['Daily', 'Monthly', 'Year'].map((label) {
+        children: ['Daily', 'Monthly', 'Yearly'].map((label) {
           final isSelected = activeFilter == label;
           return Expanded(
             child: GestureDetector(

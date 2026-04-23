@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -23,11 +22,21 @@ class _AddZonePageState extends State<AddZonePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _areaController = TextEditingController();
   final TextEditingController _capacityController = TextEditingController();
 
   String? _locationId;
   bool _isSaving = false;
+
+  static const String _polygonKey = 'hall';
+
+  static const List<Map<String, double>> _polygonPoints = [
+    {'lat': 24.82449764177584, 'lng': 46.66430063545704},
+    {'lat': 24.825253206339646, 'lng': 46.6641591489315},
+    {'lat': 24.826268023017608, 'lng': 46.663974076509476},
+    {'lat': 24.82607145048134, 'lng': 46.664384454488754},
+    {'lat': 24.825859054418114, 'lng': 46.664907820522785},
+    {'lat': 24.825234644397927, 'lng': 46.66468217968941},
+  ];
 
   @override
   void initState() {
@@ -54,7 +63,6 @@ class _AddZonePageState extends State<AddZonePage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _areaController.dispose();
     _capacityController.dispose();
     super.dispose();
   }
@@ -70,7 +78,6 @@ class _AddZonePageState extends State<AddZonePage> {
     }
 
     final zoneName = _nameController.text.trim();
-    final areaSize = int.tryParse(_areaController.text.trim()) ?? 0;
     final capacity = int.tryParse(_capacityController.text.trim()) ?? 0;
 
     final exists = widget.existingZoneNames.any(
@@ -87,11 +94,12 @@ class _AddZonePageState extends State<AddZonePage> {
     try {
       setState(() => _isSaving = true);
 
-      await _firestore.collection('zones').add({
-        'zoneName': zoneName,
+await _firestore.collection('zones').doc(_polygonKey).set({
+          'zoneName': zoneName,
         'locationId': _locationId,
-        'areaSize': areaSize,
         'capacity': capacity,
+        'polygonKey': _polygonKey,
+        'polygonPoints': _polygonPoints,
         'congestionLevel': 'low',
         'currentCount': 0,
         'density': 0,
@@ -150,22 +158,6 @@ class _AddZonePageState extends State<AddZonePage> {
                         controller: _nameController,
                         hint: 'e.g. Zone A',
                         isNumber: false,
-                      ),
-
-                      const SizedBox(height: 25),
-
-                      const Text(
-                        'Area Size',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildField(
-                        controller: _areaController,
-                        hint: 'e.g. 25',
-                        isNumber: true,
                       ),
 
                       const SizedBox(height: 25),

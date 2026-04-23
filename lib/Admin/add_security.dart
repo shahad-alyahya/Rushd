@@ -1,11 +1,16 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AddSecurity extends StatefulWidget {
-  const AddSecurity({super.key});
+  final String selectedLocationId;
+  final String selectedLocationName;
+
+  const AddSecurity({
+    super.key,
+    required this.selectedLocationId,
+    required this.selectedLocationName,
+  });
 
   @override
   State<AddSecurity> createState() => _AddSecurityState();
@@ -25,49 +30,7 @@ class _AddSecurityState extends State<AddSecurity> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  String? _selectedLocationId;
-  bool _isLoadingLocations = true;
   bool _isSaving = false;
-
-  List<Map<String, String>> _locations = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLocations();
-  }
-
-  Future<void> _loadLocations() async {
-    try {
-      final snapshot = await _firestore.collection('locations').get();
-
-      final loadedLocations = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'id': doc.id,
-          'name': (data['locationName'] ?? doc.id).toString(),
-        };
-      }).toList();
-
-      if (!mounted) return;
-
-      setState(() {
-        _locations = loadedLocations;
-        _isLoadingLocations = false;
-
-        if (loadedLocations.isNotEmpty) {
-          _selectedLocationId = loadedLocations.first['id'];
-        }
-      });
-    } catch (e) {
-      debugPrint('Error loading locations: $e');
-
-      if (!mounted) return;
-      setState(() {
-        _isLoadingLocations = false;
-      });
-    }
-  }
 
   @override
   void dispose() {
@@ -80,7 +43,6 @@ class _AddSecurityState extends State<AddSecurity> {
 
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedLocationId == null) return;
 
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
@@ -121,7 +83,7 @@ class _AddSecurityState extends State<AddSecurity> {
       await user.updateDisplayName(fullName);
 
       await _firestore.collection('users').doc(user.uid).set({
-        'assignedLocationId': _selectedLocationId,
+        'assignedLocationId': widget.selectedLocationId,
         'createdAt': FieldValue.serverTimestamp(),
         'email': email,
         'fullName': fullName,
@@ -244,7 +206,7 @@ class _AddSecurityState extends State<AddSecurity> {
                       const SizedBox(height: 18),
                       _buildInputLabel('Location'),
                       const SizedBox(height: 8),
-                      _buildLocationDropdown(),
+                      _buildLocationField(),
 
                       const SizedBox(height: 50),
 
@@ -357,44 +319,23 @@ class _AddSecurityState extends State<AddSecurity> {
     );
   }
 
-  Widget _buildLocationDropdown() {
+  Widget _buildLocationField() {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey, width: 0.8),
+        color: Colors.white,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: _isLoadingLocations
-          ? const SizedBox(
-              height: 52,
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          : DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedLocationId,
-                isExpanded: true,
-                hint: const Text('Select Location'),
-                items: _locations
-                    .map(
-                      (loc) => DropdownMenuItem<String>(
-                        value: loc['id'],
-                        child: Text(loc['name']!),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLocationId = value;
-                  });
-                },
-              ),
-            ),
+      child: Text(
+        widget.selectedLocationName,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+        ),
+      ),
     );
   }
 }

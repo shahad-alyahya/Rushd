@@ -102,12 +102,19 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     });
   }
 
-  Future<void> _navigateToAddSecurity() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddSecurity()),
-    );
-  }
+ Future<void> _navigateToAddSecurity() async {
+  if (selectedLocationId == null) return;
+
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => AddSecurity(
+        selectedLocationId: selectedLocationId!,
+        selectedLocationName: selectedLocation,
+      ),
+    ),
+  );
+}
 
   void _triggerDeleteFlow(Map<String, dynamic> user) {
     showDialog(

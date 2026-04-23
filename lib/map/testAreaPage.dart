@@ -29,13 +29,14 @@ class _TestAreaPageState extends State<TestAreaPage> {
     'zone_00A': 'low',
     'zone_00B': 'low',
     'zone_00C': 'low',
-    'zone_004': 'low',
+   'hall': 'low',
   };
 
   Map<String, int> zoneCounts = {
     'zone_00A': 0,
     'zone_00B': 0,
     'zone_00C': 0,
+    
   };
 
   static const LatLng center = LatLng(24.8260231, 46.6636767);
@@ -167,7 +168,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
           LatLng(24.8239940, 46.6634118),
           LatLng(24.8240427, 46.6632834),
           LatLng(24.8264287, 46.6620841),
-          LatLng(24.8265251, 46.662100B),
+          LatLng(24.8265251, 46.662100),
           LatLng(24.8270284, 46.6633498),
           LatLng(24.8276008, 46.6647097),
         ],
@@ -179,7 +180,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
         polygonId: const PolygonId('zoneC'),
         points: const [
           LatLng(24.827674146566494, 46.66478343307972),
-          LatLng(24.827655584987614, 46.66482400A49107),
+          LatLng(24.827655584987614, 46.6648240049107),
           LatLng(24.827013230929264, 46.66515324264765),
           LatLng(24.826779536158234, 46.66521392762661),
           LatLng(24.82653823367279, 46.66520554572344),
