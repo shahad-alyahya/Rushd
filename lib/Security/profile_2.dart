@@ -117,7 +117,7 @@ class _SecurityProfilePageState extends State<SecurityProfilePage> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                               EditProfilePageSecurity(locationId: locationId),
+                                               EditProfilePageSecurity(locationId: widget.locationId),
                                         ),
                                       );
                                     },
