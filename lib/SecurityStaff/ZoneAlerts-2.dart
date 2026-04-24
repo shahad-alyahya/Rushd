@@ -7,11 +7,8 @@ class ZoneAlerts2Screen extends StatelessWidget {
   final String locationId;
 
   const ZoneAlerts2Screen({
-
     super.key,
-
     required this.locationId,
-
   });
 
   @override
@@ -45,7 +42,7 @@ class ZoneAlerts2Screen extends StatelessWidget {
                         StreamBuilder<QuerySnapshot>(
                           stream: FirebaseFirestore.instance
                               .collection('zones')
-                              .where('locationId', isEqualTo: 'test_area_001')
+                              .where('locationId', isEqualTo: locationId)
                               .snapshots(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
@@ -113,10 +110,10 @@ class ZoneAlerts2Screen extends StatelessWidget {
                     ),
                   ),
                 ),
-             SecurityBottomBar(
-  currentIndex: 2,
-  locationId: locationId,
-),
+                SecurityBottomBar(
+                  currentIndex: 2,
+                  locationId: locationId,
+                ),
               ],
             ),
           ),
@@ -143,7 +140,8 @@ class ZoneAlerts2Screen extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>  ZoneAlerts1Screen(locationId: locationId),
+                      builder: (context) =>
+                          ZoneAlerts1Screen(locationId: locationId),
                     ),
                   );
                 },
@@ -248,8 +246,6 @@ class AlertCardResponded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isTestArea = locationId == 'test_area_001';
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -266,7 +262,7 @@ class AlertCardResponded extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (!isTestArea) ...[
+          if (locationId != 'test_area_001') ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
               child: Image.asset(
@@ -284,14 +280,14 @@ class AlertCardResponded extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     const Icon(Icons.access_time, size: 14),
@@ -302,28 +298,22 @@ class AlertCardResponded extends StatelessWidget {
                     ),
                   ],
                 ),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: levelBg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      levelText,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: levelTextColor,
-                      ),
-                    ),
-                  ),
-                ),
               ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: levelBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              levelText,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: levelTextColor,
+              ),
             ),
           ),
         ],
