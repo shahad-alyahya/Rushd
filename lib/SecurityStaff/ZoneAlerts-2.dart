@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'ZoneAlerts-1.dart';
 import 'package:rushd/Security/security_bottom_bar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ZoneAlerts2Screen extends StatelessWidget {
-  const ZoneAlerts2Screen({super.key});
+  final String locationId;
+
+  const ZoneAlerts2Screen({
+
+    super.key,
+
+    required this.locationId,
+
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,20 +42,81 @@ class ZoneAlerts2Screen extends StatelessWidget {
                         const SizedBox(height: 22),
                         _buildAlertToggle(context),
                         const SizedBox(height: 24),
-                        const AlertCardResponded(
-                          imagePath: 'assets/images/egypt.png',
-                          title: 'Egyptian Subzone',
-                          date: '19 Dec 2025',
-                          timeAgo: '40 minutes ago',
-                          levelText: 'Low Level',
-                          levelBg: Color(0x334CAF50),
-                          levelTextColor: Color(0xFF2E7D32),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('zones')
+                              .where('locationId', isEqualTo: 'test_area_001')
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return const Text("No responded alerts");
+                            }
+
+                            final filtered = snapshot.data!.docs.where((doc) {
+                              final data =
+                                  doc.data() as Map<String, dynamic>;
+
+                              final level = (data['congestionLevel'] ?? '')
+                                  .toString()
+                                  .trim()
+                                  .toLowerCase();
+
+                              return level == 'low';
+                            }).toList();
+
+                            if (filtered.isEmpty) {
+                              return const Text("No responded alerts");
+                            }
+
+                            return Column(
+                              children: filtered.map((doc) {
+                                final data =
+                                    doc.data() as Map<String, dynamic>;
+
+                                final zoneId = doc.id;
+
+                                final title = _zoneNameFromId(
+                                  zoneId,
+                                  (data['zoneName'] ?? 'Zone').toString(),
+                                );
+
+                                final updatedAt = data['lastUpdated'];
+                                final timeAgo = _formatTime(updatedAt);
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: AlertCardResponded(
+                                    imagePath: _imageForZone(zoneId),
+                                    title: title,
+                                    date: '',
+                                    timeAgo: timeAgo,
+                                    levelText: 'Low Level',
+                                    levelBg: const Color(0x334CAF50),
+                                    levelTextColor: const Color(0xFF2E7D32),
+                                    locationId:
+                                        (data['locationId'] ?? '').toString(),
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SecurityBottomBar(currentIndex: 2),
+             SecurityBottomBar(
+  currentIndex: 2,
+  locationId: locationId,
+),
               ],
             ),
           ),
@@ -73,14 +143,17 @@ class ZoneAlerts2Screen extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ZoneAlerts1Screen(),
+                      builder: (context) =>  ZoneAlerts1Screen(locationId: locationId),
                     ),
                   );
                 },
                 child: const Center(
                   child: Text(
                     'Active Alerts',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF9B9B9B)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF9B9B9B),
+                    ),
                   ),
                 ),
               ),
@@ -97,7 +170,10 @@ class ZoneAlerts2Screen extends StatelessWidget {
                 child: const Center(
                   child: Text(
                     'Responded Alerts',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -107,12 +183,52 @@ class ZoneAlerts2Screen extends StatelessWidget {
       ),
     );
   }
+
+  String _zoneNameFromId(String zoneId, String fallback) {
+    switch (zoneId) {
+      case 'zone_00A':
+        return 'Zone A';
+      case 'zone_00B':
+        return 'Zone B';
+      case 'zone_00C':
+        return 'Zone C';
+      default:
+        return fallback;
+    }
+  }
+
+  String _imageForZone(String zoneId) {
+    switch (zoneId) {
+      case 'zone_00A':
+        return 'assets/images/saudiZone.png';
+      case 'zone_00B':
+        return 'assets/images/AmusementPark.png';
+      case 'zone_00C':
+        return 'assets/images/china.png';
+      default:
+        return 'assets/images/egypt.png';
+    }
+  }
+
+  String _formatTime(dynamic timestamp) {
+    if (timestamp == null) return '';
+
+    final date = (timestamp as Timestamp).toDate();
+    final diff = DateTime.now().difference(date);
+
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hr ago';
+
+    return '${diff.inDays} days ago';
+  }
 }
 
 class AlertCardResponded extends StatelessWidget {
   final String imagePath;
   final String title;
   final String date;
+  final String locationId;
   final String timeAgo;
   final String levelText;
   final Color levelBg;
@@ -126,11 +242,14 @@ class AlertCardResponded extends StatelessWidget {
     required this.timeAgo,
     required this.levelText,
     required this.levelBg,
+    required this.locationId,
     required this.levelTextColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool isTestArea = locationId == 'test_area_001';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -147,16 +266,18 @@ class AlertCardResponded extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.asset(
-              imagePath,
-              width: 110,
-              height: 86,
-              fit: BoxFit.cover,
+          if (!isTestArea) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.asset(
+                imagePath,
+                width: 110,
+                height: 86,
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,17 +294,12 @@ class AlertCardResponded extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today_outlined, size: 14),
-                    const SizedBox(width: 5),
-                    Text(date, style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
                     const Icon(Icons.access_time, size: 14),
                     const SizedBox(width: 5),
-                    Text(timeAgo, style: const TextStyle(fontSize: 12)),
+                    Text(
+                      timeAgo,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
                 Align(

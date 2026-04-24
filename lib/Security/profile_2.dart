@@ -8,7 +8,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SecurityProfilePage extends StatefulWidget {
-  const SecurityProfilePage({super.key});
+ final String locationId;
+
+  const SecurityProfilePage({
+
+    super.key,
+
+    required this.locationId,
+
+  });
 
   @override
   State<SecurityProfilePage> createState() => _SecurityProfilePageState();
@@ -109,7 +117,7 @@ class _SecurityProfilePageState extends State<SecurityProfilePage> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              const EditProfilePageSecurity(),
+                                               EditProfilePageSecurity(locationId: locationId),
                                         ),
                                       );
                                     },
@@ -178,7 +186,10 @@ class _SecurityProfilePageState extends State<SecurityProfilePage> {
                             ),
                           ),
 
-                          SecurityBottomBar(currentIndex: 0),
+                        SecurityBottomBar(
+  currentIndex: 0,
+  locationId: widget.locationId,
+),
                         ],
                       ),
                     ),

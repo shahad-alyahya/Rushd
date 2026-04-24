@@ -103,11 +103,11 @@ void dispose() {
   // 🔥 تحويل zoneId → ZonePoint
   ZonePoint _mapZoneIdToPoint(String id) {
     switch (id) {
-      case 'zone_001':
+      case 'zone_00A':
         return ZonePoint.a;
-      case 'zone_002':
+      case 'zone_00B':
         return ZonePoint.b;
-      case 'zone_003':
+      case 'zone_00C':
         return ZonePoint.c;
         case 'hall':
       return ZonePoint.hall;
@@ -141,11 +141,11 @@ void dispose() {
 }
   String _routeZoneId(String id) {
   switch (id) {
-    case 'zone_001':
+    case 'zone_00A':
       return 'zone_a';
-    case 'zone_002':
+    case 'zone_00B':
       return 'zone_b';
-    case 'zone_003':
+    case 'zone_00C':
       return 'zone_c';
     default:
       return id;
@@ -255,11 +255,11 @@ void dispose() {
 
                       /// 🔥 الكروت
                       if (hasSelection) ...[
-                        if (_selectedTestAreaZoneId != "zone_001")
+                        if (_selectedTestAreaZoneId != "zone_00A")
                          destinationCard(
   title: "Zone A",
   time: _getTime(ZonePoint.a),
-  zoneId: "zone_001",
+  zoneId: "zone_00A",
   onGo: () {
     if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -278,7 +278,7 @@ void dispose() {
           locationName: "Test Area",
          distance: _getDistance(ZonePoint.a),
           estimatedTime: _getTime(ZonePoint.a),
-        zoneId: _routeZoneId("zone_001"),
+        zoneId: _routeZoneId("zone_00A"),
 startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
           userLocation: _selectedUserLocation!,
         ),
@@ -286,11 +286,11 @@ startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
     );
   },
 ),
-                        if (_selectedTestAreaZoneId != "zone_002")
+                        if (_selectedTestAreaZoneId != "zone_00B")
                          destinationCard(
   title: "Zone B",
   time: _getTime(ZonePoint.b),
-  zoneId: "zone_002",
+  zoneId: "zone_00B",
   onGo: () {
     if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -309,7 +309,7 @@ startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
           locationName: "Test Area",
         distance: _getDistance(ZonePoint.b),
           estimatedTime: _getTime(ZonePoint.b),
-         zoneId: _routeZoneId("zone_002"),
+         zoneId: _routeZoneId("zone_00B"),
 startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
           userLocation: _selectedUserLocation!,
         ),
@@ -318,11 +318,11 @@ startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
   },
 ),
 
-                        if (_selectedTestAreaZoneId != "zone_003")
+                        if (_selectedTestAreaZoneId != "zone_00C")
                           destinationCard(
   title: "Zone C",
   time: _getTime(ZonePoint.c),
-  zoneId: "zone_003",
+  zoneId: "zone_00C",
   onGo: () {
     if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -341,7 +341,7 @@ startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
           locationName: "Test Area",
          distance: _getDistance(ZonePoint.c),
           estimatedTime: _getTime(ZonePoint.c),
-         zoneId: _routeZoneId("zone_003"),
+         zoneId: _routeZoneId("zone_00C"),
 startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
           userLocation: _selectedUserLocation!,
         ),

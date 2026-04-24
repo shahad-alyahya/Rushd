@@ -130,7 +130,10 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                           ),
                         ),
                 ),
-                const SecurityBottomBar(currentIndex: 1),
+                SecurityBottomBar(
+  currentIndex: 1,
+  locationId: _assignedLocationId ?? '',
+),
               ],
             ),
           ),

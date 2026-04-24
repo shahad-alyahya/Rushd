@@ -1,59 +1,55 @@
 import 'package:flutter/material.dart';
-// Standardize your imports here
 import 'home_page2.dart';
 import '../SecurityStaff/ZoneAlerts-1.dart';
-import 'profile_2.dart'; // Ensure this file name matches your profile file
+import 'profile_2.dart';
 
 class SecurityBottomBar extends StatelessWidget {
   final int currentIndex;
+  final String locationId;
 
-  const SecurityBottomBar({super.key, required this.currentIndex});
+  const SecurityBottomBar({
+    super.key,
+    required this.currentIndex,
+    required this.locationId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 78,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: const Border(
-  top: BorderSide(
-    color: Color(0xFFE5E5E5),
-    width: 1,
-  ),
-),
+        border: Border(
+          top: BorderSide(
+            color: Color(0xFFE5E5E5),
+            width: 1,
+          ),
+        ),
       ),
       child: BottomNavigationBar(
         backgroundColor: Colors.white,
-elevation: 0,
+        elevation: 0,
         currentIndex: currentIndex,
         onTap: (index) {
-          // Optimization: If already on the active tab, prevent redundant navigation
           if (index == currentIndex) return;
 
           Widget nextPage;
 
-          // Index 0: Profile Page
           if (index == 0) {
-            nextPage = const SecurityProfilePage();
-          }
-          // Index 1: Home Dashboard
-          else if (index == 1) {
-            nextPage = const SecurityDashboardPage();
-          }
-          // Index 2: Security Alerts
-          else if (index == 2) {
-            nextPage = const ZoneAlerts1Screen();
+            nextPage = SecurityProfilePage(locationId: locationId);
+          } else if (index == 1) {
+            nextPage = SecurityDashboardPage();
+          } else if (index == 2) {
+            nextPage = ZoneAlerts1Screen(locationId: locationId);
           } else {
             return;
           }
 
-          // Execution: Seamless transition to the target screen
           Navigator.pushReplacement(
             context,
             PageRouteBuilder(
               pageBuilder: (context, anim1, anim2) => nextPage,
-              transitionDuration:
-                  Duration.zero, // Instant swap for professional feel
+              transitionDuration: Duration.zero,
             ),
           );
         },

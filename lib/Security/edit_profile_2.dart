@@ -4,8 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'security_bottom_bar.dart';
 
 class EditProfilePageSecurity extends StatefulWidget {
-  const EditProfilePageSecurity({super.key});
+ final String locationId;
 
+  const EditProfilePageSecurity({
+
+    super.key,
+
+    required this.locationId,
+
+  });
   @override
   State<EditProfilePageSecurity> createState() =>
       _EditProfilePageSecurityState();
@@ -202,7 +209,10 @@ class _EditProfilePageSecurityState extends State<EditProfilePageSecurity> {
                     ),
                   ),
                 ),
-                const SecurityBottomBar(currentIndex: 0),
+                SecurityBottomBar(
+  currentIndex: 0,
+  locationId: widget.locationId,
+),
               ],
             ),
           ),

@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'ZoneAlerts-2.dart';
 import 'package:rushd/Security/security_bottom_bar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ZoneAlerts1Screen extends StatelessWidget {
-  const ZoneAlerts1Screen({super.key});
+  final String locationId;
+
+  const ZoneAlerts1Screen({
+
+    super.key,
+
+    required this.locationId,
+
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +21,7 @@ class ZoneAlerts1Screen extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 380, // iPhone layout constraint
+            width: 380,
             child: Column(
               children: [
                 Expanded(
@@ -33,37 +42,134 @@ class ZoneAlerts1Screen extends StatelessWidget {
                         const SizedBox(height: 22),
                         _buildAlertToggle(context),
                         const SizedBox(height: 24),
-                        const AlertCardActive(
-                          imagePath: 'assets/images/saudiZone.png',
-                          title: 'Saudi Arabia Zone',
-                          date: '27 Dec 2025',
-                          timeAgo: '4 minutes ago',
-                          levelText: 'High Level',
-                          levelBg: Color(0x33C22222),
-                          levelTextColor: Color(0xFFE11A1A),
-                        ),
-                        const SizedBox(height: 20),
-                        const AlertCardActive(
-                          imagePath: 'assets/images/AmusementPark.png',
-                          title: 'Amusement Park',
-                          date: '27 Dec 2025',
-                          timeAgo: '8 minutes ago',
-                          levelText: 'Medium Level',
-                          levelBg: Color(0x33C26722),
-                          levelTextColor: Color(0xFFF87927),
+
+                        /// 🔥 هنا الفايربيس
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('zones')
+                              .where('locationId',
+                                  isEqualTo: locationId)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return const Text("No alerts");
+                            }
+
+                            final docs = snapshot.data!.docs;
+
+                            /// 👇 فلترة high + medium فقط
+                            final filtered = docs.where((doc) {
+                              final data =
+                                  doc.data() as Map<String, dynamic>;
+                              final level = (data['congestionLevel'] ?? '')
+                                  .toString()
+                                  .toLowerCase();
+                              return level == 'high' ||
+                                  level == 'medium';
+                            }).toList();
+
+                            if (filtered.isEmpty) {
+                              return const Text("No active alerts");
+                            }
+
+                            return Column(
+                              children: filtered.map((doc) {
+                                final data =
+                                    doc.data() as Map<String, dynamic>;
+
+                                final zoneName =
+                                    (data['zoneName'] ?? 'Zone')
+                                        .toString();
+
+                                final level =
+                                    (data['congestionLevel'] ?? 'low')
+                                        .toString();
+
+                                final updatedAt = data['lastUpdated'];
+
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.only(bottom: 20),
+                                child: AlertCardActive(
+  imagePath: _imageForZone(zoneName),
+  title: zoneName,
+  date: '',
+  timeAgo: _formatTime(updatedAt),
+  levelText: _levelText(level),
+  levelBg: _levelBg(level),
+  levelTextColor: _levelColor(level),
+  locationId: (data['locationId'] ?? '').toString(), // 🔥 هذا المهم
+),
+                                );
+                              }).toList(),
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
                 ),
-                // Alert index is 2
-                const SecurityBottomBar(currentIndex: 2),
+            SecurityBottomBar(
+  currentIndex: 2,
+  locationId: locationId,
+),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  /// 🔥 صور حسب الزون
+  String _imageForZone(String zoneName) {
+    if (zoneName.contains('A')) {
+      return 'assets/images/saudiZone.png';
+    } else if (zoneName.contains('B')) {
+      return 'assets/images/AmusementPark.png';
+    } else {
+      return 'assets/images/china.png';
+    }
+  }
+
+  /// 🔥 Level text
+  String _levelText(String level) {
+    if (level == 'high') return 'High Level';
+    if (level == 'medium') return 'Medium Level';
+    return 'Low Level';
+  }
+
+  Color _levelBg(String level) {
+    if (level == 'high') return const Color(0x33C22222);
+    if (level == 'medium') return const Color(0x33C26722);
+    return const Color(0x334CAF50);
+  }
+
+  Color _levelColor(String level) {
+    if (level == 'high') return const Color(0xFFE11A1A);
+    if (level == 'medium') return const Color(0xFFF87927);
+    return const Color(0xFF2E7D32);
+  }
+
+  /// 🔥 time ago
+  String _formatTime(dynamic timestamp) {
+    if (timestamp == null) return '';
+
+    final date = (timestamp as Timestamp).toDate();
+    final diff = DateTime.now().difference(date);
+
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hr ago';
+
+    return '${diff.inDays} days ago';
   }
 
   Widget _buildAlertToggle(BuildContext context) {
@@ -84,13 +190,16 @@ class ZoneAlerts1Screen extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: const [
-                    BoxShadow(color: Color(0x12000000), blurRadius: 6),
+                    BoxShadow(
+                        color: Color(0x12000000), blurRadius: 6),
                   ],
                 ),
                 child: const Center(
                   child: Text(
                     'Active Alerts',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -101,14 +210,17 @@ class ZoneAlerts1Screen extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ZoneAlerts2Screen(),
+                      builder: (context) =>
+                           ZoneAlerts2Screen(locationId: locationId),
                     ),
                   );
                 },
                 child: const Center(
                   child: Text(
                     'Responded Alerts',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF9B9B9B)),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF9B9B9B)),
                   ),
                 ),
               ),
@@ -119,7 +231,6 @@ class ZoneAlerts1Screen extends StatelessWidget {
     );
   }
 }
-
 class AlertCardActive extends StatelessWidget {
   final String imagePath;
   final String title;
@@ -127,6 +238,7 @@ class AlertCardActive extends StatelessWidget {
   final String timeAgo;
   final String levelText;
   final Color levelBg;
+  final String locationId;
   final Color levelTextColor;
 
   const AlertCardActive({
@@ -138,6 +250,7 @@ class AlertCardActive extends StatelessWidget {
     required this.levelText,
     required this.levelBg,
     required this.levelTextColor,
+   required this.locationId,
   });
 
   @override
@@ -156,73 +269,61 @@ class AlertCardActive extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+    child: Row(
+  children: [
+    if (locationId != 'test_area_001') ...[
+      ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Image.asset(
+          imagePath,
+          width: 110,
+          height: 86,
+          fit: BoxFit.cover,
+        ),
+      ),
+      const SizedBox(width: 12),
+    ],
+
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.asset(
-              imagePath,
-              width: 110,
-              height: 86,
-              fit: BoxFit.cover,
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today_outlined, size: 14),
-                    const SizedBox(width: 5),
-                    Text(date, style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14),
-                    const SizedBox(width: 5),
-                    Text(timeAgo, style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: levelBg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      levelText,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: levelTextColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 14),
+              const SizedBox(width: 5),
+              Text(timeAgo, style: const TextStyle(fontSize: 12)),
+            ],
           ),
         ],
       ),
+    ),
+
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: levelBg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        levelText,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: levelTextColor,
+        ),
+      ),
+    ),
+  ],
+),
     );
   }
 }
