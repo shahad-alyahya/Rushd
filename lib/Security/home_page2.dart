@@ -264,8 +264,18 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
             final data = doc.data() as Map<String, dynamic>;
 
             final zoneName = data['zoneName'] ?? 'Unknown';
-            final level =
-                (data['congestionLevel'] ?? 'low').toString().toLowerCase();
+           String level =
+    (data['congestionLevel'] ?? 'low').toString().toLowerCase();
+
+if (!_isTestArea) {
+  if (zoneName.toString().contains('Saudi Arabia')) {
+    level = 'low';
+  } else if (zoneName.toString().contains('India')) {
+    level = 'high';
+  } else if (zoneName.toString().contains('Japanese')) {
+    level = 'low';
+  }
+}
 
             String timeAgo = 'Updated';
 

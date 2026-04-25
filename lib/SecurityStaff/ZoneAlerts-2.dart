@@ -91,7 +91,7 @@ class ZoneAlerts2Screen extends StatelessWidget {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 20),
                                   child: AlertCardResponded(
-                                    imagePath: _imageForZone(zoneId),
+                                    imagePath: _imageForZone(title),
                                     title: title,
                                     date: '',
                                     timeAgo: timeAgo,
@@ -195,19 +195,29 @@ class ZoneAlerts2Screen extends StatelessWidget {
     }
   }
 
-  String _imageForZone(String zoneId) {
-    switch (zoneId) {
-      case 'zone_00A':
-        return 'assets/images/saudiZone.png';
-      case 'zone_00B':
-        return 'assets/images/AmusementPark.png';
-      case 'zone_00C':
-        return 'assets/images/china.png';
-      default:
-        return 'assets/images/egypt.png';
-    }
+  String _imageForZone(String zoneName) {
+  final name = zoneName.toLowerCase();
+
+  if (name.contains('saudi')) {
+    return 'assets/images/saudiZone.png';
+  } else if (name.contains('turkey')) {
+    return 'assets/images/turkey.png';
+  } else if (name.contains('india')) {
+    return 'assets/images/india.png';
+  } else if (name.contains('japan') || name.contains('japanese')) {
+    return 'assets/images/japan.png';
+  } else if (name.contains('china')) {
+    return 'assets/images/china.png';
+  } else if (name.contains('egypt')) {
+    return 'assets/images/egypt.png';
+  } else if (name.contains('greek')) {
+    return 'assets/images/greek.png';
+  } else if (name.contains('morocco')) {
+    return 'assets/images/morocco.png';
   }
 
+  return 'assets/images/saudiZone.png';
+}
   String _formatTime(dynamic timestamp) {
     if (timestamp == null) return '';
 
