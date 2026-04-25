@@ -43,49 +43,75 @@ class ZoneAlerts1Screen extends StatelessWidget {
                         _buildAlertToggle(context),
                         const SizedBox(height: 24),
 
-                       /// 🔥 هنا الفايربيس
-StreamBuilder<QuerySnapshot>(
-  stream: FirebaseFirestore.instance
-      .collection('alerts')
-      .where('locationId', isEqualTo: locationId)
-      .where('status', isEqualTo: 'active')
-      .snapshots(),
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const Center(child: CircularProgressIndicator());
-    }
+                        /// 🔥 هنا الفايربيس
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('zones')
+                              .where('locationId',
+                                  isEqualTo: locationId)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
 
-    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-      return const Text("No active alerts");
-    }
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return const Text("No alerts");
+                            }
 
-    final docs = snapshot.data!.docs;
+                            final docs = snapshot.data!.docs;
 
-    return Column(
-      children: docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
+                            /// 👇 فلترة high + medium فقط
+                            final filtered = docs.where((doc) {
+                              final data =
+                                  doc.data() as Map<String, dynamic>;
+                              final level = (data['congestionLevel'] ?? '')
+                                  .toString()
+                                  .toLowerCase();
+                              return level == 'high' ||
+                                  level == 'medium';
+                            }).toList();
 
-        final zoneName = (data['zoneName'] ?? 'Zone').toString();
-        final level = (data['congestionLevel'] ?? 'low').toString();
-        final updatedAt = data['createdAt'];
+                            if (filtered.isEmpty) {
+                              return const Text("No active alerts");
+                            }
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: AlertCardActive(
-            imagePath: _imageForZone(zoneName),
-            title: zoneName,
-            date: '',
-            timeAgo: _formatTime(updatedAt),
-            levelText: _levelText(level),
-            levelBg: _levelBg(level),
-            levelTextColor: _levelColor(level),
-            locationId: (data['locationId'] ?? '').toString(),
-          ),
-        );
-      }).toList(),
-    );
-  },
+                            return Column(
+                              children: filtered.map((doc) {
+                                final data =
+                                    doc.data() as Map<String, dynamic>;
+
+                                final zoneName =
+                                    (data['zoneName'] ?? 'Zone')
+                                        .toString();
+
+                                final level =
+                                    (data['congestionLevel'] ?? 'low')
+                                        .toString();
+
+                                final updatedAt = data['lastUpdated'];
+
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.only(bottom: 20),
+                                child: AlertCardActive(
+  imagePath: _imageForZone(zoneName),
+  title: zoneName,
+  date: '',
+  timeAgo: _formatTime(updatedAt),
+  levelText: _levelText(level),
+  levelBg: _levelBg(level),
+  levelTextColor: _levelColor(level),
+  locationId: (data['locationId'] ?? '').toString(), // 🔥 هذا المهم
 ),
+                                );
+                              }).toList(),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
