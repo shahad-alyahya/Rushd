@@ -40,72 +40,51 @@ class ZoneAlerts2Screen extends StatelessWidget {
                         _buildAlertToggle(context),
                         const SizedBox(height: 24),
                         StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('zones')
-                              .where('locationId', isEqualTo: locationId)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
+  stream: FirebaseFirestore.instance
+      .collection('alerts')
+      .where('locationId', isEqualTo: locationId)
+.where('status', whereIn: ['resolved', 'responded'])
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
 
-                            if (!snapshot.hasData ||
-                                snapshot.data!.docs.isEmpty) {
-                              return const Text("No responded alerts");
-                            }
+    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+      return const Text("No responded alerts");
+    }
 
-                            final filtered = snapshot.data!.docs.where((doc) {
-                              final data =
-                                  doc.data() as Map<String, dynamic>;
+    final docs = snapshot.data!.docs;
 
-                              final level = (data['congestionLevel'] ?? '')
-                                  .toString()
-                                  .trim()
-                                  .toLowerCase();
+    return Column(
+      children: docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
 
-                              return level == 'low';
-                            }).toList();
+        final zoneName = (data['zoneName'] ?? 'Zone').toString();
 
-                            if (filtered.isEmpty) {
-                              return const Text("No responded alerts");
-                            }
+        final respondedAt = data['respondedAt'];
+        final timeAgo =
+            respondedAt != null ? _formatTime(respondedAt) : '';
 
-                            return Column(
-                              children: filtered.map((doc) {
-                                final data =
-                                    doc.data() as Map<String, dynamic>;
-
-                                final zoneId = doc.id;
-
-                                final title = _zoneNameFromId(
-                                  zoneId,
-                                  (data['zoneName'] ?? 'Zone').toString(),
-                                );
-
-                                final updatedAt = data['lastUpdated'];
-                                final timeAgo = _formatTime(updatedAt);
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 20),
-                                  child: AlertCardResponded(
-                                    imagePath: _imageForZone(zoneId),
-                                    title: title,
-                                    date: '',
-                                    timeAgo: timeAgo,
-                                    levelText: 'Low Level',
-                                    levelBg: const Color(0x334CAF50),
-                                    levelTextColor: const Color(0xFF2E7D32),
-                                    locationId:
-                                        (data['locationId'] ?? '').toString(),
-                                  ),
-                                );
-                              }).toList(),
-                            );
-                          },
-                        ),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: AlertCardResponded(
+            imagePath: _imageForZone(zoneName),
+            title: zoneName,
+            date: '',
+            timeAgo: timeAgo,
+            levelText: 'Low Level',
+            levelBg: const Color(0x334CAF50),
+            levelTextColor: const Color(0xFF2E7D32),
+            locationId: (data['locationId'] ?? '').toString(),
+          ),
+        );
+      }).toList(),
+    );
+  },
+),
                       ],
                     ),
                   ),
