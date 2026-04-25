@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'zonePoint.dart';
@@ -9,10 +8,7 @@ import 'dart:async';
 class TestAreaPage extends StatefulWidget {
   final void Function(LatLng point, String zoneId)? onLocationSelected;
 
-  const TestAreaPage({
-    super.key,
-    this.onLocationSelected,
-  });
+  const TestAreaPage({super.key, this.onLocationSelected});
 
   @override
   State<TestAreaPage> createState() => _TestAreaPageState();
@@ -29,15 +25,10 @@ class _TestAreaPageState extends State<TestAreaPage> {
     'zone_00A': 'low',
     'zone_00B': 'low',
     'zone_00C': 'low',
-   'hall': 'low',
+    'hall': 'low',
   };
 
-  Map<String, int> zoneCounts = {
-    'zone_00A': 0,
-    'zone_00B': 0,
-    'zone_00C': 0,
-    
-  };
+  Map<String, int> zoneCounts = {'zone_00A': 0, 'zone_00B': 0, 'zone_00C': 0};
 
   static const LatLng center = LatLng(24.8260231, 46.6636767);
 
@@ -122,10 +113,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
       if (!mounted) return;
 
       setState(() {
-        zoneLevels = {
-          ...zoneLevels,
-          ...updatedLevels,
-        };
+        zoneLevels = {...zoneLevels, ...updatedLevels};
         _buildPolygons();
         labels.clear();
       });
@@ -260,23 +248,15 @@ class _TestAreaPageState extends State<TestAreaPage> {
       textPainter.height.toInt(),
     );
 
-    final bytes = await image.toByteData(
-      format: ui.ImageByteFormat.png,
-    );
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
 
     return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
   }
 
   void _loadLabels() async {
-    final a = await _createTextMarker(
-      "Zone A\n${zoneCounts['zone_00A'] ?? 0}",
-    );
-    final b = await _createTextMarker(
-      "Zone B\n${zoneCounts['zone_00B'] ?? 0}",
-    );
-    final c = await _createTextMarker(
-      "Zone C\n${zoneCounts['zone_00C'] ?? 0}",
-    );
+    final a = await _createTextMarker("Zone A\n${zoneCounts['zone_00A'] ?? 0}");
+    final b = await _createTextMarker("Zone B\n${zoneCounts['zone_00B'] ?? 0}");
+    final c = await _createTextMarker("Zone C\n${zoneCounts['zone_00C'] ?? 0}");
 
     if (!mounted) return;
 
@@ -321,25 +301,26 @@ class _TestAreaPageState extends State<TestAreaPage> {
   }
 
   String _zoneId(ZonePoint zone) {
-  switch (zone) {
-    case ZonePoint.a:
-      return "zone_00A";
-    case ZonePoint.b:
-      return "zone_00B";
-    case ZonePoint.c:
-      return "zone_00C";
-    case ZonePoint.hall:
-      return "hall";
+    switch (zone) {
+      case ZonePoint.a:
+        return "zone_00A";
+      case ZonePoint.b:
+        return "zone_00B";
+      case ZonePoint.c:
+        return "zone_00C";
+      case ZonePoint.hall:
+        return "hall";
+    }
   }
-}
- void _resetSelection() {
-  setState(() {
-    currentLocation = null;
-    circles.clear();
-  });
 
-  widget.onLocationSelected?.call(center, "");
-}
+  void _resetSelection() {
+    setState(() {
+      currentLocation = null;
+      circles.clear();
+    });
+
+    widget.onLocationSelected?.call(center, "");
+  }
 
   void handleZoneTap(ZonePoint zone) {
     if (currentLocation == null) {
@@ -360,10 +341,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
         );
       });
 
-      widget.onLocationSelected?.call(
-        _zoneCenter(zone),
-        _zoneId(zone),
-      );
+      widget.onLocationSelected?.call(_zoneCenter(zone), _zoneId(zone));
       return;
     }
 
@@ -390,10 +368,7 @@ class _TestAreaPageState extends State<TestAreaPage> {
       );
     });
 
-    widget.onLocationSelected?.call(
-      _zoneCenter(zone),
-      _zoneId(zone),
-    );
+    widget.onLocationSelected?.call(_zoneCenter(zone), _zoneId(zone));
   }
 
   @override

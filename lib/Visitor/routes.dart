@@ -13,10 +13,7 @@ import 'dart:async';
 class RoutesPage extends StatefulWidget {
   final String selectedLocation;
 
-  const RoutesPage({
-    super.key,
-    required this.selectedLocation,
-  });
+  const RoutesPage({super.key, required this.selectedLocation});
 
   @override
   State<RoutesPage> createState() => _RoutesPageState();
@@ -25,7 +22,6 @@ class RoutesPage extends StatefulWidget {
 class _RoutesPageState extends State<RoutesPage> {
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kDark = Color(0xFF353841);
-  
 
   late String _selectedLocation;
   DateTime _lastUpdate = DateTime.now();
@@ -33,62 +29,62 @@ class _RoutesPageState extends State<RoutesPage> {
   LatLng? _selectedUserLocation;
   String? _selectedTestAreaZoneId;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-StreamSubscription? _zonesSub;
+  StreamSubscription? _zonesSub;
 
-Map<String, String> zoneLevels = {};
-void _listenToZones() {
-  _zonesSub =
-      _firestore.collection('zones').snapshots().listen((snapshot) {
-    final updated = <String, String>{};
+  Map<String, String> zoneLevels = {};
+  void _listenToZones() {
+    _zonesSub = _firestore.collection('zones').snapshots().listen((snapshot) {
+      final updated = <String, String>{};
 
-    for (var doc in snapshot.docs) {
-      final data = doc.data();
-      updated[doc.id] = (data['congestionLevel'] ?? 'low').toString();
-    }
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        updated[doc.id] = (data['congestionLevel'] ?? 'low').toString();
+      }
 
-    setState(() {
-      zoneLevels = updated;
+      setState(() {
+        zoneLevels = updated;
+      });
     });
-  });
-}
-Color _getLevelColor(String zoneId) {
-  final level = zoneLevels[zoneId] ?? 'low';
-
-  switch (level) {
-    case 'high':
-      return Colors.red;
-    case 'medium':
-      return Colors.orange;
-    default:
-      return Colors.green;
   }
-}
 
-String _getLevelText(String zoneId) {
-  final level = zoneLevels[zoneId] ?? 'low';
+  Color _getLevelColor(String zoneId) {
+    final level = zoneLevels[zoneId] ?? 'low';
 
-  switch (level) {
-    case 'high':
-      return 'High Level';
-    case 'medium':
-      return 'Medium Level';
-    default:
-      return 'Low Level';
+    switch (level) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      default:
+        return Colors.green;
+    }
   }
-}
 
+  String _getLevelText(String zoneId) {
+    final level = zoneLevels[zoneId] ?? 'low';
 
- @override
-void initState() {
-  super.initState();
-  _selectedLocation = widget.selectedLocation;
-  _listenToZones(); // 👈 مهم
-}
-@override
-void dispose() {
-  _zonesSub?.cancel();
-  super.dispose();
-}
+    switch (level) {
+      case 'high':
+        return 'High Level';
+      case 'medium':
+        return 'Medium Level';
+      default:
+        return 'Low Level';
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLocation = widget.selectedLocation;
+    _listenToZones(); // 👈 مهم
+  }
+
+  @override
+  void dispose() {
+    _zonesSub?.cancel();
+    super.dispose();
+  }
 
   void _refresh() {
     setState(() {
@@ -100,17 +96,17 @@ void dispose() {
     return "${dateTime.hour}:${dateTime.minute}";
   }
 
-  // 🔥 تحويل zoneId → ZonePoint
+  //  تحويل zoneId → ZonePoint
   ZonePoint _mapZoneIdToPoint(String id) {
     switch (id) {
-      case 'zone_00A':
+      case 'zone_001':
         return ZonePoint.a;
-      case 'zone_00B':
+      case 'zone_002':
         return ZonePoint.b;
-      case 'zone_00C':
+      case 'zone_003':
         return ZonePoint.c;
-        case 'hall':
-      return ZonePoint.hall;
+      case 'hall':
+        return ZonePoint.hall;
       default:
         return ZonePoint.a;
     }
@@ -127,30 +123,32 @@ void dispose() {
 
     return RouteUtils.estimateTime(route.points);
   }
+
   String _getDistance(ZonePoint to) {
-  if (_selectedTestAreaZoneId == null || _selectedTestAreaZoneId!.isEmpty) {
-    return "--";
+    if (_selectedTestAreaZoneId == null || _selectedTestAreaZoneId!.isEmpty) {
+      return "--";
+    }
+
+    final from = _mapZoneIdToPoint(_selectedTestAreaZoneId!);
+    final route = RouteData.getDirectRoute(from, to);
+
+    if (route == null) return "--";
+
+    return RouteUtils.formatDistance(route.points);
   }
 
-  final from = _mapZoneIdToPoint(_selectedTestAreaZoneId!);
-  final route = RouteData.getDirectRoute(from, to);
-
-  if (route == null) return "--";
-
-  return RouteUtils.formatDistance(route.points);
-}
   String _routeZoneId(String id) {
-  switch (id) {
-    case 'zone_00A':
-      return 'zone_a';
-    case 'zone_00B':
-      return 'zone_b';
-    case 'zone_00C':
-      return 'zone_c';
-    default:
-      return id;
+    switch (id) {
+      case 'zone_001':
+        return 'zone_a';
+      case 'zone_002':
+        return 'zone_b';
+      case 'zone_003':
+        return 'zone_c';
+      default:
+        return id;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -178,14 +176,18 @@ void dispose() {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.location_on,
-                                  size: 26, color: kPurple),
+                              const Icon(
+                                Icons.location_on,
+                                size: 26,
+                                color: kPurple,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 _selectedLocation,
                                 style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold),
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -205,15 +207,19 @@ void dispose() {
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
-                            )
+                          ),
                         ],
                       ),
 
                       const SizedBox(height: 20),
 
-                      const Text("Routes",
-                          style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.bold)),
+                      const Text(
+                        "Routes",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
 
                       const SizedBox(height: 8),
 
@@ -228,11 +234,11 @@ void dispose() {
                             ? TestAreaPage(
                                 onLocationSelected:
                                     (LatLng point, String zoneId) {
-                                  setState(() {
-                                    _selectedUserLocation = point;
-                                    _selectedTestAreaZoneId = zoneId;
-                                  });
-                                },
+                                      setState(() {
+                                        _selectedUserLocation = point;
+                                        _selectedTestAreaZoneId = zoneId;
+                                      });
+                                    },
                               )
                             : MapView(
                                 mode: MapMode.selectLocation,
@@ -244,111 +250,127 @@ void dispose() {
 
                       const SizedBox(height: 20),
 
-                      const Text("Best Nearby Destinations",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        "Best Nearby Destinations",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
 
                       const SizedBox(height: 12),
 
                       /// ⚠️ لازم يختار زون أول
-                      if (!hasSelection)
-                        const Text("Tap your zone first"),
+                      if (!hasSelection) const Text("Tap your zone first"),
 
                       /// 🔥 الكروت
                       if (hasSelection) ...[
-                        if (_selectedTestAreaZoneId != "zone_00A")
-                         destinationCard(
-  title: "Zone A",
-  time: _getTime(ZonePoint.a),
-  zoneId: "zone_00A",
-  onGo: () {
-    if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select your current location first'),
-        ),
-      );
-      return;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AlternativeRoute(
-          zoneName: "Zone A",
-          locationName: "Test Area",
-         distance: _getDistance(ZonePoint.a),
-          estimatedTime: _getTime(ZonePoint.a),
-        zoneId: _routeZoneId("zone_00A"),
-startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
-          userLocation: _selectedUserLocation!,
-        ),
-      ),
-    );
-  },
-),
-                        if (_selectedTestAreaZoneId != "zone_00B")
-                         destinationCard(
-  title: "Zone B",
-  time: _getTime(ZonePoint.b),
-  zoneId: "zone_00B",
-  onGo: () {
-    if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select your current location first'),
-        ),
-      );
-      return;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AlternativeRoute(
-          zoneName: "Zone B",
-          locationName: "Test Area",
-        distance: _getDistance(ZonePoint.b),
-          estimatedTime: _getTime(ZonePoint.b),
-         zoneId: _routeZoneId("zone_00B"),
-startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
-          userLocation: _selectedUserLocation!,
-        ),
-      ),
-    );
-  },
-),
-
-                        if (_selectedTestAreaZoneId != "zone_00C")
+                        if (_selectedTestAreaZoneId != "zone_001")
                           destinationCard(
-  title: "Zone C",
-  time: _getTime(ZonePoint.c),
-  zoneId: "zone_00C",
-  onGo: () {
-    if (_selectedUserLocation == null || _selectedTestAreaZoneId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select your current location first'),
-        ),
-      );
-      return;
-    }
+                            title: "Zone A",
+                            time: _getTime(ZonePoint.a),
+                            zoneId: "zone_001",
+                            onGo: () {
+                              if (_selectedUserLocation == null ||
+                                  _selectedTestAreaZoneId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please select your current location first',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AlternativeRoute(
-          zoneName: "Zone C",
-          locationName: "Test Area",
-         distance: _getDistance(ZonePoint.c),
-          estimatedTime: _getTime(ZonePoint.c),
-         zoneId: _routeZoneId("zone_00C"),
-startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
-          userLocation: _selectedUserLocation!,
-        ),
-      ),
-    );
-  },
-),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlternativeRoute(
+                                    zoneName: "Zone A",
+                                    locationName: "Test Area",
+                                    distance: _getDistance(ZonePoint.a),
+                                    estimatedTime: _getTime(ZonePoint.a),
+                                    zoneId: _routeZoneId("zone_001"),
+                                    startZoneId: _routeZoneId(
+                                      _selectedTestAreaZoneId!,
+                                    ),
+                                    userLocation: _selectedUserLocation!,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        if (_selectedTestAreaZoneId != "zone_002")
+                          destinationCard(
+                            title: "Zone B",
+                            time: _getTime(ZonePoint.b),
+                            zoneId: "zone_002",
+                            onGo: () {
+                              if (_selectedUserLocation == null ||
+                                  _selectedTestAreaZoneId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please select your current location first',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlternativeRoute(
+                                    zoneName: "Zone B",
+                                    locationName: "Test Area",
+                                    distance: _getDistance(ZonePoint.b),
+                                    estimatedTime: _getTime(ZonePoint.b),
+                                    zoneId: _routeZoneId("zone_002"),
+                                    startZoneId: _routeZoneId(
+                                      _selectedTestAreaZoneId!,
+                                    ),
+                                    userLocation: _selectedUserLocation!,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                        if (_selectedTestAreaZoneId != "zone_003")
+                          destinationCard(
+                            title: "Zone C",
+                            time: _getTime(ZonePoint.c),
+                            zoneId: "zone_003",
+                            onGo: () {
+                              if (_selectedUserLocation == null ||
+                                  _selectedTestAreaZoneId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please select your current location first',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlternativeRoute(
+                                    zoneName: "Zone C",
+                                    locationName: "Test Area",
+                                    distance: _getDistance(ZonePoint.c),
+                                    estimatedTime: _getTime(ZonePoint.c),
+                                    zoneId: _routeZoneId("zone_003"),
+                                    startZoneId: _routeZoneId(
+                                      _selectedTestAreaZoneId!,
+                                    ),
+                                    userLocation: _selectedUserLocation!,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                       ],
                     ],
                   ),
@@ -365,10 +387,10 @@ startZoneId: _routeZoneId(_selectedTestAreaZoneId!),
 
   /// CARD
   Widget destinationCard({
-   required String title,
-required String time,
-required String zoneId, // 👈 أضيفي هذا
-required VoidCallback onGo,
+    required String title,
+    required String time,
+    required String zoneId, // 👈 أضيفي هذا
+    required VoidCallback onGo,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -380,33 +402,31 @@ required VoidCallback onGo,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 6),
           Text("$time away"),
           const SizedBox(height: 6),
 
-Container(
-  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-  decoration: BoxDecoration(
-    color: _getLevelColor(zoneId).withOpacity(0.2),
-    borderRadius: BorderRadius.circular(12),
-  ),
-  child: Text(
-    _getLevelText(zoneId),
-    style: TextStyle(
-      color: _getLevelColor(zoneId),
-      fontWeight: FontWeight.bold,
-      fontSize: 12,
-    ),
-  ),
-),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getLevelColor(zoneId).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              _getLevelText(zoneId),
+              style: TextStyle(
+                color: _getLevelColor(zoneId),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
           const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: onGo,
-            child: const Text("GO"),
-          )
+          ElevatedButton(onPressed: onGo, child: const Text("GO")),
         ],
       ),
     );
