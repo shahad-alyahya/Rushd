@@ -143,8 +143,9 @@ class _RoutesPageState extends State<RoutesPage> {
   @override
   Widget build(BuildContext context) {
     final bool isTestArea = _selectedLocation == 'Test Area';
-    final bool hasSelection =
-        _selectedTestAreaZoneId != null && _selectedTestAreaZoneId!.isNotEmpty;
+    final bool hasSelection = isTestArea
+    ? (_selectedTestAreaZoneId != null && _selectedTestAreaZoneId!.isNotEmpty)
+    : (_selectedUserLocation != null);
 
     // 🔥 اللوجيك الجديد: تعريف كل المناطق المتاحة
     final List<Map<String, dynamic>> allZones = [
@@ -269,7 +270,7 @@ class _RoutesPageState extends State<RoutesPage> {
                         ),
 
                       /// 🔥 الكروت المتبقية تنبني تلقائياً بناءً على اللي بقى في اللستة
-                      if (hasSelection)
+                      if (isTestArea && hasSelection)
                         ...availableDestinations.map((dest) {
                           return destinationCard(
                             title: dest['title'],
@@ -309,6 +310,54 @@ class _RoutesPageState extends State<RoutesPage> {
                             },
                           );
                         }),
+                        if (!isTestArea && hasSelection) ...[
+ boulevardDestinationCard(
+    title: "Saudi Arabia Zone",
+    time: "4 min",
+    zoneId: "saudia",
+    onGo: () {
+      if (_selectedUserLocation == null) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AlternativeRoute(
+            zoneName: "Saudi Arabia Zone",
+            locationName: "Boulevard World",
+            distance: "250 m",
+            estimatedTime: "4 min",
+            zoneId: "saudia",
+            startZoneId: "saudia",
+            userLocation: _selectedUserLocation!,
+          ),
+        ),
+      );
+    },
+  ),
+  boulevardDestinationCard(
+    title: "Morocco Zone",
+    time: "6 min",
+    zoneId: "moroco",
+    onGo: () {
+      if (_selectedUserLocation == null) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AlternativeRoute(
+            zoneName: "Morocco Zone",
+            locationName: "Boulevard World",
+            distance: "400 m",
+            estimatedTime: "6 min",
+            zoneId: "moroco",
+            startZoneId: "moroco",
+            userLocation: _selectedUserLocation!,
+          ),
+        ),
+      );
+    },
+  ),
+],
                     ],
                   ),
                 ),
@@ -366,4 +415,113 @@ class _RoutesPageState extends State<RoutesPage> {
       ),
     );
   }
+  Widget boulevardDestinationCard({
+  required String title,
+  required String time,
+  required String zoneId,
+  required VoidCallback onGo,
+}) {
+  String imagePath = zoneId == 'saudia'
+      ? 'assets/images/saudiZone.png'
+      : 'assets/images/morocco.png';
+
+  return Container(
+    height: 141,
+    margin: const EdgeInsets.only(bottom: 18),
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: const [
+        BoxShadow(
+          color: Color.fromRGBO(0, 0, 0, 0.18),
+          blurRadius: 18,
+          offset: Offset(0, 7),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              imagePath,
+              width: 146,
+              height: 116,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  )),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.access_time, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    "$time away",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF7D7B7B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getLevelColor(zoneId).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _getLevelText(zoneId),
+                  style: TextStyle(
+                    color: _getLevelColor(zoneId),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: onGo,
+                child: Container(
+                  width: 116,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF353841),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    "GO !",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 }
