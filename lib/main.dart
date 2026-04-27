@@ -9,16 +9,12 @@ import 'package:rushd/splash_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   ReadingService().startListening();
 
   runApp(const RushdApp());
 }
-
-
 
 class RushdApp extends StatelessWidget {
   const RushdApp({super.key});
@@ -28,9 +24,7 @@ class RushdApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Rushd',
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
+      theme: ThemeData(useMaterial3: true),
       home: const SplashScreen(),
     );
   }
