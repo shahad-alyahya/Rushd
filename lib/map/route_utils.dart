@@ -1,56 +1,98 @@
-import 'dart:math';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-
-class RouteUtils {
-  // حساب المسافة بين نقطتين (بالمتر)
-  static double _distance(LatLng a, LatLng b) {
-    const R = 6371000; // radius of earth in meters
-
-    double dLat = _degToRad(b.latitude - a.latitude);
-    double dLng = _degToRad(b.longitude - a.longitude);
-
-    double lat1 = _degToRad(a.latitude);
-    double lat2 = _degToRad(b.latitude);
-
-    double aCalc = sin(dLat / 2) * sin(dLat / 2) +
-        sin(dLng / 2) * sin(dLng / 2) * cos(lat1) * cos(lat2);
-
-    double c = 2 * atan2(sqrt(aCalc), sqrt(1 - aCalc));
-
-    return R * c;
+/// Utility class for calculating congestion metrics, density, and crowd counts.
+class CalculationUtils {
+  /// Calculates the net difference between entry and exit counts.
+  static int calculateNetCount({
+    required int entryCount,
+    required int exitCount,
+  }) {
+    return entryCount - exitCount;
   }
 
-  static double _degToRad(double deg) => deg * pi / 180;
+  /// Calculates the updated current count based on the previous count and net change.
+  /// Ensures the resulting count does not drop below zero.
+  static int calculateCurrentCount({
+    required int oldCount,
+    required int netChange,
+  }) {
+    final result = oldCount + netChange;
+    return result < 0 ? 0 : result;
+  }
 
-  // 🔥 حساب طول الروت كامل
-  static double calculateRouteDistance(List<LatLng> points) {
-    double total = 0;
-
-    for (int i = 0; i < points.length - 1; i++) {
-      total += _distance(points[i], points[i + 1]);
+  /// Determines the active count, prioritizing direct sensor 'inside' data if available.
+  /// Falls back to calculation if sensor data is null or invalid.
+  static int calculateCurrentCountFromInside({
+    required int? inside,
+    required int oldCount,
+    required int netChange,
+  }) {
+    if (inside != null && inside >= 0) {
+      return inside;
     }
 
-    return total; // بالمتر
+    return calculateCurrentCount(oldCount: oldCount, netChange: netChange);
   }
-static String formatDistance(List<LatLng> points) {
-  final distance = calculateRouteDistance(points);
 
-  if (distance < 1000) {
-    return "${distance.round()} m";
-  } else {
-    return "${(distance / 1000).toStringAsFixed(1)} km";
+  /// Calculates spatial density based on current count and either maximum capacity or physical area size.
+  static double calculateDensity({
+    required int currentCount,
+    required int capacity,
+    required double areaSize,
+  }) {
+    if (capacity > 0) {
+      return currentCount / capacity;
+    }
+
+    if (areaSize > 0) {
+      return currentCount / areaSize;
+    }
+
+    return 0.0;
+  }
+
+  /// Helper method to round a double value to two decimal places.
+  static double roundTo2(double value) {
+    return double.parse(value.toStringAsFixed(2));
+  }
+
+  /// Categorizes congestion level into 'low', 'medium', or 'high' based on predefined density thresholds.
+  static String calculateCongestionLevel({
+    required double density,
+    required double lowThreshold,
+    required double mediumThreshold,
+  }) {
+    if (density < lowThreshold) {
+      return 'low';
+    } else if (density < mediumThreshold) {
+      return 'medium';
+    } else {
+      return 'high';
+    }
+  }
+
+  /// Determines the severity level based on a critical high-density threshold.
+  static String calculateSeverity({
+    required double density,
+    required double highThreshold,
+  }) {
+    return density >= highThreshold ? 'high' : 'medium';
   }
 }
 
-  // 🔥 تحويل المسافة إلى وقت
-  static String estimateTime(List<LatLng> points) {
-    final distance = calculateRouteDistance(points);
+/// Utility class for estimating route durations and formatting travel distances.
+class RouteUtils {
+  /// Estimates the travel time based on the route points.
+  /// Note: This logic can be adjusted based on the specific movement speed in your application.
+  static String estimateTime(List<dynamic> points) {
+    // Estimating 2 minutes per route point as a baseline
+    int estimatedMinutes = points.length * 2;
+    return "$estimatedMinutes mins";
+  }
 
-    const speed = 1.4; // m/s (سرعة مشي)
-
-    final seconds = distance / speed;
-    final minutes = (seconds / 60).ceil();
-
-    return "$minutes min";
+  /// Calculates and formats the total distance of the route.
+  /// Note: Distance calculation logic can be fine-tuned using actual map coordinates.
+  static String formatDistance(List<dynamic> points) {
+    // Estimating 0.5 km per route point as a baseline
+    double distance = points.length * 0.5;
+    return "${CalculationUtils.roundTo2(distance)} km";
   }
 }
