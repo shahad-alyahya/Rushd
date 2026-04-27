@@ -26,7 +26,6 @@ class ReadingListener {
             final data = change.doc.data();
             if (data == null) continue;
 
-            // نتأكد أن القراءة جديدة
             if ((data['status'] ?? 'received') != 'received') continue;
 
             final reading = SensorReading.fromDoc(change.doc);
@@ -34,7 +33,6 @@ class ReadingListener {
             try {
               await _service.processReading(reading);
             } catch (e) {
-              // فقط تجاهل الخطأ عشان ما يوقف اللستنر
               print('Error processing reading ${reading.id}: $e');
             }
           }

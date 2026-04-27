@@ -23,6 +23,10 @@ class ReadingService {
     final readingRef = _firestore.collection('sensor_readings').doc(readingId);
 
     String? readingLocationId;
+    String? alertZoneId;
+    String? alertZoneName;
+    String? alertCongestionLevel;
+    String? alertSeverity;
 
     await _firestore.runTransaction((transaction) async {
       final readingSnap = await transaction.get(readingRef);
@@ -75,7 +79,8 @@ class ReadingService {
         return;
       }
 
-      final int oldCurrentCount = ((zoneData['currentCount'] ?? 0) as num).toInt();
+      final int oldCurrentCount =
+          ((zoneData['currentCount'] ?? 0) as num).toInt();
       final int capacity = ((zoneData['capacity'] ?? 0) as num).toInt();
       final double areaSize = ((zoneData['areaSize'] ?? 0) as num).toDouble();
 
@@ -107,8 +112,7 @@ class ReadingService {
         density = newCurrentCount / areaSize;
       }
 
-      final double roundedDensity =
-          double.parse(density.toStringAsFixed(2));
+      final double roundedDensity = double.parse(density.toStringAsFixed(2));
 
       String congestionLevel = 'low';
       if (density < lowThreshold) {
@@ -137,60 +141,77 @@ class ReadingService {
         'processedAt': FieldValue.serverTimestamp(),
       });
 
-      if (congestionLevel == 'high') {
-        final alertsQuery = await _firestore
-            .collection('alerts')
-            .where('zoneId', isEqualTo: zoneId)
-            .where('status', isEqualTo: 'active')
-            .limit(1)
-            .get();
-
-        if (alertsQuery.docs.isNotEmpty) {
-          transaction.update(alertsQuery.docs.first.reference, {
-            'locationId': locationId,
-            'zoneName': zoneName,
-            'congestionLevel': congestionLevel,
-            'severity': severity,
-            'message': 'High congestion detected in $zoneName',
-            'status': 'active',
-            'respondedAt': null,
-            'respondedBy': '',
-          });
-        } else {
-          final alertRef = _firestore.collection('alerts').doc();
-          transaction.set(alertRef, {
-            'zoneId': zoneId,
-            'locationId': locationId,
-            'zoneName': zoneName,
-            'congestionLevel': congestionLevel,
-            'severity': severity,
-            'message': 'High congestion detected in $zoneName',
-            'status': 'active',
-            'createdAt': FieldValue.serverTimestamp(),
-            'respondedAt': null,
-            'respondedBy': '',
-          });
-        }
-      } else {
-        final alertsQuery = await _firestore
-            .collection('alerts')
-            .where('zoneId', isEqualTo: zoneId)
-            .where('status', isEqualTo: 'active')
-            .limit(1)
-            .get();
-
-        if (alertsQuery.docs.isNotEmpty) {
-          transaction.update(alertsQuery.docs.first.reference, {
-            'status': 'resolved',
-            'respondedAt': FieldValue.serverTimestamp(),
-            'respondedBy': '',
-          });
-        }
-      }
+      alertZoneId = zoneId;
+      alertZoneName = zoneName;
+      alertCongestionLevel = congestionLevel;
+      alertSeverity = severity;
     });
+
+    if (alertZoneId != null &&
+        readingLocationId != null &&
+        alertCongestionLevel != null) {
+      await _handleAlert(
+        zoneId: alertZoneId!,
+        locationId: readingLocationId!,
+        zoneName: alertZoneName ?? 'Unknown Zone',
+        congestionLevel: alertCongestionLevel!,
+        severity: alertSeverity ?? 'medium',
+      );
+    }
 
     if (readingLocationId != null && readingLocationId!.isNotEmpty) {
       await updateStatistics(readingLocationId!);
+    }
+  }
+
+  Future<void> _handleAlert({
+    required String zoneId,
+    required String locationId,
+    required String zoneName,
+    required String congestionLevel,
+    required String severity,
+  }) async {
+    final alertsQuery = await _firestore
+        .collection('alerts')
+        .where('zoneId', isEqualTo: zoneId)
+        .where('status', isEqualTo: 'active')
+        .limit(1)
+        .get();
+
+    if (congestionLevel == 'high') {
+      if (alertsQuery.docs.isNotEmpty) {
+        await alertsQuery.docs.first.reference.update({
+          'locationId': locationId,
+          'zoneName': zoneName,
+          'congestionLevel': congestionLevel,
+          'severity': severity,
+          'message': 'High congestion detected in $zoneName',
+          'status': 'active',
+          'respondedAt': null,
+          'respondedBy': '',
+        });
+      } else {
+        await _firestore.collection('alerts').add({
+          'zoneId': zoneId,
+          'locationId': locationId,
+          'zoneName': zoneName,
+          'congestionLevel': congestionLevel,
+          'severity': severity,
+          'message': 'High congestion detected in $zoneName',
+          'status': 'active',
+          'createdAt': FieldValue.serverTimestamp(),
+          'respondedAt': null,
+          'respondedBy': '',
+        });
+      }
+    } else {
+      if (alertsQuery.docs.isNotEmpty) {
+        await alertsQuery.docs.first.reference.update({
+          'status': 'resolved',
+          'respondedAt': FieldValue.serverTimestamp(),
+          'respondedBy': '',
+        });
+      }
     }
   }
 
@@ -219,7 +240,8 @@ class ReadingService {
     for (final userDoc in usersSnap.docs) {
       final userData = userDoc.data();
       final String role = (userData['role'] ?? '').toString().toLowerCase();
-      final String status = (userData['status'] ?? 'active').toString().toLowerCase();
+      final String status =
+          (userData['status'] ?? 'active').toString().toLowerCase();
 
       if (role == 'security' && status == 'active') {
         totalSecurity++;
@@ -251,8 +273,7 @@ class ReadingService {
         ? double.parse((densitySum / zonesSnap.docs.length).toStringAsFixed(2))
         : 0.0;
 
-    final now = DateTime.
-    now();
+    final now = DateTime.now();
     final String date = now.toIso8601String().split('T').first;
     final String month =
         '${now.year}-${now.month.toString().padLeft(2, '0')}';

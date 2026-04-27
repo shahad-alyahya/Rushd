@@ -1,9 +1,9 @@
-
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
-import 'reading_listener.dart';
+import 'package:rushd/reading_listener.dart';
+import 'package:rushd/Services/reading_service.dart';
+
 import 'package:rushd/splash_screen.dart';
 
 Future<void> main() async {
@@ -13,8 +13,12 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  ReadingService().startListening();
+
   runApp(const RushdApp());
 }
+
+
 
 class RushdApp extends StatelessWidget {
   const RushdApp({super.key});
