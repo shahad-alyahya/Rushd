@@ -5,194 +5,137 @@ class ReadingService {
   bool _isListening = false;
 
   void startListening() {
-    if (_isListening) return;
-    _isListening = true;
+  if (_isListening) return;
+  _isListening = true;
 
-    // 1) أول ما يشتغل التطبيق: خذ آخر قراءة بالوقت حتى لو processed
-    syncLatestReading();
+  syncLatestReading();
 
-    // 2) بعدها اسمع فقط للقراءات الجديدة received
-    _firestore
-        .collection('sensor_readings')
-        .where('status', isEqualTo: 'received')
-        .orderBy('timestamp', descending: false)
-        .snapshots()
-        .listen((snapshot) {
-      for (final change in snapshot.docChanges) {
-        if (change.type == DocumentChangeType.added ||
-            change.type == DocumentChangeType.modified) {
-          processReading(change.doc.id, allowProcessed: false);
-        }
-      }
-    });
-  }
-
-  Future<void> syncLatestReading() async {
-    final snapshot = await _firestore
-        .collection('sensor_readings')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .get();
-
+  _firestore
+      .collection('sensor_readings')
+      .orderBy('timestamp', descending: true)
+      .limit(1)
+      .snapshots()
+      .listen((snapshot) {
     if (snapshot.docs.isEmpty) return;
 
-    await processReading(snapshot.docs.first.id, allowProcessed: true);
-  }
+    final latestDoc = snapshot.docs.first;
+    processReading(latestDoc.id);
+  });
+}
 
-  Future<void> processReading(
-    String readingId, {
-    bool allowProcessed = false,
-  }) async {
-    final readingRef = _firestore.collection('sensor_readings').doc(readingId);
+Future<void> syncLatestReading() async {
+  final snapshot = await _firestore
+      .collection('sensor_readings')
+      .orderBy('timestamp', descending: true)
+      .limit(1)
+      .get();
 
-    String? readingLocationId;
-    String? alertZoneId;
-    String? alertZoneName;
-    String? alertCongestionLevel;
-    String? alertSeverity;
+  if (snapshot.docs.isEmpty) return;
 
-    await _firestore.runTransaction((transaction) async {
-      final readingSnap = await transaction.get(readingRef);
-      if (!readingSnap.exists) return;
+  await processReading(snapshot.docs.first.id);
+}
+Future<void> processReading(String readingId) async {
+  final readingRef = _firestore.collection('sensor_readings').doc(readingId);
 
-      final readingData = readingSnap.data();
-      if (readingData == null) return;
+  await _firestore.runTransaction((transaction) async {
+    final readingSnap = await transaction.get(readingRef);
+    if (!readingSnap.exists) return;
 
-      final String status = (readingData['status'] ?? 'received').toString();
+    final readingData = readingSnap.data();
+    if (readingData == null) return;
 
-      // إذا syncLatestReading يسمح processed
-      // أما listener العادي يعالج received فقط
-      if (!allowProcessed && status != 'received') return;
+    final Timestamp? readingTimestamp =
+        readingData['timestamp'] as Timestamp?;
 
-      final String zoneId = (readingData['zoneId'] ?? '').toString();
-      final String locationId = (readingData['locationId'] ?? '').toString();
-      final int entryCount = ((readingData['entryCount'] ?? 0) as num).toInt();
-      final int exitCount = ((readingData['exitCount'] ?? 0) as num).toInt();
-      final int? inside = readingData['inside'] == null
-          ? null
-          : ((readingData['inside'] as num).toInt());
+    final String zoneId = (readingData['zoneId'] ?? '').toString();
+    final String locationId = (readingData['locationId'] ?? '').toString();
 
-      readingLocationId = locationId;
+    final int entryCount = ((readingData['entryCount'] ?? 0) as num).toInt();
+    final int exitCount = ((readingData['exitCount'] ?? 0) as num).toInt();
+    final int? inside = readingData['inside'] == null
+        ? null
+        : ((readingData['inside'] as num).toInt());
 
-      if (zoneId.isEmpty || locationId.isEmpty) {
-        transaction.update(readingRef, {
-          'status': 'failed',
-          'failureReason': 'Missing zoneId or locationId',
-          'processedAt': FieldValue.serverTimestamp(),
-        });
-        return;
-      }
+    if (zoneId.isEmpty || locationId.isEmpty) return;
 
-      final zoneRef = _firestore.collection('zones').doc(zoneId);
-      final zoneSnap = await transaction.get(zoneRef);
+    final zoneRef = _firestore.collection('zones').doc(zoneId);
+    final zoneSnap = await transaction.get(zoneRef);
+    if (!zoneSnap.exists) return;
 
-      if (!zoneSnap.exists) {
-        transaction.update(readingRef, {
-          'status': 'failed',
-          'failureReason': 'Zone not found',
-          'processedAt': FieldValue.serverTimestamp(),
-        });
-        return;
-      }
+    final zoneData = zoneSnap.data();
+    if (zoneData == null) return;
 
-      final zoneData = zoneSnap.data();
-      if (zoneData == null) return;
+    // ✅ أهم سطر يمنع الرجوع لقراءات قديمة
+    final Timestamp? lastReadingTimestamp =
+        zoneData['lastReadingTimestamp'] as Timestamp?;
 
-      final int oldCurrentCount =
-          ((zoneData['currentCount'] ?? 0) as num).toInt();
-      final int capacity = ((zoneData['capacity'] ?? 0) as num).toInt();
-      final double areaSize = ((zoneData['areaSize'] ?? 0) as num).toDouble();
+    if (readingTimestamp != null &&
+        lastReadingTimestamp != null &&
+        readingTimestamp.compareTo(lastReadingTimestamp) <= 0) {
+      return;
+    }
 
-      final String zoneName =
-          ((zoneData['zoneName'] ?? zoneData['areaName']) ?? 'Unknown Zone')
-              .toString();
+    final int oldCurrentCount =
+        ((zoneData['currentCount'] ?? 0) as num).toInt();
+    final int capacity = ((zoneData['capacity'] ?? 0) as num).toInt();
+    final double areaSize =
+        ((zoneData['areaSize'] ?? 0) as num).toDouble();
 
-      final double lowThreshold =
-          ((zoneData['lowThreshold'] ?? 0.3) as num).toDouble();
-      final double mediumThreshold =
-          ((zoneData['mediumThreshold'] ?? 0.7) as num).toDouble();
-      final double highThreshold =
-          ((zoneData['highThreshold'] ?? 1.0) as num).toDouble();
+    final double lowThreshold =
+        ((zoneData['lowThreshold'] ?? 0.3) as num).toDouble();
+    final double mediumThreshold =
+        ((zoneData['mediumThreshold'] ?? 0.7) as num).toDouble();
+    final double highThreshold =
+        ((zoneData['highThreshold'] ?? 1.0) as num).toDouble();
 
-      final int netCountChange = entryCount - exitCount;
+    final int netChange = entryCount - exitCount;
 
-      int newCurrentCount;
+    int newCurrentCount;
 
-      // أهم شيء: إذا inside موجود، اعتمدي عليه مباشرة
-      if (inside != null && inside >= 0) {
-        newCurrentCount = inside;
-      } else {
-        newCurrentCount = oldCurrentCount + netCountChange;
-        if (newCurrentCount < 0) newCurrentCount = 0;
-      }
+    // ✅ يعتمد على inside أولًا
+    if (inside != null && inside >= 0) {
+      newCurrentCount = inside;
+    } else {
+      newCurrentCount = oldCurrentCount + netChange;
+      if (newCurrentCount < 0) newCurrentCount = 0;
+    }
 
-      double density = 0.0;
-      if (capacity > 0) {
-        density = newCurrentCount / capacity;
-      } else if (areaSize > 0) {
-        density = newCurrentCount / areaSize;
-      }
+    double density = 0.0;
+    if (capacity > 0) {
+      density = newCurrentCount / capacity;
+    } else if (areaSize > 0) {
+      density = newCurrentCount / areaSize;
+    }
 
-      final double roundedDensity = double.parse(density.toStringAsFixed(2));
+    final double roundedDensity =
+        double.parse(density.toStringAsFixed(2));
 
-      String congestionLevel;
-      if (density < lowThreshold) {
-        congestionLevel = 'low';
-      } else if (density < mediumThreshold) {
-        congestionLevel = 'medium';
-      } else {
-        congestionLevel = 'high';
-      }
+    String congestionLevel;
+    if (density < lowThreshold) {
+      congestionLevel = 'low';
+    } else if (density < mediumThreshold) {
+      congestionLevel = 'medium';
+    } else {
+      congestionLevel = 'high';
+    }
 
-      final String severity = density >= highThreshold ? 'high' : 'medium';
-
-      transaction.update(zoneRef, {
-        'currentCount': newCurrentCount,
-        'density': roundedDensity,
-        'congestionLevel': congestionLevel,
-        'lastReadingId': readingId,
-        'lastUpdated': FieldValue.serverTimestamp(),
-      });
-
-      // إذا القراءة كانت received نخليها processed
-      // إذا كانت already processed من sync ما نغير حالتها
-      final updateReadingData = {
-        'netCountChange': netCountChange,
-        'currentCountAfterReading': newCurrentCount,
-        'densityAfterReading': roundedDensity,
-        'congestionLevelAfterReading': congestionLevel,
-        'processedAt': FieldValue.serverTimestamp(),
-      };
-
-      if (status == 'received') {
-        updateReadingData['status'] = 'processed';
-      }
-
-      transaction.update(readingRef, updateReadingData);
-
-      alertZoneId = zoneId;
-      alertZoneName = zoneName;
-      alertCongestionLevel = congestionLevel;
-      alertSeverity = severity;
+    transaction.update(zoneRef, {
+      'currentCount': newCurrentCount,
+      'density': roundedDensity,
+      'congestionLevel': congestionLevel,
+      'lastReadingId': readingId,
+      'lastReadingTimestamp': readingTimestamp, 
+      'lastUpdated': FieldValue.serverTimestamp(),
     });
 
-    if (alertZoneId != null &&
-        readingLocationId != null &&
-        alertCongestionLevel != null) {
-      await _handleAlert(
-        zoneId: alertZoneId!,
-        locationId: readingLocationId!,
-        zoneName: alertZoneName ?? 'Unknown Zone',
-        congestionLevel: alertCongestionLevel!,
-        severity: alertSeverity ?? 'medium',
-      );
-    }
-
-    if (readingLocationId != null && readingLocationId!.isNotEmpty) {
-      await updateStatistics(readingLocationId!);
-    }
-  }
-
+    transaction.update(readingRef, {
+      'currentCountAfterReading': newCurrentCount,
+      'densityAfterReading': roundedDensity,
+      'congestionLevelAfterReading': congestionLevel,
+      'processedAt': FieldValue.serverTimestamp(),
+    });
+  });
+}
   Future<void> _handleAlert({
     required String zoneId,
     required String locationId,
