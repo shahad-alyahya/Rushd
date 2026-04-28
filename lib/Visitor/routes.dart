@@ -97,11 +97,11 @@ class _RoutesPageState extends State<RoutesPage> {
 
   ZonePoint _mapZoneIdToPoint(String id) {
     switch (id) {
-      case 'zone_001':
+      case 'zone_00A':
         return ZonePoint.a;
-      case 'zone_002':
+      case 'zone_00B':
         return ZonePoint.b;
-      case 'zone_003':
+      case 'zone_00C':
         return ZonePoint.c;
       case 'hall':
         return ZonePoint.hall;
@@ -112,11 +112,11 @@ class _RoutesPageState extends State<RoutesPage> {
 
   String _routeZoneId(String id) {
     switch (id) {
-      case 'zone_001':
+      case 'zone_00A':
         return 'zone_a';
-      case 'zone_002':
+      case 'zone_00B':
         return 'zone_b';
-      case 'zone_003':
+      case 'zone_00C':
         return 'zone_c';
       default:
         return id;
@@ -149,9 +149,9 @@ class _RoutesPageState extends State<RoutesPage> {
 
     // 🔥 اللوجيك الجديد: تعريف كل المناطق المتاحة
     final List<Map<String, dynamic>> allZones = [
-      {'id': 'zone_001', 'title': 'Zone A', 'point': ZonePoint.a},
-      {'id': 'zone_002', 'title': 'Zone B', 'point': ZonePoint.b},
-      {'id': 'zone_003', 'title': 'Zone C', 'point': ZonePoint.c},
+      {'id': 'zone_00A', 'title': 'Zone A', 'point': ZonePoint.a},
+      {'id': 'zone_00B', 'title': 'Zone B', 'point': ZonePoint.b},
+      {'id': 'zone_00C', 'title': 'Zone C', 'point': ZonePoint.c},
     ];
 
     // 🔥 التصفية الديناميكية: نستبعد المنطقة اللي تم اختيارها كبداية
