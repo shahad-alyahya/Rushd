@@ -118,7 +118,6 @@ Future<void> processReading(String readingId) async {
     } else {
       congestionLevel = 'high';
     }
-
     transaction.update(zoneRef, {
       'currentCount': newCurrentCount,
       'density': roundedDensity,
