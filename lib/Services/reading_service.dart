@@ -8,18 +8,41 @@ class ReadingService {
     if (_isListening) return;
     _isListening = true;
 
+    // 1) أول ما يشتغل التطبيق: خذ آخر قراءة بالوقت حتى لو processed
+    syncLatestReading();
+
+    // 2) بعدها اسمع فقط للقراءات الجديدة received
     _firestore
         .collection('sensor_readings')
         .where('status', isEqualTo: 'received')
+        .orderBy('timestamp', descending: false)
         .snapshots()
         .listen((snapshot) {
-      for (final doc in snapshot.docs) {
-        processReading(doc.id);
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added ||
+            change.type == DocumentChangeType.modified) {
+          processReading(change.doc.id, allowProcessed: false);
+        }
       }
     });
   }
 
-  Future<void> processReading(String readingId) async {
+  Future<void> syncLatestReading() async {
+    final snapshot = await _firestore
+        .collection('sensor_readings')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return;
+
+    await processReading(snapshot.docs.first.id, allowProcessed: true);
+  }
+
+  Future<void> processReading(
+    String readingId, {
+    bool allowProcessed = false,
+  }) async {
     final readingRef = _firestore.collection('sensor_readings').doc(readingId);
 
     String? readingLocationId;
@@ -36,7 +59,10 @@ class ReadingService {
       if (readingData == null) return;
 
       final String status = (readingData['status'] ?? 'received').toString();
-      if (status != 'received') return;
+
+      // إذا syncLatestReading يسمح processed
+      // أما listener العادي يعالج received فقط
+      if (!allowProcessed && status != 'received') return;
 
       final String zoneId = (readingData['zoneId'] ?? '').toString();
       final String locationId = (readingData['locationId'] ?? '').toString();
@@ -70,14 +96,7 @@ class ReadingService {
       }
 
       final zoneData = zoneSnap.data();
-      if (zoneData == null) {
-        transaction.update(readingRef, {
-          'status': 'failed',
-          'failureReason': 'Zone data is null',
-          'processedAt': FieldValue.serverTimestamp(),
-        });
-        return;
-      }
+      if (zoneData == null) return;
 
       final int oldCurrentCount =
           ((zoneData['currentCount'] ?? 0) as num).toInt();
@@ -98,6 +117,8 @@ class ReadingService {
       final int netCountChange = entryCount - exitCount;
 
       int newCurrentCount;
+
+      // أهم شيء: إذا inside موجود، اعتمدي عليه مباشرة
       if (inside != null && inside >= 0) {
         newCurrentCount = inside;
       } else {
@@ -114,7 +135,7 @@ class ReadingService {
 
       final double roundedDensity = double.parse(density.toStringAsFixed(2));
 
-      String congestionLevel = 'low';
+      String congestionLevel;
       if (density < lowThreshold) {
         congestionLevel = 'low';
       } else if (density < mediumThreshold) {
@@ -129,17 +150,25 @@ class ReadingService {
         'currentCount': newCurrentCount,
         'density': roundedDensity,
         'congestionLevel': congestionLevel,
+        'lastReadingId': readingId,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
-      transaction.update(readingRef, {
+      // إذا القراءة كانت received نخليها processed
+      // إذا كانت already processed من sync ما نغير حالتها
+      final updateReadingData = {
         'netCountChange': netCountChange,
         'currentCountAfterReading': newCurrentCount,
         'densityAfterReading': roundedDensity,
         'congestionLevelAfterReading': congestionLevel,
-        'status': 'processed',
         'processedAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      if (status == 'received') {
+        updateReadingData['status'] = 'processed';
+      }
+
+      transaction.update(readingRef, updateReadingData);
 
       alertZoneId = zoneId;
       alertZoneName = zoneName;
