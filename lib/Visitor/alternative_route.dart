@@ -3,6 +3,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rushd/map/map_view.dart';
 import 'package:rushd/map/routePath.dart';
 import 'package:rushd/map/zonePoint.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'dart:ui' as ui;
 
 class AlternativeRoute extends StatefulWidget {
@@ -269,7 +271,7 @@ class _AlternativeRouteState extends State<AlternativeRoute> {
   }
 }
 
-class _TestAreaAlternativeMap extends StatelessWidget {
+class _TestAreaAlternativeMap extends StatefulWidget {
   final LatLng userLocation;
   final String destinationZoneId;
   final String startZoneId;
@@ -280,9 +282,75 @@ class _TestAreaAlternativeMap extends StatelessWidget {
     required this.startZoneId,
   });
 
+  @override
+  State<_TestAreaAlternativeMap> createState() =>
+      _TestAreaAlternativeMapState();
+}
+
+class _TestAreaAlternativeMapState extends State<_TestAreaAlternativeMap> {
   static const LatLng center = LatLng(24.8260231, 46.6636767);
 
-  // ================= TEXT MARKER =================
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _zonesSub;
+
+  Map<String, String> zoneLevels = {
+    'zone_00A': 'low',
+    'zone_00B': 'low',
+    'zone_00C': 'low',
+  };
+
+  Map<String, int> zoneCounts = {
+    'zone_00A': 0,
+    'zone_00B': 0,
+    'zone_00C': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _listenToZones();
+  }
+
+  @override
+  void dispose() {
+    _zonesSub?.cancel();
+    super.dispose();
+  }
+
+  void _listenToZones() {
+    _zonesSub = _firestore
+        .collection('zones')
+        .where('locationId', isEqualTo: 'test_area_001')
+        .snapshots()
+        .listen((snapshot) {
+      final updatedLevels = <String, String>{};
+      final updatedCounts = <String, int>{};
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        updatedLevels[doc.id] =
+            (data['congestionLevel'] ?? 'low').toString();
+        updatedCounts[doc.id] =
+            ((data['currentCount'] ?? 0) as num).toInt();
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        zoneLevels = {...zoneLevels, ...updatedLevels};
+        zoneCounts = {...zoneCounts, ...updatedCounts};
+      });
+    });
+  }
+
+  Color _zoneFillColor(String zoneId) {
+    final level = zoneLevels[zoneId] ?? 'low';
+
+    if (level == 'high') return Colors.red.withOpacity(0.3);
+    if (level == 'medium') return Colors.orange.withOpacity(0.3);
+    return Colors.green.withOpacity(0.3);
+  }
+
   Future<BitmapDescriptor> _createTextMarker(String text) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -297,6 +365,7 @@ class _TestAreaAlternativeMap extends StatelessWidget {
         ),
       ),
       textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
     );
 
     textPainter.layout();
@@ -308,16 +377,18 @@ class _TestAreaAlternativeMap extends StatelessWidget {
       textPainter.height.toInt(),
     );
 
-    final bytes =
-        await image.toByteData(format: ui.ImageByteFormat.png);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
 
     return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
   }
 
   Future<Set<Marker>> _zoneLabels() async {
-    final a = await _createTextMarker("Zone A");
-    final b = await _createTextMarker("Zone B");
-    final c = await _createTextMarker("Zone C");
+    final a =
+        await _createTextMarker("Zone A\n${zoneCounts['zone_00A'] ?? 0}");
+    final b =
+        await _createTextMarker("Zone B\n${zoneCounts['zone_00B'] ?? 0}");
+    final c =
+        await _createTextMarker("Zone C\n${zoneCounts['zone_00C'] ?? 0}");
 
     return {
       Marker(
@@ -338,22 +409,24 @@ class _TestAreaAlternativeMap extends StatelessWidget {
     };
   }
 
-  // ================= ZONE =================
   ZonePoint _zoneFromId(String zoneId) {
     switch (zoneId.toLowerCase()) {
       case 'a':
       case 'zone_a':
+      case 'zone_00a':
         return ZonePoint.a;
       case 'b':
       case 'zone_b':
+      case 'zone_00b':
         return ZonePoint.b;
       case 'c':
       case 'zone_c':
+      case 'zone_00c':
         return ZonePoint.c;
       case 'hall':
         return ZonePoint.hall;
       default:
-        return ZonePoint.c;
+        return ZonePoint.a;
     }
   }
 
@@ -370,53 +443,58 @@ class _TestAreaAlternativeMap extends StatelessWidget {
     }
   }
 
-  // ================= POLYGONS =================
   Set<Polygon> _polygons() {
     return {
       Polygon(
         polygonId: const PolygonId('zoneC'),
         points: const [
-          LatLng(24.8276741, 46.6647834),
-          LatLng(24.8270132, 46.6651532),
-          LatLng(24.8265382, 46.6652055),
-          LatLng(24.8258380, 46.6649162),
-          LatLng(24.8262944, 46.6639425),
-          LatLng(24.8270865, 46.6634510),
+          LatLng(24.827674146566494, 46.66478343307972),
+          LatLng(24.827655584987614, 46.6648240049107),
+          LatLng(24.827013230929264, 46.66515324264765),
+          LatLng(24.826779536158234, 46.66521392762661),
+          LatLng(24.82653823367279, 46.66520554572344),
+          LatLng(24.825838058225894, 46.66491620242596),
+          LatLng(24.82629449638488, 46.66394256055355),
+          LatLng(24.82708656474439, 46.66345104575157),
+          LatLng(24.827422195717485, 46.664228551089764),
         ],
-        fillColor: const Color(0x44EF5350),
+        fillColor: _zoneFillColor('zone_00C'),
         strokeWidth: 0,
       ),
       Polygon(
         polygonId: const PolygonId('zoneB'),
         points: const [
-          LatLng(24.8271154, 46.6634597),
-          LatLng(24.8265647, 46.6620754),
-          LatLng(24.8257093, 46.6624539),
-          LatLng(24.8263127, 46.6639221),
+          LatLng(24.82711547225293, 46.66345976293087),
+          LatLng(24.826564706982303, 46.66207540780306),
+          LatLng(24.82647281110203, 46.66204355657101),
+          LatLng(24.825709342360998, 46.662453934550285),
+          LatLng(24.826312753876245, 46.66392210870981),
         ],
-        fillColor: const Color(0x4456C271),
+        fillColor: _zoneFillColor('zone_00B'),
         strokeWidth: 0,
       ),
       Polygon(
         polygonId: const PolygonId('zoneA'),
         points: const [
-          LatLng(24.8263416, 46.6639221),
-          LatLng(24.8257358, 46.6624338),
-          LatLng(24.8240804, 46.6632545),
-          LatLng(24.8243217, 46.6640753),
-          LatLng(24.8244976, 46.6642922),
+          LatLng(24.826341661565415, 46.66392210870981),
+          LatLng(24.825735815847683, 46.662433817982674),
+          LatLng(24.82408045131227, 46.66325457394123),
+          LatLng(24.824041196995015, 46.66338734328747),
+          LatLng(24.82432175858615, 46.66407532989979),
+          LatLng(24.82449764177584, 46.66429225355387),
+          LatLng(24.82456306538995, 46.66436433792114),
+          LatLng(24.826341661565415, 46.66392210870981),
         ],
-        fillColor: const Color(0x445AA9FF),
+        fillColor: _zoneFillColor('zone_00A'),
         strokeWidth: 0,
       ),
     };
   }
 
-  // ================= ROUTE =================
   Set<Polyline> _routeLine() {
     final route = getRoute(
-      _zoneFromId(startZoneId),
-      _zoneFromId(destinationZoneId),
+      _zoneFromId(widget.startZoneId),
+      _zoneFromId(widget.destinationZoneId),
     );
 
     if (route == null) return {};
@@ -425,7 +503,7 @@ class _TestAreaAlternativeMap extends StatelessWidget {
       Polyline(
         polylineId: const PolylineId('selected_route'),
         points: route.points,
-        color: Colors.deepPurple,
+        color: Colors.blue,
         width: 8,
       ),
     };
@@ -433,8 +511,8 @@ class _TestAreaAlternativeMap extends StatelessWidget {
 
   Set<Circle> _currentCircle() {
     final route = getRoute(
-      _zoneFromId(startZoneId),
-      _zoneFromId(destinationZoneId),
+      _zoneFromId(widget.startZoneId),
+      _zoneFromId(widget.destinationZoneId),
     );
 
     if (route == null || route.points.isEmpty) return {};
@@ -453,8 +531,8 @@ class _TestAreaAlternativeMap extends StatelessWidget {
 
   Set<Marker> _destinationMarker() {
     final route = getRoute(
-      _zoneFromId(startZoneId),
-      _zoneFromId(destinationZoneId),
+      _zoneFromId(widget.startZoneId),
+      _zoneFromId(widget.destinationZoneId),
     );
 
     if (route == null || route.points.isEmpty) return {};
@@ -470,7 +548,6 @@ class _TestAreaAlternativeMap extends StatelessWidget {
     };
   }
 
-  // ================= BUILD =================
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Set<Marker>>(
@@ -484,7 +561,7 @@ class _TestAreaAlternativeMap extends StatelessWidget {
             zoom: 16.2,
           ),
           mapType: MapType.satellite,
-          polygons: _polygons(), // 👈 رجعناها
+          polygons: _polygons(),
           polylines: _routeLine(),
           circles: _currentCircle(),
           markers: {
