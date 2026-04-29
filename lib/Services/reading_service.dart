@@ -5,131 +5,127 @@ class ReadingService {
   bool _isListening = false;
 
   void startListening() {
-  if (_isListening) return;
-  _isListening = true;
+    if (_isListening) return;
+    _isListening = true;
 
-  syncLatestReading();
+    syncLatestReading();
 
-  _firestore
-      .collection('sensor_readings')
-      .orderBy('timestamp', descending: true)
-      .limit(1)
-      .snapshots()
-      .listen((snapshot) {
+    _firestore
+        .collection('sensor_readings')
+        .where('status', isEqualTo: 'received')
+        .snapshots()
+        .listen((snapshot) {
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          processReading(change.doc.id);
+        }
+      }
+    });
+  }
+
+  Future<void> syncLatestReading() async {
+    final snapshot = await _firestore
+        .collection('sensor_readings')
+        .where('status', isEqualTo: 'received')
+        .orderBy('timestamp', descending: false)
+        .get();
+
     if (snapshot.docs.isEmpty) return;
 
-    final latestDoc = snapshot.docs.first;
-    processReading(latestDoc.id);
-  });
-}
-
-Future<void> syncLatestReading() async {
-  final snapshot = await _firestore
-      .collection('sensor_readings')
-      .orderBy('timestamp', descending: true)
-      .limit(1)
-      .get();
-
-  if (snapshot.docs.isEmpty) return;
-
-  await processReading(snapshot.docs.first.id);
-}
-Future<void> processReading(String readingId) async {
-  final readingRef = _firestore.collection('sensor_readings').doc(readingId);
-
-  await _firestore.runTransaction((transaction) async {
-    final readingSnap = await transaction.get(readingRef);
-    if (!readingSnap.exists) return;
-
-    final readingData = readingSnap.data();
-    if (readingData == null) return;
-
-    final Timestamp? readingTimestamp =
-        readingData['timestamp'] as Timestamp?;
-
-    final String zoneId = (readingData['zoneId'] ?? '').toString();
-    final String locationId = (readingData['locationId'] ?? '').toString();
-
-    final int entryCount = ((readingData['entryCount'] ?? 0) as num).toInt();
-    final int exitCount = ((readingData['exitCount'] ?? 0) as num).toInt();
-    final int? inside = readingData['inside'] == null
-        ? null
-        : ((readingData['inside'] as num).toInt());
-
-    if (zoneId.isEmpty || locationId.isEmpty) return;
-
-    final zoneRef = _firestore.collection('zones').doc(zoneId);
-    final zoneSnap = await transaction.get(zoneRef);
-    if (!zoneSnap.exists) return;
-
-    final zoneData = zoneSnap.data();
-    if (zoneData == null) return;
-
-    final Timestamp? lastReadingTimestamp =
-        zoneData['lastReadingTimestamp'] as Timestamp?;
-
-    if (readingTimestamp != null &&
-        lastReadingTimestamp != null &&
-        readingTimestamp.compareTo(lastReadingTimestamp) <= 0) {
-      return;
+    for (final doc in snapshot.docs) {
+      await processReading(doc.id);
     }
+  }
 
-    final int oldCurrentCount =
-        ((zoneData['currentCount'] ?? 0) as num).toInt();
-    final int capacity = ((zoneData['capacity'] ?? 0) as num).toInt();
-    final double areaSize =
-        ((zoneData['areaSize'] ?? 0) as num).toDouble();
+  Future<void> processReading(String readingId) async {
+    final readingRef = _firestore.collection('sensor_readings').doc(readingId);
 
-    final double lowThreshold =
-        ((zoneData['lowThreshold'] ?? 0.3) as num).toDouble();
-    final double mediumThreshold =
-        ((zoneData['mediumThreshold'] ?? 0.7) as num).toDouble();
-    final double highThreshold =
-        ((zoneData['highThreshold'] ?? 1.0) as num).toDouble();
+    await _firestore.runTransaction((transaction) async {
+      final readingSnap = await transaction.get(readingRef);
+      if (!readingSnap.exists) return;
 
-    final int netChange = entryCount - exitCount;
+      final readingData = readingSnap.data();
+      if (readingData == null) return;
 
-    int newCurrentCount;
+      final String status = (readingData['status'] ?? '').toString();
+      if (status != 'received') return;
 
-    if (inside != null && inside >= 0) {
-      newCurrentCount = inside;
-    } else {
-      newCurrentCount = oldCurrentCount + netChange;
-      if (newCurrentCount < 0) newCurrentCount = 0;
-    }
+      final Timestamp? readingTimestamp =
+          readingData['timestamp'] as Timestamp?;
 
-    double density = 0.0;
-    if (capacity > 0) {
-      density = newCurrentCount / capacity;
-    } else if (areaSize > 0) {
-      density = newCurrentCount / areaSize;
-    }
+      final String zoneId = (readingData['zoneId'] ?? '').toString();
+      final String locationId = (readingData['locationId'] ?? '').toString();
 
-    final double roundedDensity =
-        double.parse(density.toStringAsFixed(2));
+      final int? inside = readingData['inside'] == null
+          ? null
+          : ((readingData['inside'] as num).toInt());
 
-    String congestionLevel;
-    if (density < lowThreshold) {
-      congestionLevel = 'low';
-    } else if (density < mediumThreshold) {
-      congestionLevel = 'medium';
-    } else {
-      congestionLevel = 'high';
-    }
-    transaction.update(zoneRef, {
-      'currentCount': newCurrentCount,
-      'density': roundedDensity,
-      'congestionLevel': congestionLevel,
-      'lastReadingId': readingId,
-      'lastReadingTimestamp': readingTimestamp, 
-      'lastUpdated': FieldValue.serverTimestamp(),
+      if (zoneId.isEmpty || locationId.isEmpty) return;
+      if (inside == null || inside < 0) return;
+
+      final zoneRef = _firestore.collection('zones').doc(zoneId);
+      final zoneSnap = await transaction.get(zoneRef);
+      if (!zoneSnap.exists) return;
+
+      final zoneData = zoneSnap.data();
+      if (zoneData == null) return;
+
+      final Timestamp? lastReadingTimestamp =
+          zoneData['lastReadingTimestamp'] as Timestamp?;
+
+      if (readingTimestamp != null &&
+          lastReadingTimestamp != null &&
+          readingTimestamp.compareTo(lastReadingTimestamp) <= 0) {
+        transaction.update(readingRef, {
+          'status': 'processed',
+        });
+        return;
+      }
+
+      final int capacity = ((zoneData['capacity'] ?? 0) as num).toInt();
+      final double areaSize = ((zoneData['areaSize'] ?? 0) as num).toDouble();
+
+      final double lowThreshold =
+          ((zoneData['lowThreshold'] ?? 0.3) as num).toDouble();
+      final double mediumThreshold =
+          ((zoneData['mediumThreshold'] ?? 0.7) as num).toDouble();
+
+      final int newCurrentCount = inside;
+
+      double density = 0.0;
+      if (capacity > 0) {
+        density = newCurrentCount / capacity;
+      } else if (areaSize > 0) {
+        density = newCurrentCount / areaSize;
+      }
+
+      final double roundedDensity =
+          double.parse(density.toStringAsFixed(2));
+
+      String congestionLevel;
+      if (density < lowThreshold) {
+        congestionLevel = 'low';
+      } else if (density < mediumThreshold) {
+        congestionLevel = 'medium';
+      } else {
+        congestionLevel = 'high';
+      }
+
+      transaction.update(zoneRef, {
+        'currentCount': newCurrentCount,
+        'density': roundedDensity,
+        'congestionLevel': congestionLevel,
+        'lastReadingId': readingId,
+        'lastReadingTimestamp': readingTimestamp,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(readingRef, {
+        'status': 'processed',
+      });
     });
+  }
 
-   transaction.update(readingRef, {
-  'status': 'processed',
-});
-  });
-}
   Future<void> _handleAlert({
     required String zoneId,
     required String locationId,
