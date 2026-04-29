@@ -65,7 +65,6 @@ Future<void> processReading(String readingId) async {
     final zoneData = zoneSnap.data();
     if (zoneData == null) return;
 
-    // ✅ أهم سطر يمنع الرجوع لقراءات قديمة
     final Timestamp? lastReadingTimestamp =
         zoneData['lastReadingTimestamp'] as Timestamp?;
 
@@ -92,7 +91,6 @@ Future<void> processReading(String readingId) async {
 
     int newCurrentCount;
 
-    // ✅ يعتمد على inside أولًا
     if (inside != null && inside >= 0) {
       newCurrentCount = inside;
     } else {
@@ -127,12 +125,9 @@ Future<void> processReading(String readingId) async {
       'lastUpdated': FieldValue.serverTimestamp(),
     });
 
-    transaction.update(readingRef, {
-      'currentCountAfterReading': newCurrentCount,
-      'densityAfterReading': roundedDensity,
-      'congestionLevelAfterReading': congestionLevel,
-      'processedAt': FieldValue.serverTimestamp(),
-    });
+   transaction.update(readingRef, {
+  'status': 'processed',
+});
   });
 }
   Future<void> _handleAlert({

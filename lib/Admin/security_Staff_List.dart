@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'Mesgsage_4.dart';
@@ -81,40 +80,43 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
         .where('assignedLocationId', isEqualTo: selectedLocationId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) {
-            final data = doc.data();
+          return snapshot.docs
+              .map((doc) {
+                final data = doc.data();
 
-            return {
-              'id': doc.id,
-              'name': (data['fullName'] ?? '').toString(),
-              'email': (data['email'] ?? '').toString(),
-              'role': (data['role'] ?? '').toString(),
-              'status': (data['status'] ?? '').toString(),
-              'assignedLocationId':
-                  (data['assignedLocationId'] ?? '').toString(),
-              'createdAt': data['createdAt'],
-              'isVerified': data['isVerified'],
-            };
-          })
-          .where((user) => _isSecurityRole(user['role']))
-          .toList();
-    });
+                return {
+                  'id': doc.id,
+                  'name': (data['fullName'] ?? '').toString(),
+                  'email': (data['email'] ?? '').toString(),
+                  'role': (data['role'] ?? '').toString(),
+                  'status': (data['status'] ?? '').toString(),
+                  'assignedLocationId': (data['assignedLocationId'] ?? '')
+                      .toString(),
+                  'createdAt': data['createdAt'],
+                  'isVerified': data['isVerified'],
+                };
+              })
+              .where(
+                (user) =>
+                    _isSecurityRole(user['role']) && user['status'] == 'active',
+              )
+              .toList();
+        });
   }
 
- Future<void> _navigateToAddSecurity() async {
-  if (selectedLocationId == null) return;
+  Future<void> _navigateToAddSecurity() async {
+    if (selectedLocationId == null) return;
 
-  await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => AddSecurity(
-        selectedLocationId: selectedLocationId!,
-        selectedLocationName: selectedLocation,
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddSecurity(
+          selectedLocationId: selectedLocationId!,
+          selectedLocationName: selectedLocation,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _triggerDeleteFlow(Map<String, dynamic> user) {
     showDialog(
@@ -154,8 +156,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                           await _firestore
                               .collection('users')
                               .doc(user['id'].toString())
-                              .delete();
-
+                              .update({'status': 'inactive'});
                           if (!mounted) return;
                           Navigator.pop(context);
                           Navigator.push(
@@ -287,8 +288,9 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                     width: 62,
                     height: 62,
                     child: FloatingActionButton(
-                      onPressed:
-                          selectedLocationId == null ? null : _navigateToAddSecurity,
+                      onPressed: selectedLocationId == null
+                          ? null
+                          : _navigateToAddSecurity,
                       backgroundColor: const Color(0xFFA79ECC),
                       elevation: 5,
                       shape: const CircleBorder(),
@@ -309,105 +311,103 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
   }
 
   Widget _buildHeader() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: _staffStream(),
-          builder: (context, snapshot) {
-            final staff = snapshot.data ?? [];
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    child: StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _staffStream(),
+      builder: (context, snapshot) {
+        final staff = snapshot.data ?? [];
 
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6F5FB).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: isLoadingLocations
+                    ? const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedLocationId,
+                          isExpanded: true,
+                          icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                          hint: const Text('Select Location'),
+                          items: locations
+                              .map(
+                                (loc) => DropdownMenuItem<String>(
+                                  value: loc['id'],
+                                  child: Text(loc['name']!),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) {
+                            if (val == null) return;
+
+                            final location = locations.firstWhere(
+                              (loc) => loc['id'] == val,
+                            );
+
+                            setState(() {
+                              selectedLocationId = location['id'];
+                              selectedLocation = location['name']!;
+                            });
+                          },
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Row(
               children: [
-                Expanded(
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF6F5FB).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: isLoadingLocations
-                        ? const Center(
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedLocationId,
-                              isExpanded: true,
-                              icon: const Icon(
-                                Icons.keyboard_arrow_down,
-                                size: 20,
-                              ),
-                              hint: const Text('Select Location'),
-                              items: locations
-                                  .map(
-                                    (loc) => DropdownMenuItem<String>(
-                                      value: loc['id'],
-                                      child: Text(loc['name']!),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (val) {
-                                if (val == null) return;
-
-                                final location = locations.firstWhere(
-                                  (loc) => loc['id'] == val,
-                                );
-
-                                setState(() {
-                                  selectedLocationId = location['id'];
-                                  selectedLocation = location['name']!;
-                                });
-                              },
-                            ),
-                          ),
+                GestureDetector(
+                  onTap: selectedLocationId == null
+                      ? null
+                      : () async {
+                          await _shareSecurity(staff);
+                        },
+                  child: Icon(
+                    Icons.ios_share,
+                    size: 22,
+                    color: selectedLocationId == null
+                        ? Colors.grey
+                        : Colors.black,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: selectedLocationId == null
-                          ? null
-                          : () async {
-                              await _shareSecurity(staff);
-                            },
-                      child: Icon(
-                        Icons.ios_share,
-                        size: 22,
-                        color: selectedLocationId == null
-                            ? Colors.grey
-                            : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    GestureDetector(
-                      onTap: selectedLocationId == null
-                          ? null
-                          : () async {
-                              await _printSecurity(staff);
-                            },
-                      child: Icon(
-                        Icons.print,
-                        size: 22,
-                        color: selectedLocationId == null
-                            ? Colors.grey
-                            : Colors.black,
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 15),
+                GestureDetector(
+                  onTap: selectedLocationId == null
+                      ? null
+                      : () async {
+                          await _printSecurity(staff);
+                        },
+                  child: Icon(
+                    Icons.print,
+                    size: 22,
+                    color: selectedLocationId == null
+                        ? Colors.grey
+                        : Colors.black,
+                  ),
                 ),
               ],
-            );
-          },
-        ),
-      );
+            ),
+          ],
+        );
+      },
+    ),
+  );
 
-  Widget _buildStaffList(List<Map<String, dynamic>> staff) => ListView.separated(
+  Widget _buildStaffList(List<Map<String, dynamic>> staff) =>
+      ListView.separated(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(10),
         itemCount: staff.length,
@@ -457,9 +457,6 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
       );
 
   Widget _buildEmptyState() => const Center(
-        child: Text(
-          'No data available',
-          style: TextStyle(color: Colors.grey),
-        ),
-      );
+    child: Text('No data available', style: TextStyle(color: Colors.grey)),
+  );
 }

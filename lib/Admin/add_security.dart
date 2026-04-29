@@ -59,14 +59,33 @@ class _AddSecurityState extends State<AddSecurity> {
           .limit(1)
           .get();
 
-      if (existingUser.docs.isNotEmpty) {
-        if (!mounted) return;
-        setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This email is already registered')),
-        );
-        return;
-      }
+     if (existingUser.docs.isNotEmpty) {
+  final doc = existingUser.docs.first;
+  final data = doc.data();
+  final status = (data['status'] ?? 'active').toString();
+
+  if (status == 'inactive') {
+    await doc.reference.update({
+      'status': 'active',
+      'fullName': fullName,
+      'assignedLocationId': widget.selectedLocationId,
+    });
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    Navigator.pop(context);
+    return;
+  } else {
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('This email is already registered')),
+    );
+    return;
+  }
+}
 
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,

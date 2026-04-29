@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,6 +21,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Map<String, String>> locations = [];
+  Future<Map<String, dynamic>>? _panelStatsFuture;
+
+  void _refreshPanelStats() {
+    _panelStatsFuture = _fetchPanelStats();
+  }
 
   @override
   void initState() {
@@ -49,6 +52,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         if (loadedLocations.isNotEmpty) {
           selectedLocationId = loadedLocations.first['id'];
           selectedLocationName = loadedLocations.first['name']!;
+          _refreshPanelStats();
         }
       });
     } catch (e) {
@@ -73,7 +77,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
 
     if (picked != null) {
-      setState(() => selectedDate = picked);
+      setState(() {
+        selectedDate = picked;
+        _refreshPanelStats();
+      });
     }
   }
 
@@ -106,6 +113,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     setState(() {
                       selectedLocationId = loc['id'];
                       selectedLocationName = loc['name']!;
+                      _refreshPanelStats();
                     });
                     Navigator.pop(context);
                   },
@@ -251,8 +259,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
     return result;
   }
-
-  Future<Map<String, dynamic>> _fetchAllAdminData() async {
+  
+Future<Map<String, dynamic>> _fetchAllAdminData() async {
   if (selectedLocationId == null) {
     return {
       'visitors': 0,
@@ -298,10 +306,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
       if (!_isInSelectedRange(readingDate)) continue;
 
       final locationId = (raw['locationId'] ?? '').toString();
-
       if (locationId != selectedLocationId) continue;
 
-      totalVisitors += ((raw['entryCount'] ?? 0) as num).toInt();
+      final eventType = (raw['eventType'] ?? '').toString().trim().toLowerCase();
+
+      if (eventType == 'entered') {
+        totalVisitors++;
+      }
 
       final data = _normalizeMap(raw);
       data['documentId'] = doc.id;
@@ -339,7 +350,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     };
   }
 }
-
   Future<Map<String, dynamic>> _fetchPanelStats() async {
     final data = await _fetchAllAdminData();
     return {
@@ -408,7 +418,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: FutureBuilder<Map<String, dynamic>>(
-                      future: _fetchPanelStats(),
+                      future: _panelStatsFuture,
                       builder: (context, snapshot) {
                         final stats = snapshot.data ??
                             {
@@ -563,7 +573,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
           final isSelected = activeFilter == label;
           return Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => activeFilter = label),
+              onTap: () {
+                setState(() {
+                  activeFilter = label;
+                  _refreshPanelStats();
+                });
+              },
               child: Container(
                 height: 45,
                 decoration: BoxDecoration(

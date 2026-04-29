@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// [Message4] serves as the success confirmation for user-related administrative tasks.
-/// Standardized with Rushd branding (Purple) and a 380px container for cross-platform alignment.
 class Message4 extends StatelessWidget {
   const Message4({super.key});
 
-  // --- Branding Constants ---
   static const Color kRushdPurple = Color(0xFF867AB9);
 
   @override
@@ -15,18 +12,17 @@ class Message4 extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 380, // Aligned with the rest of the app's components
+            width: 380, 
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // --- Success Icon Container ---
                   Container(
                     width: 130,
                     height: 130,
                     decoration: const BoxDecoration(
-                      color: kRushdPurple, // Updated to brand color
+                      color: kRushdPurple, 
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -45,7 +41,6 @@ class Message4 extends StatelessWidget {
 
                   const SizedBox(height: 40),
 
-                  // --- Narrative Feedback ---
                   const Text(
                     'User deleted successfully',
                     textAlign: TextAlign.center,
@@ -64,7 +59,6 @@ class Message4 extends StatelessWidget {
 
                   const SizedBox(height: 80),
 
-                  // --- Navigation Action ---
                   SizedBox(
                     width: 180,
                     height: 52,

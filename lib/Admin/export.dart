@@ -584,7 +584,6 @@ class ExportService {
                 'Capacity',
                 'Status',
                 'Last Updated',
-                'Polygon Points',
               ],
               headerStyle: pw.TextStyle(
                 fontWeight: pw.FontWeight.bold,
@@ -599,7 +598,6 @@ class ExportService {
                 _safeText(z['capacity']),
                 _safeText(z['congestionLevel']),
                 _formatReadableDate(z['lastUpdated']),
-                _formatPolygonPoints(z['polygonPoints']),
               ]).toList(),
             ),
         ],
