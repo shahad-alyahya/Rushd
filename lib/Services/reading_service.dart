@@ -15,12 +15,12 @@ class ReadingService {
         .where('status', isEqualTo: 'received')
         .snapshots()
         .listen((snapshot) {
-      for (final change in snapshot.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          processReading(change.doc.id);
-        }
-      }
-    });
+          for (final change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              processReading(change.doc.id);
+            }
+          }
+        });
   }
 
   Future<void> syncLatestReading() async {
@@ -76,17 +76,15 @@ class ReadingService {
       if (readingTimestamp != null &&
           lastReadingTimestamp != null &&
           readingTimestamp.compareTo(lastReadingTimestamp) <= 0) {
-        transaction.update(readingRef, {
-          'status': 'processed',
-        });
+        transaction.update(readingRef, {'status': 'processed'});
         return;
       }
 
       final int capacity = ((zoneData['capacity'] ?? 0) as num).toInt();
       final double areaSize = ((zoneData['areaSize'] ?? 0) as num).toDouble();
 
-      final double lowThreshold =
-          ((zoneData['lowThreshold'] ?? 0.3) as num).toDouble();
+      final double lowThreshold = ((zoneData['lowThreshold'] ?? 0.3) as num)
+          .toDouble();
       final double mediumThreshold =
           ((zoneData['mediumThreshold'] ?? 0.7) as num).toDouble();
 
@@ -99,8 +97,7 @@ class ReadingService {
         density = newCurrentCount / areaSize;
       }
 
-      final double roundedDensity =
-          double.parse(density.toStringAsFixed(2));
+      final double roundedDensity = double.parse(density.toStringAsFixed(2));
 
       String congestionLevel;
       if (density < lowThreshold) {
@@ -110,7 +107,13 @@ class ReadingService {
       } else {
         congestionLevel = 'high';
       }
-
+      await _handleAlert(
+        zoneId: zoneId,
+        locationId: locationId,
+        zoneName: (zoneData['zoneName'] ?? '').toString(),
+        congestionLevel: congestionLevel,
+        severity: congestionLevel == 'high' ? 'high' : 'medium',
+      );
       transaction.update(zoneRef, {
         'currentCount': newCurrentCount,
         'density': roundedDensity,
@@ -120,9 +123,7 @@ class ReadingService {
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
-      transaction.update(readingRef, {
-        'status': 'processed',
-      });
+      transaction.update(readingRef, {'status': 'processed'});
     });
   }
 
@@ -202,8 +203,9 @@ class ReadingService {
     for (final userDoc in usersSnap.docs) {
       final userData = userDoc.data();
       final String role = (userData['role'] ?? '').toString().toLowerCase();
-      final String status =
-          (userData['status'] ?? 'active').toString().toLowerCase();
+      final String status = (userData['status'] ?? 'active')
+          .toString()
+          .toLowerCase();
 
       if (role == 'security' && status == 'active') {
         totalSecurity++;
@@ -214,8 +216,8 @@ class ReadingService {
       final data = doc.data();
       final int currentCount = ((data['currentCount'] ?? 0) as num).toInt();
       final double density = ((data['density'] ?? 0) as num).toDouble();
-      final String zoneName =
-          ((data['zoneName'] ?? data['areaName']) ?? '').toString();
+      final String zoneName = ((data['zoneName'] ?? data['areaName']) ?? '')
+          .toString();
 
       totalVisitors += currentCount;
       densitySum += density;
@@ -237,8 +239,7 @@ class ReadingService {
 
     final now = DateTime.now();
     final String date = now.toIso8601String().split('T').first;
-    final String month =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final String month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     final String year = '${now.year}';
 
     final existingStatsQuery = await _firestore
