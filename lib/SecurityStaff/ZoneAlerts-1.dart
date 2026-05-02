@@ -6,13 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ZoneAlerts1Screen extends StatelessWidget {
   final String locationId;
 
-  const ZoneAlerts1Screen({
-
-    super.key,
-
-    required this.locationId,
-
-  });
+  const ZoneAlerts1Screen({super.key, required this.locationId});
 
   @override
   Widget build(BuildContext context) {
@@ -43,18 +37,18 @@ class ZoneAlerts1Screen extends StatelessWidget {
                         _buildAlertToggle(context),
                         const SizedBox(height: 24),
 
-                        /// 🔥 هنا الفايربيس
+                        /// Firebase
                         StreamBuilder<QuerySnapshot>(
                           stream: FirebaseFirestore.instance
                               .collection('zones')
-                              .where('locationId',
-                                  isEqualTo: locationId)
+                              .where('locationId', isEqualTo: locationId)
                               .snapshots(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Center(
-                                  child: CircularProgressIndicator());
+                                child: CircularProgressIndicator(),
+                              );
                             }
 
                             if (!snapshot.hasData ||
@@ -64,15 +58,13 @@ class ZoneAlerts1Screen extends StatelessWidget {
 
                             final docs = snapshot.data!.docs;
 
-                            /// 👇 فلترة high + medium فقط
+                            ///   high + medium
                             final filtered = docs.where((doc) {
-                              final data =
-                                  doc.data() as Map<String, dynamic>;
+                              final data = doc.data() as Map<String, dynamic>;
                               final level = (data['congestionLevel'] ?? '')
                                   .toString()
                                   .toLowerCase();
-                              return level == 'high' ||
-                                  level == 'medium';
+                              return level == 'high' || level == 'medium';
                             }).toList();
 
                             if (filtered.isEmpty) {
@@ -81,32 +73,29 @@ class ZoneAlerts1Screen extends StatelessWidget {
 
                             return Column(
                               children: filtered.map((doc) {
-                                final data =
-                                    doc.data() as Map<String, dynamic>;
+                                final data = doc.data() as Map<String, dynamic>;
 
-                                final zoneName =
-                                    (data['zoneName'] ?? 'Zone')
-                                        .toString();
+                                final zoneName = (data['zoneName'] ?? 'Zone')
+                                    .toString();
 
-                                final level =
-                                    (data['congestionLevel'] ?? 'low')
-                                        .toString();
+                                final level = (data['congestionLevel'] ?? 'low')
+                                    .toString();
 
                                 final updatedAt = data['lastUpdated'];
 
                                 return Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 20),
-                                child: AlertCardActive(
-  imagePath: _imageForZone(zoneName),
-  title: zoneName,
-  date: '',
-  timeAgo: _formatTime(updatedAt),
-  levelText: _levelText(level),
-  levelBg: _levelBg(level),
-  levelTextColor: _levelColor(level),
-  locationId: (data['locationId'] ?? '').toString(), // 🔥 هذا المهم
-),
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: AlertCardActive(
+                                    imagePath: _imageForZone(zoneName),
+                                    title: zoneName,
+                                    date: '',
+                                    timeAgo: _formatTime(updatedAt),
+                                    levelText: _levelText(level),
+                                    levelBg: _levelBg(level),
+                                    levelTextColor: _levelColor(level),
+                                    locationId: (data['locationId'] ?? '')
+                                        .toString(),
+                                  ),
                                 );
                               }).toList(),
                             );
@@ -116,10 +105,7 @@ class ZoneAlerts1Screen extends StatelessWidget {
                     ),
                   ),
                 ),
-            SecurityBottomBar(
-  currentIndex: 2,
-  locationId: locationId,
-),
+                SecurityBottomBar(currentIndex: 2, locationId: locationId),
               ],
             ),
           ),
@@ -128,31 +114,31 @@ class ZoneAlerts1Screen extends StatelessWidget {
     );
   }
 
-  /// 🔥 صور حسب الزون
-String _imageForZone(String zoneName) {
-  final name = zoneName.toLowerCase();
+  String _imageForZone(String zoneName) {
+    final name = zoneName.toLowerCase();
 
-  if (name.contains('saudi')) {
+    if (name.contains('saudi')) {
+      return 'assets/images/saudiZone.png';
+    } else if (name.contains('turkey')) {
+      return 'assets/images/turkey.png';
+    } else if (name.contains('india')) {
+      return 'assets/images/india.png';
+    } else if (name.contains('japan') || name.contains('japanese')) {
+      return 'assets/images/japan.png';
+    } else if (name.contains('china')) {
+      return 'assets/images/china.png';
+    } else if (name.contains('egypt')) {
+      return 'assets/images/egypt.png';
+    } else if (name.contains('greek')) {
+      return 'assets/images/greek.png';
+    } else if (name.contains('morocco')) {
+      return 'assets/images/morocco.png';
+    }
+
     return 'assets/images/saudiZone.png';
-  } else if (name.contains('turkey')) {
-    return 'assets/images/turkey.png';
-  } else if (name.contains('india')) {
-    return 'assets/images/india.png';
-  } else if (name.contains('japan') || name.contains('japanese')) {
-    return 'assets/images/japan.png';
-  } else if (name.contains('china')) {
-    return 'assets/images/china.png';
-  } else if (name.contains('egypt')) {
-    return 'assets/images/egypt.png';
-  } else if (name.contains('greek')) {
-    return 'assets/images/greek.png';
-  } else if (name.contains('morocco')) {
-    return 'assets/images/morocco.png';
   }
 
-  return 'assets/images/saudiZone.png';
-}
-  /// 🔥 Level text
+  ///  Level text
   String _levelText(String level) {
     if (level == 'high') return 'High Level';
     if (level == 'medium') return 'Medium Level';
@@ -171,7 +157,7 @@ String _imageForZone(String zoneName) {
     return const Color(0xFF2E7D32);
   }
 
-  /// 🔥 time ago
+  ///  time ago
   String _formatTime(dynamic timestamp) {
     if (timestamp == null) return '';
 
@@ -203,16 +189,13 @@ String _imageForZone(String zoneName) {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: const [
-                    BoxShadow(
-                        color: Color(0x12000000), blurRadius: 6),
+                    BoxShadow(color: Color(0x12000000), blurRadius: 6),
                   ],
                 ),
                 child: const Center(
                   child: Text(
                     'Active Alerts',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -224,16 +207,14 @@ String _imageForZone(String zoneName) {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                           ZoneAlerts2Screen(locationId: locationId),
+                          ZoneAlerts2Screen(locationId: locationId),
                     ),
                   );
                 },
                 child: const Center(
                   child: Text(
                     'Responded Alerts',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9B9B9B)),
+                    style: TextStyle(fontSize: 12, color: Color(0xFF9B9B9B)),
                   ),
                 ),
               ),
@@ -244,6 +225,7 @@ String _imageForZone(String zoneName) {
     );
   }
 }
+
 class AlertCardActive extends StatelessWidget {
   final String imagePath;
   final String title;
@@ -263,7 +245,7 @@ class AlertCardActive extends StatelessWidget {
     required this.levelText,
     required this.levelBg,
     required this.levelTextColor,
-   required this.locationId,
+    required this.locationId,
   });
 
   @override
@@ -282,61 +264,61 @@ class AlertCardActive extends StatelessWidget {
           ),
         ],
       ),
-    child: Row(
-  children: [
-    if (locationId != 'test_area_001') ...[
-      ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Image.asset(
-          imagePath,
-          width: 110,
-          height: 86,
-          fit: BoxFit.cover,
-        ),
-      ),
-      const SizedBox(width: 12),
-    ],
-
-    Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          if (locationId != 'test_area_001') ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.asset(
+                imagePath,
+                width: 110,
+                height: 86,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 14),
+                    const SizedBox(width: 5),
+                    Text(timeAgo, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 14),
-              const SizedBox(width: 5),
-              Text(timeAgo, style: const TextStyle(fontSize: 12)),
-            ],
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: levelBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              levelText,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: levelTextColor,
+              ),
+            ),
           ),
         ],
       ),
-    ),
-
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: levelBg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        levelText,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: levelTextColor,
-        ),
-      ),
-    ),
-  ],
-),
     );
   }
 }
