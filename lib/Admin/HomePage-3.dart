@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rushd/Admin/export.dart';
 import 'admin_bottom_bar.dart';
 import 'package:rushd/Visitor/loginPage.dart';
-
+// Main Dashboard for the Admin to monitor crowd statistics and export reports
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
 
@@ -13,7 +13,8 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  String activeFilter = 'Daily';
+  // State variables for filtering and data selection
+  String activeFilter = 'Daily';// Can be Daily, Monthly, or Yearly
   String? selectedLocationId;
   String selectedLocationName = 'Select Location';
   DateTime selectedDate = DateTime.now();
@@ -22,7 +23,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   List<Map<String, String>> locations = [];
   Future<Map<String, dynamic>>? _panelStatsFuture;
-
+// Helper to trigger a data refresh from Firestore
   void _refreshPanelStats() {
     _panelStatsFuture = _fetchPanelStats();
   }
@@ -30,9 +31,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
   @override
   void initState() {
     super.initState();
+    // Load available locations immediately on page launch
     _loadLocations();
   }
-
+// Fetches the list of locations managed by the system
   Future<void> _loadLocations() async {
     try {
       final snapshot = await _firestore.collection('locations').get();
@@ -49,6 +51,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
       setState(() {
         locations = loadedLocations;
+        // Default to the first location if available
         if (loadedLocations.isNotEmpty) {
           selectedLocationId = loadedLocations.first['id'];
           selectedLocationName = loadedLocations.first['name']!;
@@ -59,7 +62,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       debugPrint('Error loading locations: $e');
     }
   }
-
+// Opens date picker to change the report focus
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -83,7 +86,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       });
     }
   }
-
+// Shows a bottom sheet to pick between different locations
   void _showLocationPicker() {
     if (locations.isEmpty) return;
 
@@ -125,7 +128,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       },
     );
   }
-
+// calculate the start and end of periods for filtering queries
   DateTime get _startOfDay =>
       DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
 
@@ -141,7 +144,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   DateTime get _startOfYear => DateTime(selectedDate.year, 1, 1);
 
   DateTime get _endOfYear => DateTime(selectedDate.year + 1, 1, 1);
-
+// Returns the current date range based on the active filter
   ({DateTime start, DateTime end}) _getSelectedRange() {
     if (activeFilter == 'Daily') {
       return (start: _startOfDay, end: _endOfDay);
@@ -151,7 +154,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       return (start: _startOfYear, end: _endOfYear);
     }
   }
-
+// Formatting helpers for dates and labels
   String _twoDigits(int value) => value.toString().padLeft(2, '0');
 
   String _formatDateTime(DateTime dateTime) {
@@ -178,7 +181,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       return 'Yearly';
     }
   }
-
+// Checks if a user has a security-related role
   bool _isSecurityRole(dynamic roleValue) {
     final role = (roleValue ?? '').toString().trim().toLowerCase();
     return role == 'security' ||
@@ -186,7 +189,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         role == 'security_staff' ||
         role == 'securitystaff';
   }
-
+// Flexible date parser for multiple data types (Timestamp, int, String)
   DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
 
@@ -214,7 +217,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
     return null;
   }
-
+// Tries to find a valid date field within a reading document
   DateTime? _extractReadingDate(Map<String, dynamic> data) {
     return _parseDate(data['processedAt']) ??
         _parseDate(data['createdAt']) ??
@@ -222,13 +225,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
         _parseDate(data['lastUpdatedAt']) ??
         _parseDate(data['timestamp']);
   }
-
+// Validates if a specific date falls within the selected period
   bool _isInSelectedRange(DateTime? date) {
     if (date == null) return false;
     final range = _getSelectedRange();
     return !date.isBefore(range.start) && date.isBefore(range.end);
   }
-
+// Normalizes Firestore data into standard JSON-friendly formats for reporting
   Map<String, dynamic> _normalizeMap(Map<String, dynamic> source) {
     final result = <String, dynamic>{};
 
@@ -259,7 +262,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
     return result;
   }
-  
+  // High-level aggregator that fetches zones, users, and filtered readings
 Future<Map<String, dynamic>> _fetchAllAdminData() async {
   if (selectedLocationId == null) {
     return {
@@ -320,7 +323,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
           readingDate != null ? _formatDateTime(readingDate) : '';
       filteredReadings.add(data);
     }
-
+// Sort readings so newest data appears first
     filteredReadings.sort((a, b) {
       final aDate = a['readingDate'].toString();
       final bDate = b['readingDate'].toString();
@@ -349,7 +352,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       'readingDocs': <Map<String, dynamic>>[],
     };
   }
-}
+}// Minimal version of data fetching for the UI metric cards
   Future<Map<String, dynamic>> _fetchPanelStats() async {
     final data = await _fetchAllAdminData();
     return {
@@ -358,7 +361,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       'zones': data['zones'] as int,
     };
   }
-
+// Sends the compiled data to the ExportService for PDF sharing
   Future<void> _shareReport() async {
     final details = await _fetchAllAdminData();
 
@@ -374,7 +377,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       readingDocs: (details['readingDocs'] as List).cast<Map<String, dynamic>>(),
     );
   }
-
+// Sends the compiled data to the ExportService for printing
   Future<void> _printReport() async {
     final details = await _fetchAllAdminData();
 
@@ -390,7 +393,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       readingDocs: (details['readingDocs'] as List).cast<Map<String, dynamic>>(),
     );
   }
-
+// Logic to sign out and clear the navigation stack
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
 
@@ -486,7 +489,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       ),
     );
   }
-
+// Dashboard Header widget
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -511,7 +514,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       ],
     );
   }
-
+// UI Container for the key metrics cards
   Widget _buildMetricOverview({
     required int visitors,
     required int security,
@@ -557,7 +560,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       ),
     );
   }
-
+// Segmented control to switch between time filters
   Widget _buildPeriodToggle() {
     return Container(
       padding: const EdgeInsets.all(4),
@@ -604,7 +607,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       ),
     );
   }
-
+// Reusable component for selection inputs
   Widget _buildSelectionBox(String text, IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -628,7 +631,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       ),
     );
   }
-
+// Reusable card for displaying values and titles
   Widget _buildSimpleCard(
     String title,
     String value, {
@@ -676,7 +679,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       ),
     );
   }
-
+// Export actions row (Share and Print)
   Widget _buildQuickActions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -697,7 +700,7 @@ Future<Map<String, dynamic>> _fetchAllAdminData() async {
       ],
     );
   }
-
+// Helper for floating-style circular action buttons
   Widget _buildCircleIcon(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,

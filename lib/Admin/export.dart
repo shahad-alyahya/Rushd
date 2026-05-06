@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-
+// Service class to handle PDF generation, exporting, and sharing
 class ExportService {
+  // Formats the display string for the report period (Daily, Monthly, or Yearly)
   static String _buildPeriodDisplay(String periodLabel, DateTime selectedDate) {
     if (periodLabel == 'Daily') {
       return 'Date: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
@@ -14,19 +15,19 @@ class ExportService {
       return 'Year: ${selectedDate.year}';
     }
   }
-
+// Safe conversion of dynamic values to integers
   static int _toInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value.toString()) ?? 0;
   }
-
+// Safe conversion of dynamic values to strings
   static String _safeText(dynamic value) {
     if (value == null) return '';
     return value.toString();
   }
-
+// Formats a date object or string into a readable format (DD/MM/YYYY HH:MM:SS)
   static String _formatReadableDate(dynamic value) {
     if (value == null) return '';
 
@@ -42,7 +43,7 @@ class ExportService {
     final text = value.toString().trim();
     return text;
   }
-
+// Converts polygon coordinate points into a readable string format
   static String _formatPolygonPoints(dynamic value) {
     if (value == null) return '';
 
@@ -59,11 +60,11 @@ class ExportService {
 
     return value.toString();
   }
-
+// Determines if charts should be displayed (only for Monthly/Yearly reports)
   static bool _showCharts(String periodLabel) {
     return periodLabel == 'Monthly' || periodLabel == 'Yearly';
   }
-
+// Aggregates congestion levels (Low, Medium, High) from zone data
   static Map<String, int> _buildCongestionStats(
     List<Map<String, dynamic>> zoneDocs,
   ) {
@@ -92,7 +93,7 @@ class ExportService {
       'High': high,
     };
   }
-
+// Calculates visitor flow per zone and returns the top 6 busiest zones
   static List<Map<String, dynamic>> _buildZoneTrafficStats(
     List<Map<String, dynamic>> readingDocs,
   ) {
@@ -109,12 +110,12 @@ class ExportService {
     final items = zoneTotals.entries
         .map((e) => {'label': e.key, 'value': e.value})
         .toList();
-
+// Sort by value descending
     items.sort((a, b) => _toInt(b['value']).compareTo(_toInt(a['value'])));
 
     return items.take(6).toList();
   }
-
+// Custom widget to build a bar chart inside the PDF
   static pw.Widget _buildBarChart({
     required String title,
     required List<Map<String, dynamic>> items,
@@ -217,7 +218,7 @@ class ExportService {
       ),
     );
   }
-
+// Combines multiple charts into an Analytics section
   static pw.Widget _buildChartsSection({
     required String periodLabel,
     required List<Map<String, dynamic>> zoneDocs,
@@ -273,7 +274,7 @@ class ExportService {
       ],
     );
   }
-
+// Builds a small summary card (Visitors, Security, Zones) for the PDF header
   static pw.Widget _buildSummaryCard({
     required String label,
     required String value,
@@ -304,12 +305,12 @@ class ExportService {
       ),
     );
   }
-
+// Loads the app logo from assets for use in the PDF
   static Future<pw.MemoryImage> _loadLogo() async {
     final logoData = await rootBundle.load('assets/images/LogoRushd.png');
     return pw.MemoryImage(logoData.buffer.asUint8List());
   }
-
+// Builds the top header section of the PDF report
   static pw.Widget _buildHeader({
     required pw.MemoryImage logoImage,
     required String subtitle,
@@ -338,7 +339,7 @@ class ExportService {
       ],
     );
   }
-
+// Builds the footer of the PDF
   static pw.Widget _buildFooter() {
     return pw.Center(
       child: pw.Text(
@@ -350,7 +351,7 @@ class ExportService {
       ),
     );
   }
-
+//  full Admin Report PDF
   static Future<Uint8List> _buildFullAdminReport({
     required String location,
     required DateTime selectedDate,
@@ -401,6 +402,7 @@ class ExportService {
             zoneDocs: zoneDocs,
             readingDocs: readingDocs,
           ),
+          // Zones Table
           pw.Text(
             "Zones",
             style: pw.TextStyle(
@@ -430,6 +432,7 @@ class ExportService {
             ),
           pw.SizedBox(height: 20),
           pw.Text(
+            // Users Table
             "Users",
             style: pw.TextStyle(
               fontSize: 18,
@@ -458,6 +461,7 @@ class ExportService {
             ),
           pw.SizedBox(height: 20),
           pw.Text(
+            // Sensor Readings Table
             "Sensor Readings",
             style: pw.TextStyle(
               fontSize: 18,
@@ -492,7 +496,7 @@ class ExportService {
 
     return Uint8List.fromList(await pdf.save());
   }
-
+//  methods to trigger print layout or sharing
   static Future<void> exportFullReport({
     required String location,
     required DateTime selectedDate,
@@ -547,7 +551,7 @@ class ExportService {
       filename: 'rushd_report.pdf',
     );
   }
-
+// Similar methods follow for specific Zone and Security reports...
   static Future<Uint8List> _buildZonesReportPdf({
     required String location,
     required List<Map<String, dynamic>> zoneDocs,

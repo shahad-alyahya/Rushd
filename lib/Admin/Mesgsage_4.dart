@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// A simple success screen displayed after deleting a security user
 class Message4 extends StatelessWidget {
   const Message4({super.key});
 
@@ -12,17 +13,18 @@ class Message4 extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SizedBox(
-            width: 380, 
+            width: 380,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Success icon container with a circular shadow
                   Container(
                     width: 130,
                     height: 130,
                     decoration: const BoxDecoration(
-                      color: kRushdPurple, 
+                      color: kRushdPurple,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -40,7 +42,7 @@ class Message4 extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 40),
-
+                  // Success message titles
                   const Text(
                     'User deleted successfully',
                     textAlign: TextAlign.center,
@@ -58,7 +60,7 @@ class Message4 extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 80),
-
+                  // Back button to return to the previous screen
                   SizedBox(
                     width: 180,
                     height: 52,

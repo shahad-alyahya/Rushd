@@ -5,6 +5,7 @@ import 'add_security.dart';
 import 'admin_bottom_bar.dart';
 import 'package:rushd/Admin/export.dart';
 
+// Screen that displays a real-time list of active security staff
 class SecurityStaffList extends StatefulWidget {
   const SecurityStaffList({super.key});
 
@@ -20,15 +21,16 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
   String? selectedLocationId;
   String selectedLocation = "Select Location";
   bool isLoadingLocations = true;
-
+  // List to store locations fetched from Firestore
   List<Map<String, String>> locations = [];
 
   @override
   void initState() {
     super.initState();
-    _loadLocations();
+    _loadLocations(); // Fetch locations on screen startup
   }
 
+  // Fetches the list of available locations from Firestore
   Future<void> _loadLocations() async {
     try {
       final snapshot = await _firestore.collection('locations').get();
@@ -46,7 +48,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
       setState(() {
         locations = loadedLocations;
         isLoadingLocations = false;
-
+        // Automatically select the first location if the list is not empty
         if (loadedLocations.isNotEmpty) {
           selectedLocationId = loadedLocations.first['id'];
           selectedLocation = loadedLocations.first['name']!;
@@ -62,6 +64,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     }
   }
 
+  // Utility to check if a user role matches "security" keywords
   bool _isSecurityRole(dynamic roleValue) {
     final role = (roleValue ?? '').toString().trim().toLowerCase();
     return role == 'security' ||
@@ -70,6 +73,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
         role == 'securitystaff';
   }
 
+  // Real-time stream to listen for security staff assigned to the selected location
   Stream<List<Map<String, dynamic>>> _staffStream() {
     if (selectedLocationId == null) {
       return Stream.value([]);
@@ -95,7 +99,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                   'createdAt': data['createdAt'],
                   'isVerified': data['isVerified'],
                 };
-              })
+              }) // Filter to only show active security staff in the UI
               .where(
                 (user) =>
                     _isSecurityRole(user['role']) && user['status'] == 'active',
@@ -104,6 +108,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
         });
   }
 
+  // Navigates to the Add Security screen
   Future<void> _navigateToAddSecurity() async {
     if (selectedLocationId == null) return;
 
@@ -118,6 +123,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     );
   }
 
+  // Displays a confirmation dialog before "deleting" a user
   void _triggerDeleteFlow(Map<String, dynamic> user) {
     showDialog(
       context: context,
@@ -153,12 +159,13 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                     child: ElevatedButton(
                       onPressed: () async {
                         try {
+                          // Perform "Soft Delete" by changing status to inactive
                           await _firestore
                               .collection('users')
                               .doc(user['id'].toString())
                               .update({'status': 'inactive'});
                           if (!mounted) return;
-                          Navigator.pop(context);
+                          Navigator.pop(context); // Close dialog
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -194,6 +201,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     );
   }
 
+  // Helper to format dynamic Firestore values (e.g., Timestamps) into strings
   String _formatValue(dynamic value) {
     if (value == null) return '';
     if (value is Timestamp) {
@@ -203,6 +211,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     return value.toString();
   }
 
+  // Prepares user data for PDF/Export services
   Map<String, dynamic> _normalizeUserForExport(Map<String, dynamic> user) {
     return {
       'documentId': _formatValue(user['id']),
@@ -216,6 +225,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     };
   }
 
+  // Triggers report sharing for the current security list
   Future<void> _shareSecurity(List<Map<String, dynamic>> users) async {
     await ExportService.shareSecurityReport(
       location: selectedLocation,
@@ -223,6 +233,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
     );
   }
 
+  // Triggers PDF printing for the current security list
   Future<void> _printSecurity(List<Map<String, dynamic>> users) async {
     await ExportService.exportSecurityReport(
       location: selectedLocation,
@@ -251,8 +262,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    _buildHeader(),
-                    const SizedBox(height: 15),
+                    _buildHeader(), // Location picker and export buttons                    const SizedBox(height: 15),
                     Expanded(
                       child: selectedLocationId == null
                           ? _buildEmptyState()
@@ -281,6 +291,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
                     const SizedBox(height: 10),
                   ],
                 ),
+                // Floating Action Button to add new staff
                 Positioned(
                   bottom: 100,
                   right: 20,
@@ -309,7 +320,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
       ),
     );
   }
-
+// Header widget containing the Dropdown for location selection and action icons
   Widget _buildHeader() => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 10),
     child: StreamBuilder<List<Map<String, dynamic>>>(
@@ -367,6 +378,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
               ),
             ),
             const SizedBox(width: 12),
+            // Export and Print action icons
             Row(
               children: [
                 GestureDetector(
@@ -405,7 +417,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
       },
     ),
   );
-
+// Widget to build the scrollable list of staff members
   Widget _buildStaffList(List<Map<String, dynamic>> staff) =>
       ListView.separated(
         physics: const BouncingScrollPhysics(),
@@ -455,7 +467,7 @@ class _SecurityStaffListState extends State<SecurityStaffList> {
           ),
         ),
       );
-
+// Placeholder when no data is found
   Widget _buildEmptyState() => const Center(
     child: Text('No data available', style: TextStyle(color: Colors.grey)),
   );

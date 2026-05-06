@@ -28,7 +28,7 @@ class _AddZonePageState extends State<AddZonePage> {
   bool _isSaving = false;
 
   static const String _polygonKey = 'hall';
-
+  // Static coordinates for the zone boundary (Polygon)
   static const List<Map<String, double>> _polygonPoints = [
     {'lat': 24.82449764177584, 'lng': 46.66430063545704},
     {'lat': 24.825253206339646, 'lng': 46.6641591489315},
@@ -41,9 +41,11 @@ class _AddZonePageState extends State<AddZonePage> {
   @override
   void initState() {
     super.initState();
+    // Load the unique location ID when the page opens
     _loadLocationId();
   }
 
+  // Fetches the location ID from Firestore based on the name passed to the widget
   Future<void> _loadLocationId() async {
     try {
       final snapshot = await _firestore
@@ -67,45 +69,46 @@ class _AddZonePageState extends State<AddZonePage> {
     super.dispose();
   }
 
+  // Handles validation and saving the new zone to Firestore
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
-
+    // Ensure the location ID was successfully loaded
     if (_locationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location not found')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Location not found')));
       return;
     }
 
     final zoneName = _nameController.text.trim();
     final capacity = int.tryParse(_capacityController.text.trim()) ?? 0;
-
+    // Check if the zone name already exists (case-insensitive)
     final exists = widget.existingZoneNames.any(
       (name) => name.toLowerCase() == zoneName.toLowerCase(),
     );
 
     if (exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Zone already exists')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Zone already exists')));
       return;
     }
 
     try {
       setState(() => _isSaving = true);
-
-await _firestore.collection('zones').doc(_polygonKey).set({
-          'zoneName': zoneName,
+      // Create a new zone document with initial values and thresholds
+      await _firestore.collection('zones').doc(_polygonKey).set({
+        'zoneName': zoneName,
         'locationId': _locationId,
         'capacity': capacity,
         'polygonKey': _polygonKey,
         'polygonPoints': _polygonPoints,
-        'congestionLevel': 'low',
-        'currentCount': 0,
-        'density': 0,
-        'highThreshold': 1,
-        'lowThreshold': 0.3,
-        'mediumThreshold': 0.7,
+        'congestionLevel': 'low', // Default status
+        'currentCount': 0, // Start with zero people
+        'density': 0, // Start with zero density
+        'highThreshold': 1, // 100% capacity threshold
+        'lowThreshold': 0.3, // 30% capacity threshold
+        'mediumThreshold': 0.7, // 70% capacity threshold
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
@@ -115,9 +118,9 @@ await _firestore.collection('zones').doc(_polygonKey).set({
       debugPrint('Error adding zone: $e');
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save zone')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to save zone')));
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -293,7 +296,7 @@ await _firestore.collection('zones').doc(_polygonKey).set({
       ),
     );
   }
-
+// Builds the top header with a back button
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [

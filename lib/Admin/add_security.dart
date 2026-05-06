@@ -21,10 +21,11 @@ class _AddSecurityState extends State<AddSecurity> {
 
   static const Color kRushdPurple = Color(0xFF867AB9);
   static const Color kFieldBorder = Color(0xFF353841);
-
+ // Firebase instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+// Controllers for input fields
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -34,14 +35,16 @@ class _AddSecurityState extends State<AddSecurity> {
 
   @override
   void dispose() {
+    // Dispose controllers to free up memory
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
-
+// save or reactivate security staff
   Future<void> _handleSave() async {
+    // Validate form inputs before proceeding
     if (!_formKey.currentState!.validate()) return;
 
     final firstName = _firstNameController.text.trim();
@@ -52,7 +55,7 @@ class _AddSecurityState extends State<AddSecurity> {
 
     try {
       setState(() => _isSaving = true);
-
+// Check if a user with this email already exists in Firestore
       final existingUser = await _firestore
           .collection('users')
           .where('email', isEqualTo: email)
@@ -63,7 +66,7 @@ class _AddSecurityState extends State<AddSecurity> {
   final doc = existingUser.docs.first;
   final data = doc.data();
   final status = (data['status'] ?? 'active').toString();
-
+// If user exists but is inactive, reactivate them and update details
   if (status == 'inactive') {
     await doc.reference.update({
       'status': 'active',
@@ -77,6 +80,7 @@ class _AddSecurityState extends State<AddSecurity> {
     Navigator.pop(context);
     return;
   } else {
+    // If user is already active, show error
     if (!mounted) return;
     setState(() => _isSaving = false);
 
@@ -86,7 +90,7 @@ class _AddSecurityState extends State<AddSecurity> {
     return;
   }
 }
-
+// Create a new user in Firebase Authentication
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -98,7 +102,7 @@ class _AddSecurityState extends State<AddSecurity> {
         setState(() => _isSaving = false);
         return;
       }
-
+// Update the user's display name in Firebase Auth
       await user.updateDisplayName(fullName);
 
       await _firestore.collection('users').doc(user.uid).set({
@@ -110,13 +114,14 @@ class _AddSecurityState extends State<AddSecurity> {
         'role': 'security',
         'status': 'active',
       });
-
+// Send verification email to the new user
       await user.sendEmailVerification();
 
       if (!mounted) return;
       setState(() => _isSaving = false);
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
+      // Handle Firebase specific errors (email in use, etc.)
       if (!mounted) return;
       setState(() => _isSaving = false);
 
@@ -273,7 +278,7 @@ class _AddSecurityState extends State<AddSecurity> {
       ),
     );
   }
-
+// Header widget with back button
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
@@ -294,7 +299,7 @@ class _AddSecurityState extends State<AddSecurity> {
         text,
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
       );
-
+// Reusable validated text field widget
   Widget _buildValidatedField({
     required TextEditingController controller,
     required String hint,
@@ -337,7 +342,6 @@ class _AddSecurityState extends State<AddSecurity> {
       ),
     );
   }
-
   Widget _buildLocationField() {
     return Container(
       width: double.infinity,

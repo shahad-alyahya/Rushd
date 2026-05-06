@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 
-
+// Success message page displayed after a zone is successfully deleted
 class Message3Page extends StatelessWidget {
   const Message3Page({super.key});
-
-  static const Color kRushdPurple = Color(
-    0xFF867AB9,
-  ); 
+  // Theme colors for the project
+  static const Color kRushdPurple = Color(0xFF867AB9);
   static const Color kPrimaryDark = Color(0xFF010E16);
 
   @override
@@ -44,7 +42,7 @@ class Message3Page extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 45),
-
+// Main success title
                   const Text(
                     'Success!',
                     style: TextStyle(
@@ -54,24 +52,25 @@ class Message3Page extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 15),
+                  // Detailed description of the action completed
                   const Text(
                     'The selected zone has been successfully purged from the administrative registry.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black54,
-                      height: 1.6, 
+                      height: 1.6,
                     ),
                   ),
 
                   const SizedBox(height: 60),
-
+// Navigation button to return to the zones list
                   SizedBox(
                     width: 180,
                     height: 54,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pop(context); // Go back to the previous screen
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: kRushdPurple,

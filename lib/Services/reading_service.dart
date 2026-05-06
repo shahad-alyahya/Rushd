@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Service to handle sensor data processing, density calculations, and alerts
 class ReadingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isListening = false;
-
+  // Starts real-time listening for new sensor readings with 'received' status
   void startListening() {
     if (_isListening) return;
     _isListening = true;
-
+    // Process any missed readings first
     syncLatestReading();
 
     _firestore
@@ -23,6 +24,7 @@ class ReadingService {
         });
   }
 
+  // Ensures all pending 'received' readings are processed sequentially
   Future<void> syncLatestReading() async {
     final snapshot = await _firestore
         .collection('sensor_readings')
@@ -37,9 +39,10 @@ class ReadingService {
     }
   }
 
+  //  Processes a single reading, calculates density, and updates zone status
   Future<void> processReading(String readingId) async {
     final readingRef = _firestore.collection('sensor_readings').doc(readingId);
-
+    // Use a Transaction to ensure data consistency between reading and zone updates
     await _firestore.runTransaction((transaction) async {
       final readingSnap = await transaction.get(readingRef);
       if (!readingSnap.exists) return;
@@ -72,7 +75,7 @@ class ReadingService {
 
       final Timestamp? lastReadingTimestamp =
           zoneData['lastReadingTimestamp'] as Timestamp?;
-
+      // Avoid processing out-of-order or duplicate data
       if (readingTimestamp != null &&
           lastReadingTimestamp != null &&
           readingTimestamp.compareTo(lastReadingTimestamp) <= 0) {
@@ -89,7 +92,7 @@ class ReadingService {
           ((zoneData['mediumThreshold'] ?? 0.7) as num).toDouble();
 
       final int newCurrentCount = inside;
-
+      // Density calculation logic
       double density = 0.0;
       if (capacity > 0) {
         density = newCurrentCount / capacity;
@@ -98,7 +101,7 @@ class ReadingService {
       }
 
       final double roundedDensity = double.parse(density.toStringAsFixed(2));
-
+      // Determine congestion level based on calculated density
       String congestionLevel;
       if (density < lowThreshold) {
         congestionLevel = 'low';
@@ -107,6 +110,7 @@ class ReadingService {
       } else {
         congestionLevel = 'high';
       }
+      // Handle alert creation or resolution
       await _handleAlert(
         zoneId: zoneId,
         locationId: locationId,
@@ -114,6 +118,7 @@ class ReadingService {
         congestionLevel: congestionLevel,
         severity: congestionLevel == 'high' ? 'high' : 'medium',
       );
+      // Update the zone with new crowd data
       transaction.update(zoneRef, {
         'currentCount': newCurrentCount,
         'density': roundedDensity,
@@ -122,11 +127,12 @@ class ReadingService {
         'lastReadingTimestamp': readingTimestamp,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
-
+      // Mark reading as processed
       transaction.update(readingRef, {'status': 'processed'});
     });
   }
 
+  // Automates alert management for High congestion scenarios
   Future<void> _handleAlert({
     required String zoneId,
     required String locationId,
@@ -142,6 +148,7 @@ class ReadingService {
         .get();
 
     if (congestionLevel == 'high') {
+      // Create or update active alert if congestion is high
       if (alertsQuery.docs.isNotEmpty) {
         await alertsQuery.docs.first.reference.update({
           'locationId': locationId,
@@ -168,6 +175,7 @@ class ReadingService {
         });
       }
     } else {
+      // Resolve existing alert if congestion level drops below High
       if (alertsQuery.docs.isNotEmpty) {
         await alertsQuery.docs.first.reference.update({
           'status': 'resolved',
@@ -175,100 +183,6 @@ class ReadingService {
           'respondedBy': '',
         });
       }
-    }
-  }
-
-  Future<void> updateStatistics(String locationId) async {
-    final zonesSnap = await _firestore
-        .collection('zones')
-        .where('locationId', isEqualTo: locationId)
-        .get();
-
-    if (zonesSnap.docs.isEmpty) return;
-
-    final usersSnap = await _firestore
-        .collection('users')
-        .where('assignedLocationId', isEqualTo: locationId)
-        .get();
-
-    int totalVisitors = 0;
-    double densitySum = 0.0;
-
-    String mostCrowdedZone = '';
-    String leastCrowdedZone = '';
-    double maxDensity = -1;
-    double minDensity = double.infinity;
-    int totalSecurity = 0;
-
-    for (final userDoc in usersSnap.docs) {
-      final userData = userDoc.data();
-      final String role = (userData['role'] ?? '').toString().toLowerCase();
-      final String status = (userData['status'] ?? 'active')
-          .toString()
-          .toLowerCase();
-
-      if (role == 'security' && status == 'active') {
-        totalSecurity++;
-      }
-    }
-
-    for (final doc in zonesSnap.docs) {
-      final data = doc.data();
-      final int currentCount = ((data['currentCount'] ?? 0) as num).toInt();
-      final double density = ((data['density'] ?? 0) as num).toDouble();
-      final String zoneName = ((data['zoneName'] ?? data['areaName']) ?? '')
-          .toString();
-
-      totalVisitors += currentCount;
-      densitySum += density;
-
-      if (density > maxDensity) {
-        maxDensity = density;
-        mostCrowdedZone = zoneName;
-      }
-
-      if (density < minDensity) {
-        minDensity = density;
-        leastCrowdedZone = zoneName;
-      }
-    }
-
-    final double averageDensity = zonesSnap.docs.isNotEmpty
-        ? double.parse((densitySum / zonesSnap.docs.length).toStringAsFixed(2))
-        : 0.0;
-
-    final now = DateTime.now();
-    final String date = now.toIso8601String().split('T').first;
-    final String month = '${now.year}-${now.month.toString().padLeft(2, '0')}';
-    final String year = '${now.year}';
-
-    final existingStatsQuery = await _firestore
-        .collection('statistics')
-        .where('locationId', isEqualTo: locationId)
-        .where('periodType', isEqualTo: 'day')
-        .where('date', isEqualTo: date)
-        .limit(1)
-        .get();
-
-    final statsData = {
-      'locationId': locationId,
-      'periodType': 'day',
-      'date': date,
-      'month': month,
-      'year': year,
-      'totalVisitors': totalVisitors,
-      'totalZones': zonesSnap.docs.length,
-      'totalSecurity': totalSecurity,
-      'averageDensity': averageDensity,
-      'mostCrowdedZone': mostCrowdedZone,
-      'leastCrowdedZone': leastCrowdedZone,
-      'lastUpdated': FieldValue.serverTimestamp(),
-    };
-
-    if (existingStatsQuery.docs.isNotEmpty) {
-      await existingStatsQuery.docs.first.reference.update(statsData);
-    } else {
-      await _firestore.collection('statistics').add(statsData);
     }
   }
 

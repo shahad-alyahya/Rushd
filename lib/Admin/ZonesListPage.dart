@@ -5,7 +5,7 @@ import 'AddZonePage.dart';
 import 'message_3.dart';
 import 'admin_bottom_bar.dart';
 import 'package:rushd/Admin/export.dart';
-
+// Screen to display and manage the list of crowd management zones
 class ZonesListPage extends StatefulWidget {
   const ZonesListPage({super.key});
 
@@ -28,9 +28,9 @@ class _ZonesListPageState extends State<ZonesListPage> {
   @override
   void initState() {
     super.initState();
-    _loadLocations();
+_loadLocations(); // Fetch available locations from Firestore on init
   }
-
+// Fetches the list of locations to populate the selection dropdown
   Future<void> _loadLocations() async {
     try {
       final snapshot = await _firestore.collection('locations').get();
@@ -48,7 +48,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       setState(() {
         _locations = loadedLocations;
         _isLoadingLocations = false;
-
+// Automatically select the first location if any exist
         if (loadedLocations.isNotEmpty) {
           _selectedLocationId = loadedLocations.first['id'];
           _selectedLocation = loadedLocations.first['name']!;
@@ -62,7 +62,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       });
     }
   }
-
+// Real-time stream to listen for zones under the selected location
   Stream<List<Map<String, dynamic>>> _zonesStream() {
     if (_selectedLocationId == null) {
       return Stream.value([]);
@@ -93,7 +93,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       }).toList();
     });
   }
-
+// Navigates to AddZonePage, passing current zone names to prevent duplicates
   Future<void> _navigateToAddZone(List<Map<String, dynamic>> currentZones) async {
     final existingZoneNames = currentZones
         .map((z) => (z['name'] ?? '').toString())
@@ -110,7 +110,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       ),
     );
   }
-
+// Shows a confirmation dialog before deleting a zone document
   Future<void> _confirmDeletion(Map<String, dynamic> zone) async {
     await showDialog<void>(
       context: context,
@@ -173,7 +173,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       },
     );
   }
-
+// Helper to format zone data for PDF/Report generation
   Map<String, dynamic> _normalizeZoneForExport(Map<String, dynamic> zone) {
     String formatValue(dynamic value) {
       if (value == null) return '';
@@ -199,14 +199,14 @@ class _ZonesListPageState extends State<ZonesListPage> {
       'lastUpdated': formatValue(zone['lastUpdated']),
     };
   }
-
+// Triggers the sharing functionality for the zones report
   Future<void> _shareZones(List<Map<String, dynamic>> zones) async {
     await ExportService.shareZonesReport(
       location: _selectedLocation,
       zoneDocs: zones.map(_normalizeZoneForExport).toList(),
     );
   }
-
+// Triggers the PDF printing functionality for the zones report
   Future<void> _printZones(List<Map<String, dynamic>> zones) async {
     await ExportService.exportZonesReport(
       location: _selectedLocation,
@@ -300,7 +300,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       ),
     );
   }
-
+// Builds the top filter row with location dropdown and export icons
   Widget _buildFilterHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -388,7 +388,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       ),
     );
   }
-
+// Builds the scrollable list of zone tiles
   Widget _buildZoneListView(List<Map<String, dynamic>> zones) {
     return ListView.separated(
       physics: const BouncingScrollPhysics(),
@@ -404,7 +404,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
       },
     );
   }
-
+// Placeholder UI when no zones or locations are found
   Widget _buildEmptyState() => const Center(
         child: Text(
           'No data available',
@@ -412,7 +412,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
         ),
       );
 }
-
+// Reusable custom tile widget for zone items
 class _ZoneTile extends StatelessWidget {
   final String name;
   final VoidCallback onDelete;
