@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart'
 /// );
 /// ```
 class DefaultFirebaseOptions {
+  // Returns the correct Firebase configuration based on the current platform.
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       return web;
@@ -49,6 +50,7 @@ class DefaultFirebaseOptions {
     }
   }
 
+  // Firebase configuration specific to Web.
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyA86HDfRoy_J0fWOXgfwEohWBS61rF42q4',
     appId: '1:491211849737:web:a6550db6e7a90bc51b38d8',
@@ -59,6 +61,7 @@ class DefaultFirebaseOptions {
     measurementId: 'G-5CNZ1D4Q2T',
   );
 
+  // Firebase configuration specific to Android.
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD2SWf06_xoNXHhj9fl-d8SJJW-2nwWIIQ',
     appId: '1:491211849737:android:23c655c826b58f6c1b38d8',

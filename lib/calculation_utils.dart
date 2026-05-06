@@ -1,4 +1,6 @@
+/// Utility methods for calculating crowd metrics and sensor data.
 class CalculationUtils {
+  // Calculates the net difference between gate entries and exits.
   static int calculateNetCount({
     required int entryCount,
     required int exitCount,
@@ -6,6 +8,7 @@ class CalculationUtils {
     return entryCount - exitCount;
   }
 
+  // Updates the total count, ensuring it never drops below zero.
   static int calculateCurrentCount({
     required int oldCount,
     required int netChange,
@@ -14,6 +17,7 @@ class CalculationUtils {
     return result < 0 ? 0 : result;
   }
 
+  // Uses the direct 'inside' sensor count if valid, otherwise calculates it.
   static int calculateCurrentCountFromInside({
     required int? inside,
     required int oldCount,
@@ -23,12 +27,10 @@ class CalculationUtils {
       return inside;
     }
 
-    return calculateCurrentCount(
-      oldCount: oldCount,
-      netChange: netChange,
-    );
+    return calculateCurrentCount(oldCount: oldCount, netChange: netChange);
   }
 
+  // Calculates density based on maximum capacity or total area size.
   static double calculateDensity({
     required int currentCount,
     required int capacity,
@@ -49,6 +51,7 @@ class CalculationUtils {
     return double.parse(value.toStringAsFixed(2));
   }
 
+  // Determines the congestion level based on predefined density thresholds.
   static String calculateCongestionLevel({
     required double density,
     required double lowThreshold,

@@ -1,18 +1,42 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// A data model representing a specific physical zone or area within a location.
 class ZoneModel {
+  // Unique identifier for the zone.
   final String id;
+
+  // The ID of the broader location this zone belongs to.
   final String locationId;
+
+  // The display name of the zone.
   final String zoneName;
+
+  // An optional specific area name within the zone.
   final String? areaName;
+
+  // The physical size of the area (used for density calculations if capacity is unknown).
   final double areaSize;
+
+  // The maximum allowed number of people in this zone.
   final int capacity;
+
+  // The current number of people inside, updated continuously by sensor readings.
   final int currentCount;
+
+  // The calculated crowd density.
   final double density;
+
+  // The current state of crowding (e.g., 'low', 'medium', 'high').
   final String congestionLevel;
+
+  // Threshold limits used to determine the current congestion level.
   final double lowThreshold;
   final double mediumThreshold;
+
+  // The threshold that triggers a high-congestion alert when exceeded.
   final double highThreshold;
+
+  // The exact timestamp when this zone's metrics were last updated.
   final Timestamp? lastUpdated;
 
   ZoneModel({
@@ -31,6 +55,8 @@ class ZoneModel {
     required this.lastUpdated,
   });
 
+  // Factory constructor to safely parse a Firestore data map into a ZoneModel object.
+  // It provides safe fallback defaults (like 0 for numbers or 'low' for congestion) to prevent crashes.
   factory ZoneModel.fromMap(String id, Map<String, dynamic> data) {
     return ZoneModel(
       id: id,

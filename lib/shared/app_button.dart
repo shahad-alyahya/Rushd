@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
+/// A custom reusable button widget used across the application.
 class AppButton extends StatelessWidget {
+  // The text displayed inside the button.
   final String text;
+
+  // Callback function triggered when the button is pressed.
+
   final VoidCallback onPressed;
+  // Callback function triggered when the button is pressed.
   final bool withArrow;
 
   const AppButton({
     super.key,
     required this.text,
     required this.onPressed,
-    this.withArrow = false, // افتراضي بدون سهم
+    this.withArrow = false, // Defaults to false (no arrow).
   });
 
   @override
@@ -28,7 +34,7 @@ class AppButton extends StatelessWidget {
           ),
         ),
 
-        // 👇 هنا يتحكم إذا فيه سهم أو لا
+        // Conditionally renders a Row with an arrow icon if [withArrow] is true, otherwise renders text only.
         child: withArrow
             ? Row(
                 children: [

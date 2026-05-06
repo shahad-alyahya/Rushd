@@ -3,7 +3,9 @@ import 'package:rushd/Visitor/homepage1.dart';
 import 'package:rushd/Visitor/profile_1.dart';
 import 'package:rushd/Visitor/routes.dart';
 
+/// Custom bottom navigation bar for the visitor interface.
 class VisitorBottomBar1 extends StatelessWidget {
+  // Tracks the currently active tab index.
   final int currentIndex;
 
   const VisitorBottomBar1({super.key, required this.currentIndex});
@@ -11,6 +13,7 @@ class VisitorBottomBar1 extends StatelessWidget {
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kGrey = Colors.black54;
 
+  // Handles tab selection and navigates to the corresponding page.
   void _onItemTapped(BuildContext context, int index) {
     if (index == currentIndex) return;
 
@@ -24,16 +27,13 @@ class VisitorBottomBar1 extends StatelessWidget {
         page = const HomePage1();
         break;
       case 2:
-        page = const RoutesPage(selectedLocation:"Boulevard World");
+        page = const RoutesPage(selectedLocation: "Boulevard World");
         break;
       default:
         page = const HomePage1();
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-    );
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
   }
 
   @override
@@ -44,12 +44,7 @@ class VisitorBottomBar1 extends StatelessWidget {
         height: 78,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(
-            top: BorderSide(
-              color: Color(0xFFE5E5E5),
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -78,6 +73,7 @@ class VisitorBottomBar1 extends StatelessWidget {
     );
   }
 
+  // Helper method to build individual navigation bar items.
   Widget _buildItem({
     required BuildContext context,
     required int index,
@@ -101,11 +97,7 @@ class VisitorBottomBar1 extends StatelessWidget {
                     height: 22,
                     color: isSelected ? kPurple : kGrey,
                   )
-                : Icon(
-                    icon,
-                    size: 28,
-                    color: isSelected ? kPurple : kGrey,
-                  ),
+                : Icon(icon, size: 28, color: isSelected ? kPurple : kGrey),
             const SizedBox(height: 4),
             Text(
               label,
