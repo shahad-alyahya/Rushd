@@ -316,7 +316,7 @@ class _TestAreaAlternativeMapState extends State<_TestAreaAlternativeMap> {
     _zonesSub?.cancel();
     super.dispose();
   }
-
+// Listens to Firestore zone updates.
   void _listenToZones() {
     _zonesSub = _firestore
         .collection('zones')
@@ -442,7 +442,7 @@ class _TestAreaAlternativeMapState extends State<_TestAreaAlternativeMap> {
         return const LatLng(24.82535, 46.66445);
     }
   }
-
+// Creates zone polygons.
   Set<Polygon> _polygons() {
     return {
       Polygon(
@@ -490,7 +490,7 @@ class _TestAreaAlternativeMapState extends State<_TestAreaAlternativeMap> {
       ),
     };
   }
-
+// Creates the route path.
   Set<Polyline> _routeLine() {
     final route = getRoute(
       _zoneFromId(widget.startZoneId),
@@ -547,14 +547,14 @@ class _TestAreaAlternativeMapState extends State<_TestAreaAlternativeMap> {
       ),
     };
   }
-
+// Builds the alternative route screen.
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Set<Marker>>(
       future: _zoneLabels(),
       builder: (context, snapshot) {
         final labels = snapshot.data ?? {};
-
+// Builds the Google Map.
         return GoogleMap(
           initialCameraPosition: const CameraPosition(
             target: center,

@@ -10,6 +10,7 @@ import 'package:rushd/map/zonePoint.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
+// Routes screen for selecting a start point and destination.
 class RoutesPage extends StatefulWidget {
   final String selectedLocation;
 
@@ -45,7 +46,7 @@ class _RoutesPageState extends State<RoutesPage> {
     _zonesSub?.cancel();
     super.dispose();
   }
-
+// Listens to live zone congestion updates.
   void _listenToZones() {
     _zonesSub = _firestore.collection('zones').snapshots().listen((snapshot) {
       final updated = <String, String>{};
@@ -60,7 +61,7 @@ class _RoutesPageState extends State<RoutesPage> {
       }
     });
   }
-
+// Returns the color of the congestion level.
   Color _getLevelColor(String zoneId) {
     final level = zoneLevels[zoneId] ?? 'low';
     switch (level) {
@@ -122,7 +123,7 @@ class _RoutesPageState extends State<RoutesPage> {
         return id;
     }
   }
-
+// Calculates the estimated route time.
   String _getTime(ZonePoint to) {
     if (_selectedTestAreaZoneId == null) return "--";
     final from = _mapZoneIdToPoint(_selectedTestAreaZoneId!);
@@ -130,7 +131,7 @@ class _RoutesPageState extends State<RoutesPage> {
     if (route == null) return "--";
     return RouteUtils.estimateTime(route.points);
   }
-
+// Calculates the route distance.
   String _getDistance(ZonePoint to) {
     if (_selectedTestAreaZoneId == null || _selectedTestAreaZoneId!.isEmpty)
       return "--";
@@ -140,6 +141,7 @@ class _RoutesPageState extends State<RoutesPage> {
     return RouteUtils.formatDistance(route.points);
   }
 
+// Builds the routes page screen.
   @override
   Widget build(BuildContext context) {
     final bool isTestArea = _selectedLocation == 'Test Area';
@@ -154,7 +156,7 @@ class _RoutesPageState extends State<RoutesPage> {
       {'id': 'zone_00C', 'title': 'Zone C', 'point': ZonePoint.c},
     ];
 
-    // 🔥 التصفية الديناميكية: نستبعد المنطقة اللي تم اختيارها كبداية
+   
     List<Map<String, dynamic>> availableDestinations = [];
     if (hasSelection) {
       availableDestinations = allZones
@@ -259,7 +261,6 @@ class _RoutesPageState extends State<RoutesPage> {
                       ),
                       const SizedBox(height: 12),
 
-                      /// رسالة توجيهية إذا ما اختار شيء
                       if (!hasSelection)
                         const Padding(
                           padding: EdgeInsets.only(top: 10),
@@ -269,7 +270,6 @@ class _RoutesPageState extends State<RoutesPage> {
                           ),
                         ),
 
-                      /// 🔥 الكروت المتبقية تنبني تلقائياً بناءً على اللي بقى في اللستة
                       if (isTestArea && hasSelection)
                         ...availableDestinations.map((dest) {
                           return destinationCard(
@@ -299,10 +299,10 @@ class _RoutesPageState extends State<RoutesPage> {
                                     estimatedTime: _getTime(dest['point']),
                                     zoneId: _routeZoneId(
                                       dest['id'],
-                                    ), // معرف الوجهة
+                                    ), 
                                     startZoneId: _routeZoneId(
                                       _selectedTestAreaZoneId!,
-                                    ), // معرف البداية
+                                    ),  
                                     userLocation: _selectedUserLocation!,
                                   ),
                                 ),
@@ -370,7 +370,7 @@ class _RoutesPageState extends State<RoutesPage> {
     );
   }
 
-  /// CARD
+ // Builds a destination card for Test Area.
   Widget destinationCard({
     required String title,
     required String time,
@@ -415,6 +415,7 @@ class _RoutesPageState extends State<RoutesPage> {
       ),
     );
   }
+  // Builds a destination card for Boulevard World.
   Widget boulevardDestinationCard({
   required String title,
   required String time,

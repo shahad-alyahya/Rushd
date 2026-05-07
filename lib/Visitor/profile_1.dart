@@ -3,11 +3,10 @@ import 'package:rushd/shared/VisitorBottomBar1.dart';
 import 'edit_profile_1.dart';
 import 'faqs_1.dart';
 import 'loginPage.dart';
-
-// 🔥 Firebase
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Visitor profile screen with user data and settings.
 class ProfileVisitorPage extends StatefulWidget {
   const ProfileVisitorPage({super.key});
 
@@ -21,6 +20,7 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
 
   final user = FirebaseAuth.instance.currentUser;
 
+// Builds the visitor profile screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +39,6 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
         centerTitle: true,
       ),
 
-      // 🔥 StreamBuilder لجلب بيانات المستخدم
       body: user == null
           ? const Center(child: Text("No user logged in"))
           : StreamBuilder<DocumentSnapshot>(
@@ -93,7 +92,6 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
                                     ),
                                   ),
 
-                                  // ✅ الإيميل من Firebase
                                   Text(
                                     email,
                                     style: const TextStyle(
@@ -207,7 +205,7 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
             ),
     );
   }
-
+// Builds a reusable profile option tile.
   Widget _buildOptionTile(
     IconData icon,
     String title, {
@@ -246,7 +244,7 @@ class _ProfileVisitorPageState extends State<ProfileVisitorPage> {
           ),
     );
   }
-
+// Builds the language selection dropdown.
   Widget _buildLanguageDropdown() {
     return DropdownButton<String>(
       value: selectedLanguage,

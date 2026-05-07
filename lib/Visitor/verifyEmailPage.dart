@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:rushd/Services/auth_service.dart';
 import 'homepage1.dart';
 
+// Email verification screen.
 class VerifyEmailPage extends StatefulWidget {
   const VerifyEmailPage({super.key});
 
@@ -13,11 +14,11 @@ class VerifyEmailPage extends StatefulWidget {
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
   Timer? _timer;
 
+// Checks the email verification status.
   @override
   void initState() {
     super.initState();
 
-    // يبدأ التشييك كل 3 ثواني
     _timer = Timer.periodic(const Duration(seconds: 3), (_) async {
       await AuthService.instance.reloadCurrentUser();
       final result = await AuthService.instance.getCurrentUserRole();
@@ -37,12 +38,13 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
     });
   }
 
+// Cancels the verification timer.
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
-
+// Resends the verification email.
   Future<void> resendEmail() async {
     await AuthService.instance.sendVerificationEmail();
 
@@ -51,6 +53,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
     );
   }
 
+// Builds the email verification screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rushd/shared/app_button.dart';
 import 'package:rushd/shared/app_spacing.dart';
 
+// Password reset screen.
 class ResetPassword extends StatefulWidget {
   const ResetPassword({super.key});
 
@@ -13,6 +14,7 @@ class ResetPassword extends StatefulWidget {
 class _ResetPasswordState extends State<ResetPassword> {
   final TextEditingController _emailController = TextEditingController();
 
+// Sends the password reset email.
   Future<void> resetPassword() async {
     final email = _emailController.text.trim();
 
@@ -34,7 +36,7 @@ class _ResetPasswordState extends State<ResetPassword> {
         ),
       );
 
-      Navigator.pop(context); // يرجع لصفحة اللوقن
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -42,12 +44,14 @@ class _ResetPasswordState extends State<ResetPassword> {
     }
   }
 
+// Releases the email controller.
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
   }
 
+// Builds the reset password screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

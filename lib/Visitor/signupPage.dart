@@ -5,6 +5,7 @@ import 'verifyEmailPage.dart';
 import 'package:rushd/Services/auth_service.dart';
 import 'loginPage.dart';
 
+// Sign up screen for creating a new account.
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
@@ -18,6 +19,7 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+// Builds the sign up screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,7 +112,7 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  /// ✨ شكل الحقول (بوكس مثل الزون والسيكيورتي)
+// Builds a reusable input field.
   Widget _field(
     TextEditingController c,
     String hint, {
@@ -128,7 +130,6 @@ class _SignupPageState extends State<SignupPage> {
           vertical: 15,
         ),
 
-        /// 🟣 البوردر
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.grey),

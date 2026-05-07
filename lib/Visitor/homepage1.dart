@@ -17,6 +17,7 @@ class _HomePage1State extends State<HomePage1> {
   static const Color kPurple = Color(0xFF867AB9);
   static const Color kDark = Color(0xFF353841);
   @override
+  // Starts the sensor reading listener.
 void initState() {
   super.initState();
   ReadingListener().startListening();
@@ -62,7 +63,7 @@ void initState() {
   String _selected = 'Boulevard World';
   DateTime _lastUpdate = DateTime.now();
   bool _showSheet = true;
-
+// Animates the bottom sheet.
   Future<void> _animateSheet(double size) async {
     if (!_sheetController.isAttached) return;
     await _sheetController.animateTo(
@@ -71,7 +72,7 @@ void initState() {
       curve: Curves.easeOutCubic,
     );
   }
-
+// Updates the refresh time.
   void _refresh() {
     setState(() {
       _lastUpdate = DateTime.now();
@@ -83,7 +84,7 @@ void initState() {
     final mm = dateTime.minute.toString().padLeft(2, '0');
     return '$hh:$mm';
   }
-
+// Handles selected destination.
   Future<void> _handleDestinationSelected(String value) async {
     setState(() {
       _selected = value;
@@ -116,7 +117,7 @@ void initState() {
       );
     }
   }
-
+// Closes the details sheet.
   Future<void> _closeSheet() async {
     await _animateSheet(0.0);
     if (!mounted) return;
@@ -125,7 +126,7 @@ void initState() {
       _showSheet = false;
     });
   }
-
+// Builds the home page screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -242,7 +243,7 @@ void initState() {
     );
   }
 }
-
+// Dropdown menu for destination selection.
 class _TopDropdown extends StatelessWidget {
   const _TopDropdown({
     required this.value,
@@ -328,7 +329,7 @@ class _TopDropdown extends StatelessWidget {
     );
   }
 }
-
+// Bottom sheet displaying place details.
 class _DetailsBottomSheet extends StatelessWidget {
   const _DetailsBottomSheet({
     required this.controller,
@@ -477,7 +478,7 @@ class _DetailsBottomSheet extends StatelessWidget {
     );
   }
 }
-
+// Info tile for displaying location details.
 class _InfoTile extends StatelessWidget {
   const _InfoTile({
     required this.icon,

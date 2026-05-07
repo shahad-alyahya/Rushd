@@ -11,6 +11,7 @@ import 'package:rushd/Admin/HomePage-3.dart';
 import 'package:rushd/Services/auth_service.dart';
 import 'package:rushd/Visitor/verifyEmailPage.dart';
 
+// Login screen for user authentication.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -25,13 +26,14 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+// Releases the text controllers.
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
-
+// Builds the login screen.
   @override
   Widget build(BuildContext context) {
     return AppPageLayout(
@@ -238,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-
+// Builds a reusable input field.
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,
@@ -279,7 +281,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-
+// Builds the password input field.
   Widget _buildPasswordField() {
     return TextField(
       controller: _passwordController,
@@ -330,7 +332,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-
+// Builds a social login button.
   Widget _socialButton({
     required String text,
     required String iconText,

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+// Handles user location services.
 class LocationService {
   static const LatLng mockLocation = LatLng(24.77560985506877, 46.60403173416853);
 
+// Returns the current user location.
   static LatLng getCurrentLocation() {
     return mockLocation;
   }
 
+// Creates user location circles on the map.
   static Set<Circle> getUserLocationCircles(LatLng location) {
     return {
       Circle(

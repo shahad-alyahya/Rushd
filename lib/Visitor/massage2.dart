@@ -3,9 +3,11 @@ import 'package:rushd/shared/app_button.dart';
 import 'package:rushd/shared/app_spacing.dart';
 import 'loginPage.dart';
 
+// Password reset success screen.
 class Massage2 extends StatelessWidget {
   const Massage2({super.key});
 
+// Builds the success message screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

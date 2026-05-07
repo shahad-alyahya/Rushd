@@ -45,7 +45,7 @@ class _FAQPageState extends State<FAQPage> {
       "isExpanded": false,
     },
   ];
-
+// Builds the FAQ screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,6 +107,7 @@ class _FAQPageState extends State<FAQPage> {
     );
   }
 
+// Builds each FAQ item.
   Widget _buildFAQItem(int index) {
     final bool isExpanded = faqs[index]['isExpanded'];
 

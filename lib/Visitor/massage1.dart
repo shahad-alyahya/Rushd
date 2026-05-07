@@ -3,9 +3,10 @@ import 'package:rushd/shared/app_button.dart';
 import 'package:rushd/shared/app_spacing.dart';
 import 'loginPage.dart';
 
+// Success message screen after account creation.
 class Massage1 extends StatelessWidget {
   const Massage1({super.key});
-
+// Builds the success message screen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

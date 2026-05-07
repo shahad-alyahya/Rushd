@@ -173,7 +173,7 @@ static final Map<String, String> zoneLabelTexts = {
     
   };
 
-  // الربط
+  
   static final Map<String, List<String>> pathEdges = {
   'p1': ['p2', 'p11'],
   'p2': ['p1', 'p3'],

@@ -26,7 +26,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     _loadUserData();
   }
-
+// Loads the current user profile data.
   Future<void> _loadUserData() async {
     if (_currentUser == null) {
       setState(() {
@@ -69,6 +69,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
   }
 
+// Saves the updated profile name.
   Future<void> _submitData() async {
     if (!_formKey.currentState!.validate()) return;
     if (_currentUser == null) return;
@@ -120,7 +121,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _passwordController.dispose();
     super.dispose();
   }
-
+// Builds the edit profile screen.
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -200,7 +201,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _buildPasswordField(),
 
                     const SizedBox(height: 38),
-
+// Builds the save button.
                     _buildSubmitButton(),
 
                     const SizedBox(height: 24),
